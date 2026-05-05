@@ -1345,7 +1345,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v36</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v37</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -5487,20 +5487,51 @@ function renderMoodTrendChart(container, diaryEntries, buckets) {
 // Complete Modal
 // ═══════════════════════════════════════════
 async function openCompleteModal(choreId, date) {
-  S.pendingChoreId=choreId; S.pendingDate=date;
   const [chore,people,allComps]=await Promise.all([get('chores',choreId),all('people'),all('completions')]);
+
+  // When viewing as a specific person, skip the modal entirely — just toggle
+  if(S.person !== 'all') {
+    const person = people.find(p=>p.id===S.person);
+    const existing = allComps.find(c=>c.choreId===choreId&&c.date===date&&c.personId===S.person);
+    if(existing) {
+      await del('completions', existing.id);
+    } else {
+      const addedId = await put('completions',{choreId,date,personId:S.person,points:chore?.points||0});
+      // Goal check
+      const ws=weekStart(0);
+      const wkDates=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return fmtDate(d);});
+      const beforePts={};
+      beforePts[S.person]=allComps.filter(c=>c.personId===S.person&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0);
+      S.recentlyCompletedPersonIds=[S.person];
+      await render(S.view);
+      // Float points
+      if(chore?.points) {
+        setTimeout(()=>{
+          const btn=document.querySelector('.check-btn.checked');
+          if(btn) animFloatPts(chore.points, btn);
+        }, 80);
+      }
+      checkGoalMet([S.person], beforePts);
+    }
+    if(!allComps.find(c=>c.choreId===choreId&&c.date===date&&c.personId===S.person)) {
+      S.recentlyCompletedPersonIds=[];
+      await render(S.view);
+    }
+    return;
+  }
+
+  // "View As: Everyone" — show the full person-selection modal as normal
+  S.pendingChoreId=choreId; S.pendingDate=date;
   g('completeTitle').textContent=`"${chore?.name||'Task'}" — ${date}`;
   g('completeNote').value='';
   if(chore?.description){ const p=g('completeNote').previousElementSibling; if(p) p.querySelector('.comp-note-badge').textContent=chore.description.slice(0,40)+(chore.description.length>40?'…':''); }
   const grid=g('completeGrid'); grid.innerHTML='';
-  const showPpl=S.person==='all'?people:people.filter(p=>p.id===S.person);
-  if(!showPpl.length) {
-    // No people at all — toggle a 'no-person' completion
+  if(!people.length) {
     const ex=allComps.find(c=>c.choreId===choreId&&c.date===date&&!c.personId);
     if(ex) await del('completions',ex.id); else await put('completions',{choreId,date,personId:null,points:chore?.points||0});
     render(S.view); return;
   }
-  showPpl.forEach(p=>{
+  people.forEach(p=>{
     const done=allComps.some(c=>c.choreId===choreId&&c.date===date&&c.personId===p.id);
     const row=document.createElement('div'); row.className='person-sel-row'+(done?' on':'');
     row.innerHTML=`<div class="pdot" style="background:${p.color}"></div><span style="flex:1">${p.name}</span>${done?'<span style="color:var(--sage);font-size:12px">✓ Done</span>':''}`;
@@ -6252,7 +6283,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 36, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: 37, exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
