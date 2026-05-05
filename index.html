@@ -1192,7 +1192,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v22</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v23</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -2720,9 +2720,10 @@ async function renderDash() {
       const task=allTasks.find(t=>t.id===c.choreId);
       if(!task) return;
       const cat=categories.find(cat=>cat.id===task.categoryId);
+      const person=c.personId?people.find(p=>p.id===c.personId):null;
       const row=document.createElement('div'); row.className='chore-row done';
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-sm)';
-      row.innerHTML=`<div class="cdot" style="background:${cat?.color||'var(--gold-dim)'}"></div><span class="chore-name" style="flex:1">${task.name}</span><span class="pts-badge">${pts(task.points)}</span><span class="bonus-badge">bonus</span>`;
+      row.innerHTML=`<div class="cdot" style="background:${cat?.color||'var(--gold-dim)'}"></div><span class="chore-name" style="flex:1">${task.name}</span>${person?`<span style="font-size:11px;font-weight:500;color:${person.color}">${person.name}</span>`:''}<span class="pts-badge">${pts(task.points)}</span><span class="bonus-badge">bonus</span>`;
       const rmBtn=document.createElement('button');
       rmBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--text-3);font-size:13px;padding:0 3px;line-height:1;opacity:0;transition:opacity 0.15s;flex-shrink:0';
       rmBtn.title='Remove this bonus task log';
@@ -3094,9 +3095,10 @@ async function renderWeek() {
       const task=allTasks.find(t=>t.id===bc.choreId);
       if(!task) return;
       const cat=categories.find(cat=>cat.id===task.categoryId);
+      const person=bc.personId?people.find(p=>p.id===bc.personId):null;
       const chip=document.createElement('div'); chip.className='w-bonus';
       if(cat) chip.style.borderLeftColor=cat.color;
-      chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span><button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
+      chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
       body.appendChild(chip);
     });
     // Per-day bonus button
@@ -5869,7 +5871,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 22, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: 23, exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
