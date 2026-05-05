@@ -1345,7 +1345,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v37</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v38</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -5491,31 +5491,22 @@ async function openCompleteModal(choreId, date) {
 
   // When viewing as a specific person, skip the modal entirely — just toggle
   if(S.person !== 'all') {
-    const person = people.find(p=>p.id===S.person);
     const existing = allComps.find(c=>c.choreId===choreId&&c.date===date&&c.personId===S.person);
     if(existing) {
+      // Uncheck — remove completion and re-render
       await del('completions', existing.id);
-    } else {
-      const addedId = await put('completions',{choreId,date,personId:S.person,points:chore?.points||0});
-      // Goal check
-      const ws=weekStart(0);
-      const wkDates=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return fmtDate(d);});
-      const beforePts={};
-      beforePts[S.person]=allComps.filter(c=>c.personId===S.person&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0);
-      S.recentlyCompletedPersonIds=[S.person];
-      await render(S.view);
-      // Float points
-      if(chore?.points) {
-        setTimeout(()=>{
-          const btn=document.querySelector('.check-btn.checked');
-          if(btn) animFloatPts(chore.points, btn);
-        }, 80);
-      }
-      checkGoalMet([S.person], beforePts);
-    }
-    if(!allComps.find(c=>c.choreId===choreId&&c.date===date&&c.personId===S.person)) {
       S.recentlyCompletedPersonIds=[];
       await render(S.view);
+    } else {
+      // Check — add completion, animate, check goal
+      const ws=weekStart(0);
+      const wkDates=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return fmtDate(d);});
+      const beforePts={[S.person]: allComps.filter(c=>c.personId===S.person&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0)};
+      await put('completions',{choreId,date,personId:S.person,points:chore?.points||0});
+      S.recentlyCompletedPersonIds=[S.person];
+      await render(S.view);
+      if(chore?.points) setTimeout(()=>{ const btn=document.querySelector('.check-btn.checked'); if(btn) animFloatPts(chore.points, btn); }, 80);
+      checkGoalMet([S.person], beforePts);
     }
     return;
   }
@@ -6283,7 +6274,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 37, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: 38, exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
