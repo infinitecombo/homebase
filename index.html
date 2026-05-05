@@ -1192,7 +1192,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v21</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v22</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -5869,7 +5869,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 21, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: 22, exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -6422,30 +6422,48 @@ async function gistCollectData() {
     await Promise.all([all('chores'),all('people'),all('completions'),all('diary'),
       all('categories'),all('events'),all('rewards'),all('earnedRewards'),
       all('pins'),all('pauses').catch(()=>[])]);
-  return { _meta:{ app:'HomeBase', version:20, syncedAt:new Date().toISOString() },
-    chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses };
+
+  // Strip base64 photos — they're too large for Gist sync (kept locally only)
+  const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
+  const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
+
+  return { _meta:{ app:'HomeBase', version:21, syncedAt:new Date().toISOString(),
+    photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
+    chores, people:peopleStripped, completions, diary:diaryStripped,
+    categories, events, rewards, earnedRewards, pins, pauses };
+}
+
+function gistDataSizeKb(data) {
+  return Math.round(JSON.stringify(data).length / 1024);
 }
 
 async function gistPush() {
   const token = gistToken();
   if(!token) { setGistStatus('⚠ No token saved — enter your GitHub token below', 'var(--terra)'); return; }
 
-  setGistStatus('☁️ Pushing to GitHub…', 'var(--gold)');
+  setGistStatus('☁️ Preparing data…', 'var(--gold)');
   try {
     const data = await gistCollectData();
+    const kb = gistDataSizeKb(data);
+    const hasStripped = data._meta.photosStripped;
+
+    if(kb > 50000) { // 50MB sanity check
+      setGistStatus(`✗ Data too large (${kb}KB) — try exporting instead`, 'var(--terra)');
+      return;
+    }
+
+    setGistStatus(`☁️ Pushing ${kb}KB to GitHub…${hasStripped?' (photos kept local)':''}`, 'var(--gold)');
     const content = JSON.stringify(data, null, 2);
     const id = gistId();
 
     let res, body;
     if(id) {
-      // Update existing gist
       res = await fetch(`https://api.github.com/gists/${id}`, {
         method: 'PATCH',
         headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ files: { [GIST_FILENAME]: { content } } })
       });
     } else {
-      // Create new gist
       res = await fetch('https://api.github.com/gists', {
         method: 'POST',
         headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
@@ -6460,10 +6478,11 @@ async function gistPush() {
     body = await res.json();
     if(!res.ok) throw new Error(body.message || `HTTP ${res.status}`);
 
-    if(!id) saveSetting('gistId', body.id); // save new gist ID
+    if(!id) saveSetting('gistId', body.id);
     saveSetting('gistLastSync', new Date().toISOString());
     updateGistLastSync();
-    setGistStatus(`✓ Pushed successfully — ${Object.values(data).filter(Array.isArray).reduce((s,a)=>s+a.length,0)} records`, 'var(--sage)');
+    const recordCount = Object.values(data).filter(Array.isArray).reduce((s,a)=>s+a.length,0);
+    setGistStatus(`✓ Pushed ${kb}KB · ${recordCount} records${hasStripped?' · 📷 Photos kept local only':''}`, 'var(--sage)');
   } catch(e) {
     setGistStatus(`✗ Push failed: ${e.message}`, 'var(--terra)');
   }
@@ -6514,15 +6533,25 @@ async function gistPull() {
       async () => {
         setGistStatus('⬇️ Importing…', 'var(--gold)');
         try {
+          // Pull — preserve local photos that weren't synced
+          const [localDiary, localPeople] = await Promise.all([all('diary'), all('people')]);
+          const localDiaryPhotos = Object.fromEntries(localDiary.filter(e=>e.photo).map(e=>[e.id,e.photo]));
+          const localPeoplePhotos = Object.fromEntries(localPeople.filter(p=>p.photo).map(p=>[p.id,p.photo]));
+
           const stores = ['chores','people','completions','diary','categories','events','rewards','earnedRewards','pins','pauses'];
           await Promise.all(stores.map(store =>
             new Promise((res,rej)=>{ const req=DB.transaction(store,'readwrite').objectStore(store).clear(); req.onsuccess=res; req.onerror=rej; })
           ));
           for(const [key, records] of Object.entries(data)) {
             if(key==='_meta'||!Array.isArray(records)) continue;
-            const store = key;
-            if(!DB.objectStoreNames.contains(store)) continue;
-            for(const r of records) await put(store, r);
+            if(!DB.objectStoreNames.contains(key)) continue;
+            for(const r of records) {
+              // Re-attach local photos if the record had one stripped
+              if(key==='diary' && r._photoStripped && localDiaryPhotos[r.id]) r.photo = localDiaryPhotos[r.id];
+              if(key==='people' && r._photoStripped && localPeoplePhotos[r.id]) r.photo = localPeoplePhotos[r.id];
+              delete r._photoStripped;
+              await put(key, r);
+            }
           }
           saveSetting('gistLastSync', new Date().toISOString());
           updateGistLastSync();
