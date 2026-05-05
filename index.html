@@ -1345,7 +1345,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v35</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v36</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -2992,8 +2992,8 @@ async function renderDash() {
     sortedCats.forEach(cat=>{ if(grouped[cat.id]) renderCatGroup(cat,grouped[cat.id]); });
     if(grouped[UNCAT]) renderCatGroup(null,grouped[UNCAT]);
   }
-  // Bonus completions today
-  const bonusTodayComps = todayComps.filter(c=>c.isBonus);
+  // Bonus completions today — filtered by viewAs person
+  const bonusTodayComps = todayComps.filter(c=>c.isBonus && (S.person==='all' || c.personId===S.person));
   if(bonusTodayComps.length) {
     const allTasks = chores;
     const hdr=document.createElement('div');
@@ -3399,8 +3399,8 @@ async function renderWeek() {
       item.onclick=()=>openCompleteModal(c.id,ds);
       body.appendChild(item);
     });
-    // Bonus completions for this day
-    const dayBonusComps=allComps.filter(c=>c.date===ds&&c.isBonus);
+    // Bonus completions for this day — filtered by viewAs person
+    const dayBonusComps=allComps.filter(c=>c.date===ds&&c.isBonus&&(S.person==='all'||c.personId===S.person));
     dayBonusComps.forEach(bc=>{
       const task=allTasks.find(t=>t.id===bc.choreId);
       if(!task) return;
@@ -3469,7 +3469,7 @@ async function renderCalDetail(ds) {
   const dayChores=chores.filter(c=>isTaskScheduledFor(c,ds));
   const dayEvts=allEvts.filter(e=>eventOnDate(e,ds));
   const comps=allComps.filter(c=>c.date===ds);
-  const bonusComps=comps.filter(c=>c.isBonus);
+  const bonusComps=comps.filter(c=>c.isBonus&&(S.person==='all'||c.personId===S.person));
   const entries=allDiary.filter(e=>e.date===ds);
   const det=g('calDetail');
 
@@ -6252,7 +6252,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 35, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: 36, exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
