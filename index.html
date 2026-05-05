@@ -1185,6 +1185,13 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   </div>
 </div>
 
+<!-- Update Available Banner -->
+<div id="updateBanner" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:900;background:var(--surface);border:1px solid var(--gold-dim);border-radius:var(--radius);padding:12px 18px;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);white-space:nowrap">
+  <span style="font-size:13px;color:var(--text-2)">🆕 A new version is available</span>
+  <button id="updateNowBtn" class="btn btn-primary" style="padding:6px 14px;font-size:13px">Update Now</button>
+  <button id="updateDismissBtn" style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:0 2px">✕</button>
+</div>
+
 <!-- Sidebar backdrop (mobile) -->
 <div id="sidebarBackdrop" style="display:none;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px)"></div>
 
@@ -1192,7 +1199,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v23</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v24</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -5871,7 +5878,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 23, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: 24, exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -6214,6 +6221,15 @@ function wire() {
   // Export / Import
   g('exportBtn').onclick = exportData;
   g('importBtn').onclick = triggerImport;
+  // Update banner
+  g('updateNowBtn').onclick = () => {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      reg?.waiting?.postMessage('skipWaiting');
+    });
+  };
+  g('updateDismissBtn').onclick = () => {
+    g('updateBanner').style.display = 'none';
+  };
   // PWA install button — always visible unless already installed
   const installBtn = g('pwaInstallBtn');
   if (installBtn) {
@@ -6671,11 +6687,11 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-v19';
+const CACHE = 'homebase-v23';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
-  self.skipWaiting();
+  // Don't skipWaiting immediately — let the page know an update is ready
   e.waitUntil(
     caches.open(CACHE).then(c => c.add(APP_URL)).catch(()=>{})
   );
@@ -6703,11 +6719,39 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request))
   );
 });
+
+// Tell the page when a new SW is waiting
+self.addEventListener('message', e => {
+  if (e.data === 'skipWaiting') self.skipWaiting();
+});
     `;
     const swBlob = new Blob([swCode], {type:'application/javascript'});
     const swUrl = URL.createObjectURL(swBlob);
     navigator.serviceWorker.register(swUrl, {scope: './'})
-      .then(() => console.log('HomeBase: SW registered'))
+      .then(reg => {
+        console.log('HomeBase: SW registered');
+        // Check for updates when app becomes visible again
+        document.addEventListener('visibilitychange', () => {
+          if(document.visibilityState==='visible') reg.update();
+        });
+        // Show update banner when a new SW is waiting
+        const showBanner = () => {
+          const b=document.getElementById('updateBanner');
+          if(b) b.style.display='flex';
+        };
+        if(reg.waiting) showBanner();
+        reg.addEventListener('updatefound', () => {
+          const sw=reg.installing;
+          sw?.addEventListener('statechange', () => {
+            if(sw.state==='installed'&&navigator.serviceWorker.controller) showBanner();
+          });
+        });
+        // Reload once new SW takes control
+        let refreshing=false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if(!refreshing){ refreshing=true; window.location.reload(); }
+        });
+      })
       .catch(e => console.log('HomeBase: SW skipped —', e.message));
   }
 }
