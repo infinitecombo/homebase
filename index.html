@@ -156,10 +156,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .prog-fill{height:100%;border-radius:4px;transition:width 0.6s ease}
 
 /* ── WEEK VIEW ── */
-.week-nav{display:flex;align-items:center;gap:12px;margin-top:8px;margin-bottom:20px}
+.week-nav{display:flex;align-items:center;gap:8px;margin-top:8px;margin-bottom:6px}
+.week-range-label{font-size:13px;color:var(--text-2);font-weight:500;margin-bottom:14px;padding-left:2px}
 .week-title{font-family:'Playfair Display',serif;font-size:18px;flex:1}
 .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
-.week-col{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.week-col{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);display:flex;flex-direction:column}
 .week-col.is-today{border-color:var(--gold-dim)}
 .wday-head{padding:10px 8px;border-bottom:1px solid var(--border-soft);text-align:center}
 .wday-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3)}
@@ -779,6 +780,20 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   }
 }
 
+/* ── MOBILE WEEK: vertical day pills ── */
+.wday-pill{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:8px 4px;text-align:center;cursor:pointer;transition:all var(--t);user-select:none}
+.wday-pill:hover{border-color:var(--gold-dim)}
+.wday-pill.is-today{border-color:var(--gold-dim)}
+.wday-pill.sel{background:var(--gold-glow);border-color:var(--gold)}
+.wday-pill-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+.wday-pill.sel .wday-pill-lbl{color:var(--gold)}
+.wday-pill-num{font-size:18px;font-weight:600;color:var(--text);line-height:1.2;margin:2px 0}
+.wday-pill.is-today .wday-pill-num{color:var(--gold)}
+.wday-pill-prog{height:3px;background:var(--surface-3);border-radius:2px;margin:4px 2px 0;overflow:hidden}
+.wday-pill-prog-fill{height:100%;background:var(--sage);border-radius:2px;transition:width 0.4s ease}
+.wday-pill-evt{width:5px;height:5px;border-radius:50%;background:var(--gold);margin:3px auto 0}
+
+.cal-evt-ico-dot{font-size:11px;line-height:1.2;cursor:pointer}
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-2);padding:4px 6px;border-radius:var(--radius-sm);transition:all var(--t);flex-shrink:0}
 .hamburger-btn:hover{background:var(--surface-2);color:var(--text)}
 
@@ -814,6 +829,24 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 
+  #view-week.active, #view-calendar.active {
+    padding: 10px 10px 80px;
+    overflow-y: auto;
+  }
+  /* Calendar: grid takes remaining space, detail scrolls below */
+  #view-calendar.active {
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  #calGrid {
+    flex-shrink: 0;
+  }
+  #calDetail {
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
   /* Data-bar buttons: full width stacked */
   #sidebar .data-btn { width: 100%; text-align: left; justify-content: flex-start; }
   #sidebar .theme-toggle-btn { width: 100%; }
@@ -833,18 +866,55 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   .dash-grid { grid-template-columns: 1fr; margin-top: 14px; gap: 10px; }
   .dash-grid .full, .dash-grid .third { grid-column: 1/-1; }
 
-  /* Week view: horizontal scroll */
+  /* ── Week view: horizontal scroll, scrollable columns ── */
   .week-grid {
-    grid-template-columns: repeat(7, minmax(130px, 1fr));
+    grid-template-columns: repeat(7, minmax(150px, 1fr));
     overflow-x: auto;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
     gap: 5px;
     -webkit-overflow-scrolling: touch;
+    /* Snap to columns for easier swiping */
+    scroll-snap-type: x mandatory;
   }
+  .week-col {
+    scroll-snap-align: start;
+    /* Fixed max-height so bonus tasks scroll inside the column */
+    max-height: calc(100vh - 180px);
+    display: flex;
+    flex-direction: column;
+  }
+  .wday-head { padding: 8px 6px; }
+  .wday-lbl  { font-size: 11px; }
+  .wday-num  { font-size: 18px; }
+  /* Week col body scrolls independently */
+  .wday-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    padding: 6px;
+  }
+  /* Slightly larger touch targets for chore rows */
+  .w-chore { padding: 5px 4px; font-size: 11.5px; }
+  .w-bonus { padding: 5px 5px; font-size: 11px; }
 
-  /* Calendar: smaller */
-  .cal-grid { gap: 2px; }
-  .cal-day { min-height: 44px; font-size: 11px; }
+  /* ── Calendar: equal cells, full-screen fit ── */
+  .cal-grid {
+    gap: 2px;
+    /* Make grid fill available height with equal rows */
+    grid-template-rows: auto repeat(6, 1fr);
+  }
+  .cal-hdr { font-size: 10px; padding: 4px 2px; }
+  .cal-cell {
+    min-height: 0;
+    padding: 4px 3px;
+    /* Equal height cells driven by grid rows */
+    aspect-ratio: unset;
+  }
+  .cal-num { font-size: 12px; margin-bottom: 2px; }
+  .cal-dot  { width: 5px; height: 5px; }
+  .cal-diary-ico { font-size: 9px; }
+  .cal-evt-ico-dot { font-size: 10px; }
 
   /* Cards: reduced padding */
   .card { padding: 14px; }
@@ -1345,7 +1415,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v38</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v5.0.0</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -1555,11 +1625,11 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="view" id="view-week">
     <div class="week-nav">
       <button class="btn btn-ghost" id="wkPrev">← Prev</button>
-      <span class="week-title" id="wkLabel"></span>
+      <button class="btn btn-ghost" id="wkToday">Today</button>
       <button class="btn btn-ghost" id="wkNext">Next →</button>
-      <button class="btn btn-ghost" id="wkToday" style="margin-left:auto">Today</button>
-      <button class="btn-bonus" id="wkBonusBtn">✨ Bonus Task</button>
+      <button class="btn-bonus" id="wkBonusBtn" style="margin-left:auto">✨ Bonus Task</button>
     </div>
+    <div class="week-range-label" id="wkLabel"></div>
     <div class="week-grid" id="weekGrid"></div>
   </div>
 
@@ -2640,7 +2710,7 @@ const byIdx = (store,idx,val) => new Promise((r,j) => { const q=tx(store).object
 const S = {
   view: 'dashboard',
   person: 'all',
-  wkOffset: 0,
+  wkOffset: 0, wkSelDay: null, _wkSelOffset: null,
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth(),
   calSel: null,
@@ -3341,88 +3411,222 @@ async function renderDash() {
 // ═══════════════════════════════════════════
 // Week View
 // ═══════════════════════════════════════════
+function scrollWeekToToday() {
+  const grid = g('weekGrid');
+  if(!grid) return;
+  const todayCol = grid.querySelector('.week-col.is-today');
+  if(!todayCol) return;
+  // Center the today column in the scroll container
+  const gridRect = grid.getBoundingClientRect();
+  const colRect = todayCol.getBoundingClientRect();
+  const scrollTo = todayCol.offsetLeft - (gridRect.width / 2) + (colRect.width / 2);
+  grid.scrollTo({ left: Math.max(0, scrollTo), behavior: 'smooth' });
+}
+
 async function renderWeek() {
   const ws = weekStart(S.wkOffset);
   const we = new Date(ws); we.setDate(we.getDate()+6);
   const fmt = d => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
-  g('wkLabel').textContent = `${fmt(ws)} – ${ws.getMonth()!==we.getMonth()?fmt(we):we.getDate()}, ${ws.getFullYear()}`;
 
-  const [chores, people, allComps, categories, allEvts] = await Promise.all([all('chores'),all('people'),all('completions'),all('categories'),all('events')]);
+  // Fix missing label
+  const labelEl = g('wkLabel');
+  if(labelEl) labelEl.textContent = `${fmt(ws)} – ${ws.getMonth()!==we.getMonth()?fmt(we):we.getDate()}, ${ws.getFullYear()}`;
+
+  const [chores,people,allComps,categories,allEvts] = await Promise.all([all('chores'),all('people'),all('completions'),all('categories'),all('events')]);
   S.activePauses = await all('pauses').catch(()=>[]);
   const allTasks=chores;
   const todayStr = today();
+
+  // Auto-select today when on current week
+  if(!S.wkSelDay || S.wkOffset!==S._wkSelOffset) {
+    S.wkSelDay = todayStr;
+    S._wkSelOffset = S.wkOffset;
+  }
+
+  const isMobile = window.innerWidth <= 768;
   const grid = g('weekGrid'); grid.innerHTML='';
 
-  for (let i=0;i<7;i++) {
-    const d=new Date(ws); d.setDate(d.getDate()+i);
-    const ds=fmtDate(d), dow=d.getDay(), isToday=ds===todayStr;
-    let dayChores = chores.filter(c=>!c.isBonus&&isTaskActiveFor(c, ds, S.person!=='all'?S.person:null));
-    if (S.person!=='all') dayChores=dayChores.filter(c=>!c.assignedTo||!c.assignedTo.length||c.assignedTo.includes(S.person));
-    const doneCount = dayChores.filter(c=>{
-      if(S.person!=='all') return allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person);
-      return allComps.some(cp=>cp.choreId===c.id&&cp.date===ds);
-    }).length;
+  if(isMobile) {
+    // ── MOBILE: vertical day picker + detail panel ──────────────────────
+    grid.style.display = 'flex';
+    grid.style.gap = '8px';
+    grid.style.overflowX = 'unset';
 
-    const col=document.createElement('div'); col.className='week-col'+(isToday?' is-today':'');
-    col.innerHTML=`<div class="wday-head"><div class="wday-lbl">${DAYS[dow]}</div><div class="wday-num${isToday?' today':''}">${d.getDate()}</div>${dayChores.length?`<div class="wday-sub">${doneCount}/${dayChores.length}</div>`:''}</div><div class="wday-body" id="wb_${ds}"></div>`;
-    grid.appendChild(col);
+    // Left: day list
+    const dayList = document.createElement('div');
+    dayList.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex-shrink:0;width:64px';
 
-    const body=col.querySelector(`#wb_${ds}`);
-    // Events first
-    const dayEvts = allEvts.filter(e=>eventOnDate(e,ds));
-    dayEvts.forEach(e=>{
-      const chip=document.createElement('div'); chip.className='w-evt';
-      chip.style.cssText=`background:${e.color}18;border-left-color:${e.color};color:${e.color}`;
-      chip.innerHTML=`<span class="w-evt-icon">${e.icon||'📅'}</span><span class="w-evt-title">${e.title}</span>`;
-      body.appendChild(chip);
-    });
-    if(!dayChores.length && !dayEvts.length){ body.innerHTML='<div style="font-size:11px;color:var(--text-3);text-align:center;padding-top:12px">—</div>'; continue; }
-    if(!dayChores.length && dayEvts.length) continue;
-    dayChores.forEach(c=>{
-      const color = taskColor(c, categories);
-      // Per-person completion state
-      const assignees = c.assignedTo?.length ? people.filter(p=>c.assignedTo.includes(p.id)) : people;
-      const showDots = S.person==='all' && assignees.length>0;
-      const done = S.person!=='all'
-        ? allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person)
-        : assignees.length===0
-          ? allComps.some(cp=>cp.choreId===c.id&&cp.date===ds)
-          : assignees.every(p=>allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id));
-      const item=document.createElement('div'); item.className='w-chore'+(done?' done':'');
-      if(c.description) item.title=c.description;
-      const dotsHtml = showDots ? `<div class="comp-dots">${assignees.map(p=>{
-        const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
-        const tooltip=comp?.note?`${p.name}: ${comp.note}`:p.name+(comp?' ✓':'');
-        return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${tooltip}"></div>`;
-      }).join('')}</div>` : (done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-      item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name">${c.name}</span>${dotsHtml}`;
-      item.onclick=()=>openCompleteModal(c.id,ds);
-      body.appendChild(item);
-    });
-    // Bonus completions for this day — filtered by viewAs person
-    const dayBonusComps=allComps.filter(c=>c.date===ds&&c.isBonus&&(S.person==='all'||c.personId===S.person));
-    dayBonusComps.forEach(bc=>{
-      const task=allTasks.find(t=>t.id===bc.choreId);
-      if(!task) return;
-      const cat=categories.find(cat=>cat.id===task.categoryId);
-      const person=bc.personId?people.find(p=>p.id===bc.personId):null;
-      const chip=document.createElement('div'); chip.className='w-bonus';
-      if(cat) chip.style.borderLeftColor=cat.color;
-      chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
-      body.appendChild(chip);
-    });
-    // Per-day bonus button
-    const bonusBtn=document.createElement('button'); bonusBtn.className='wday-bonus-btn';
-    bonusBtn.textContent='+ bonus';
-    bonusBtn.onclick=()=>openBonusModal(ds);
-    body.appendChild(bonusBtn);
-    // Per-day quick-add task button
-    const addBtn=document.createElement('button'); addBtn.className='wday-add-btn';
-    addBtn.textContent='+ task';
-    addBtn.onclick=()=>openTaskModal(null,ds);
-    body.appendChild(addBtn);
+    // Right: detail panel
+    const detail = document.createElement('div');
+    detail.id = 'wkMobileDetail';
+    detail.style.cssText = 'flex:1;min-width:0;overflow-y:auto';
+
+    const renderMobileDetail = (ds) => {
+      S.wkSelDay = ds;
+      detail.innerHTML = '';
+      const d = parseLocal(ds), dow = d.getDay();
+      let dayChores = chores.filter(c=>!c.isBonus&&isTaskActiveFor(c,ds,S.person!=='all'?S.person:null));
+      if(S.person!=='all') dayChores = dayChores.filter(c=>!c.assignedTo||!c.assignedTo.length||c.assignedTo.includes(S.person));
+      const dayEvts = allEvts.filter(e=>eventOnDate(e,ds));
+      const dayBonusComps = allComps.filter(c=>c.date===ds&&c.isBonus&&(S.person==='all'||c.personId===S.person));
+
+      // Header
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px;padding:2px 0 6px;border-bottom:1px solid var(--border-soft)';
+      hdr.textContent = `${DAYS[dow]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+      detail.appendChild(hdr);
+
+      // Events
+      dayEvts.forEach(e=>{
+        const chip=document.createElement('div'); chip.className='w-evt';
+        chip.style.cssText=`background:${e.color}18;border-left-color:${e.color};color:${e.color};margin-bottom:4px`;
+        chip.innerHTML=`<span class="w-evt-icon">${e.icon||'📅'}</span><span class="w-evt-title">${e.title}</span>`;
+        detail.appendChild(chip);
+      });
+
+      // Tasks
+      if(dayChores.length) {
+        dayChores.forEach(c=>{
+          const color=taskColor(c,categories);
+          const assignees=c.assignedTo?.length?people.filter(p=>c.assignedTo.includes(p.id)):people;
+          const done=S.person!=='all'
+            ?allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person)
+            :assignees.length===0?allComps.some(cp=>cp.choreId===c.id&&cp.date===ds)
+            :assignees.every(p=>allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id));
+          const item=document.createElement('div'); item.className='w-chore'+(done?' done':'');
+          if(c.description) item.title=c.description;
+          const showDots=S.person==='all'&&assignees.length>0;
+          const dotsHtml=showDots?`<div class="comp-dots">${assignees.map(p=>{
+            const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
+            return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${p.name}${comp?' ✓':''}"></div>`;
+          }).join('')}</div>`:(done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
+          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}</span>${dotsHtml}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          item.onclick=(e)=>{ animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
+          detail.appendChild(item);
+        });
+      } else if(!dayEvts.length) {
+        const empty=document.createElement('div');
+        empty.style.cssText='font-size:12px;color:var(--text-3);padding:12px 0;text-align:center';
+        empty.textContent='No tasks scheduled';
+        detail.appendChild(empty);
+      }
+
+      // Bonus completions
+      dayBonusComps.forEach(bc=>{
+        const task=allTasks.find(t=>t.id===bc.choreId); if(!task) return;
+        const cat=categories.find(cat=>cat.id===task.categoryId);
+        const person=bc.personId?people.find(p=>p.id===bc.personId):null;
+        const chip=document.createElement('div'); chip.className='w-bonus';
+        if(cat) chip.style.borderLeftColor=cat.color;
+        chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
+        detail.appendChild(chip);
+      });
+
+      // Bonus + task add buttons
+      const btnRow=document.createElement('div'); btnRow.style.cssText='display:flex;gap:6px;margin-top:8px;flex-wrap:wrap';
+      const bBtn=document.createElement('button'); bBtn.className='wday-bonus-btn'; bBtn.textContent='+ bonus'; bBtn.onclick=()=>openBonusModal(ds);
+      const tBtn=document.createElement('button'); tBtn.className='wday-add-btn'; tBtn.textContent='+ task'; tBtn.onclick=()=>openTaskModal(null,ds);
+      btnRow.appendChild(bBtn); btnRow.appendChild(tBtn);
+      detail.appendChild(btnRow);
+
+      // Update day list selection state
+      dayList.querySelectorAll('.wday-pill').forEach(p=>p.classList.remove('sel'));
+      const selPill=dayList.querySelector(`[data-ds="${ds}"]`);
+      if(selPill) selPill.classList.add('sel');
+    };
+
+    // Build day pills
+    for(let i=0;i<7;i++){
+      const d=new Date(ws); d.setDate(d.getDate()+i);
+      const ds=fmtDate(d), dow=d.getDay(), isToday=ds===todayStr;
+      let dayChores=chores.filter(c=>!c.isBonus&&isTaskActiveFor(c,ds,S.person!=='all'?S.person:null));
+      if(S.person!=='all') dayChores=dayChores.filter(c=>!c.assignedTo||!c.assignedTo.length||c.assignedTo.includes(S.person));
+      const doneCount=dayChores.filter(c=>S.person!=='all'
+        ?allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person)
+        :allComps.some(cp=>cp.choreId===c.id&&cp.date===ds)).length;
+      const hasEvt=allEvts.some(e=>eventOnDate(e,ds));
+      const isSelected=ds===S.wkSelDay;
+
+      const pill=document.createElement('div');
+      pill.className='wday-pill'+(isToday?' is-today':'')+(isSelected?' sel':'');
+      pill.dataset.ds=ds;
+      pill.innerHTML=`<div class="wday-pill-lbl">${DAYS[dow].slice(0,3)}</div><div class="wday-pill-num">${d.getDate()}</div>${dayChores.length?`<div class="wday-pill-prog"><div class="wday-pill-prog-fill" style="width:${dayChores.length?Math.round(doneCount/dayChores.length*100):0}%"></div></div>`:''}${hasEvt?'<div class="wday-pill-evt"></div>':''}`;
+      pill.onclick=()=>renderMobileDetail(ds);
+      dayList.appendChild(pill);
+    }
+
+    grid.appendChild(dayList);
+    grid.appendChild(detail);
+    renderMobileDetail(S.wkSelDay);
+
+  } else {
+    // ── DESKTOP: existing 7-column grid ────────────────────────────────
+    grid.style.display = '';
+    grid.style.gap = '';
+    grid.style.overflowX = '';
+
+    for (let i=0;i<7;i++) {
+      const d=new Date(ws); d.setDate(d.getDate()+i);
+      const ds=fmtDate(d), dow=d.getDay(), isToday=ds===todayStr;
+      let dayChores = chores.filter(c=>!c.isBonus&&isTaskActiveFor(c, ds, S.person!=='all'?S.person:null));
+      if (S.person!=='all') dayChores=dayChores.filter(c=>!c.assignedTo||!c.assignedTo.length||c.assignedTo.includes(S.person));
+      const doneCount = dayChores.filter(c=>{
+        if(S.person!=='all') return allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person);
+        return allComps.some(cp=>cp.choreId===c.id&&cp.date===ds);
+      }).length;
+      const col=document.createElement('div'); col.className='week-col'+(isToday?' is-today':'');
+      col.innerHTML=`<div class="wday-head"><div class="wday-lbl">${DAYS[dow]}</div><div class="wday-num${isToday?' today':''}">${d.getDate()}</div>${dayChores.length?`<div class="wday-sub">${doneCount}/${dayChores.length}</div>`:''}</div><div class="wday-body" id="wb_${ds}"></div>`;
+      grid.appendChild(col);
+      const body=col.querySelector(`#wb_${ds}`);
+      const dayEvts = allEvts.filter(e=>eventOnDate(e,ds));
+      dayEvts.forEach(e=>{
+        const chip=document.createElement('div'); chip.className='w-evt';
+        chip.style.cssText=`background:${e.color}18;border-left-color:${e.color};color:${e.color}`;
+        chip.innerHTML=`<span class="w-evt-icon">${e.icon||'📅'}</span><span class="w-evt-title">${e.title}</span>`;
+        body.appendChild(chip);
+      });
+      if(!dayChores.length && !dayEvts.length){ body.innerHTML='<div style="font-size:11px;color:var(--text-3);text-align:center;padding-top:12px">—</div>'; continue; }
+      if(!dayChores.length && dayEvts.length) continue;
+      dayChores.forEach(c=>{
+        const color = taskColor(c, categories);
+        const assignees = c.assignedTo?.length ? people.filter(p=>c.assignedTo.includes(p.id)) : people;
+        const showDots = S.person==='all' && assignees.length>0;
+        const done = S.person!=='all'
+          ? allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person)
+          : assignees.length===0
+            ? allComps.some(cp=>cp.choreId===c.id&&cp.date===ds)
+            : assignees.every(p=>allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id));
+        const item=document.createElement('div'); item.className='w-chore'+(done?' done':'');
+        if(c.description) item.title=c.description;
+        const dotsHtml = showDots ? `<div class="comp-dots">${assignees.map(p=>{
+          const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
+          const tooltip=comp?.note?`${p.name}: ${comp.note}`:p.name+(comp?' ✓':'');
+          return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${tooltip}"></div>`;
+        }).join('')}</div>` : (done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
+        item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name">${c.name}</span>${dotsHtml}`;
+        item.onclick=()=>openCompleteModal(c.id,ds);
+        body.appendChild(item);
+      });
+      const dayBonusComps=allComps.filter(c=>c.date===ds&&c.isBonus&&(S.person==='all'||c.personId===S.person));
+      dayBonusComps.forEach(bc=>{
+        const task=allTasks.find(t=>t.id===bc.choreId); if(!task) return;
+        const cat=categories.find(cat=>cat.id===task.categoryId);
+        const person=bc.personId?people.find(p=>p.id===bc.personId):null;
+        const chip=document.createElement('div'); chip.className='w-bonus';
+        if(cat) chip.style.borderLeftColor=cat.color;
+        chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
+        body.appendChild(chip);
+      });
+      const bonusBtn=document.createElement('button'); bonusBtn.className='wday-bonus-btn';
+      bonusBtn.textContent='+ bonus'; bonusBtn.onclick=()=>openBonusModal(ds);
+      body.appendChild(bonusBtn);
+      const addBtn=document.createElement('button'); addBtn.className='wday-add-btn';
+      addBtn.textContent='+ task'; addBtn.onclick=()=>openTaskModal(null,ds);
+      body.appendChild(addBtn);
+    }
   }
 }
+
 
 // ═══════════════════════════════════════════
 // Calendar
@@ -3451,7 +3655,8 @@ async function renderCal() {
     if(dayEvts.length&&!isSel) cell.style.background=`color-mix(in srgb,${dayEvts[0].color} 12%,var(--surface))`;
     let inner=`<div class="cal-num">${d}</div><div class="cal-dots">${doneChores.slice(0,6).map(c=>`<div class="cal-dot" style="background:${taskColor(c,categories)}"></div>`).join('')}</div>`;
     if(hasDiary) inner+=`<div class="cal-diary-ico">📖</div>`;
-    dayEvts.slice(0,3).forEach(e=>{ inner+=`<div class="cal-evt" style="background:${e.color}22;color:${e.color}"><span class="cal-evt-icon">${e.icon||'📅'}</span><span class="cal-evt-title">${e.title}</span></div>`; });
+    // Events: emoji only (no text) to keep cells compact — details shown in panel on tap
+    if(dayEvts.length) inner+=`<div class="cal-evt-icos">${dayEvts.slice(0,3).map(e=>`<span class="cal-evt-ico-dot" style="color:${e.color}" title="${e.title}">${e.icon||'📅'}</span>`).join('')}${dayEvts.length>3?`<span style="font-size:9px;color:var(--text-3)">+${dayEvts.length-3}</span>`:''}</div>`;
     cell.innerHTML=inner;
     cell.onclick=()=>{ S.calSel=ds; renderCal(); renderCalDetail(ds); };
     grid.appendChild(cell);
@@ -4150,10 +4355,10 @@ async function renderStats() {
 function buildWeekBuckets(n) {
   const buckets = [];
   const thisWk = weekStart(0);
-  for (let i = n; i >= 1; i--) {
+  for (let i = n - 1; i >= 0; i--) {
     const start = new Date(thisWk); start.setDate(start.getDate() - i*7);
     const dates = Array.from({length:7},(_,j)=>{ const d=new Date(start); d.setDate(d.getDate()+j); return fmtDate(d); });
-    const label = `${MONTHS[start.getMonth()].slice(0,3)} ${start.getDate()}`;
+    const label = i===0 ? 'This wk' : `${MONTHS[start.getMonth()].slice(0,3)} ${start.getDate()}`;
     buckets.push({ start: fmtDate(start), end: dates[6], dates, label });
   }
   return buckets;
@@ -5505,7 +5710,10 @@ async function openCompleteModal(choreId, date) {
       await put('completions',{choreId,date,personId:S.person,points:chore?.points||0});
       S.recentlyCompletedPersonIds=[S.person];
       await render(S.view);
-      if(chore?.points) setTimeout(()=>{ const btn=document.querySelector('.check-btn.checked'); if(btn) animFloatPts(chore.points, btn); }, 80);
+      if(chore?.points) setTimeout(()=>{
+        const btn=document.querySelector('#wkMobileDetail .check-btn.checked')||document.querySelector('.check-btn.checked');
+        if(btn) animFloatPts(chore.points, btn);
+      }, 80);
       checkGoalMet([S.person], beforePts);
     }
     return;
@@ -5560,11 +5768,12 @@ async function saveComplete() {
   closeModal('completeModal');
   await render(S.view);
 
-  // Float points
+  // Float points — find nearest checked button (dashboard or mobile week detail)
   if(addedPersonIds.length && chore?.points) {
     setTimeout(()=>{
-      const checkBtns=document.querySelectorAll('.check-btn.checked');
-      if(checkBtns.length) animFloatPts(chore.points * addedPersonIds.length, checkBtns[0]);
+      const btn = document.querySelector('#wkMobileDetail .check-btn.checked')
+               || document.querySelector('.check-btn.checked');
+      if(btn) animFloatPts(chore.points * addedPersonIds.length, btn);
     }, 80);
   }
 
@@ -6274,7 +6483,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: 38, exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '5.0.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -6455,7 +6664,8 @@ function wire() {
   // Week
   g('wkPrev').onclick=()=>{S.wkOffset--;renderWeek();};
   g('wkNext').onclick=()=>{S.wkOffset++;renderWeek();};
-  g('wkToday').onclick=()=>{S.wkOffset=0;renderWeek();};
+  g('wkToday').onclick=()=>{S.wkOffset=0;renderWeek().then(()=>scrollWeekToToday());};
+
   // Calendar
   g('calPrev').onclick=()=>{S.calMonth--;if(S.calMonth<0){S.calMonth=11;S.calYear--;}renderCal();};
   g('calNext').onclick=()=>{S.calMonth++;if(S.calMonth>11){S.calMonth=0;S.calYear++;}renderCal();};
@@ -7214,7 +7424,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-v23';
+const CACHE = 'homebase-5.0.0';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
