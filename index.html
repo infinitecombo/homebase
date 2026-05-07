@@ -865,6 +865,15 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   .exp-toolbar .fi { font-size:13px; }
 }
 
+/* Budget alerts */
+.budget-alert-strip{margin-bottom:10px}
+.budget-alert{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);font-size:12.5px;margin-bottom:4px}
+.budget-alert.over{background:rgba(196,112,128,0.12);border:1px solid rgba(196,112,128,0.3);color:var(--terra)}
+.budget-alert.near{background:rgba(224,196,106,0.1);border:1px solid rgba(224,196,106,0.25);color:var(--gold)}
+.budget-alert-ico{font-size:14px;flex-shrink:0}
+.budget-alert-txt{flex:1}
+.budget-alert-pct{font-weight:700;flex-shrink:0}
+
 .wday-pill{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:8px 4px;text-align:center;cursor:pointer;transition:all var(--t);user-select:none}
 .wday-pill:hover{border-color:var(--gold-dim)}
 .wday-pill.is-today{border-color:var(--gold-dim)}
@@ -1447,8 +1456,30 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       </div>
     </div>
 
-    <!-- Step 5: All set -->
+    <!-- Step 5: Expenses intro -->
     <div id="obStep5" style="display:none">
+      <div class="ob-icon-row">💰📊</div>
+      <div class="ob-title">Track Your Expenses</div>
+      <div class="ob-sub">HomeBase has a built-in expense tracker. Log income and spending, set monthly budgets per category, and see where your money goes with charts and a month-to-month compare view.<br><br>10 expense categories are created automatically — you can customise them any time from the <strong>💰 Expenses</strong> section.</div>
+      <div class="ob-actions">
+        <button class="ob-skip" id="obBack5">← Back</button>
+        <button class="btn btn-primary" id="obNext5" style="padding:10px 28px;font-size:14px">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 6: Cloud Sync -->
+    <div id="obStep6" style="display:none">
+      <div class="ob-icon-row">☁️🔄</div>
+      <div class="ob-title">Keep Devices in Sync</div>
+      <div class="ob-sub">HomeBase can sync all your data to a private <strong>GitHub Gist</strong> — a free file on your GitHub account. This lets you use HomeBase on your phone, tablet, and laptop with the same data.<br><br><strong>To set it up:</strong> go to <strong>👥 People → Cloud Sync</strong>, click "Generate token ↗", and paste the token. Push to cloud after big changes, pull on a new device to get the latest.<br><br>Photos are kept local only — everything else syncs.</div>
+      <div class="ob-actions">
+        <button class="ob-skip" id="obBack6">← Back</button>
+        <button class="btn btn-primary" id="obNext6" style="padding:10px 28px;font-size:14px">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 7: All set -->
+    <div id="obStep7" style="display:none">
       <div class="ob-icon-row">🎉</div>
       <div class="ob-title">You're all set!</div>
       <div class="ob-sub">Here's what was created. You can edit everything from the sidebar at any time.</div>
@@ -1499,7 +1530,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.0.0</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.2.1</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -2024,24 +2055,24 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         <span class="help-toc-label">Contents</span>
         <div class="help-toc-item active" onclick="helpScroll('help-overview',this)">📋 Overview</div>
         <div class="help-toc-item" onclick="helpScroll('help-setup',this)">🚀 Getting Started</div>
+        <div class="help-toc-item" onclick="helpScroll('help-pwa',this)">📲 Install as App</div>
         <div class="help-toc-item" onclick="helpScroll('help-tasks',this)">✅ Tasks</div>
-        <div class="help-toc-item" onclick="helpScroll('help-points',this)">⭐ Points & Goals</div>
+        <div class="help-toc-item" onclick="helpScroll('help-points',this)">⭐ Points &amp; Goals</div>
         <div class="help-toc-item" onclick="helpScroll('help-rewards',this)">🏆 Rewards</div>
-        <div class="help-toc-item" onclick="helpScroll('help-diary',this)">📖 Journal & Diary</div>
+        <div class="help-toc-item" onclick="helpScroll('help-expenses',this)">💰 Expenses</div>
         <div class="help-toc-item" onclick="helpScroll('help-events',this)">📅 Events</div>
+        <div class="help-toc-item" onclick="helpScroll('help-diary',this)">📖 Journal &amp; Diary</div>
         <div class="help-toc-item" onclick="helpScroll('help-pinboard',this)">📌 Pinboard</div>
-        <div class="help-toc-item" onclick="helpScroll('help-people',this)">👥 People & Stats</div>
+        <div class="help-toc-item" onclick="helpScroll('help-people',this)">👥 People &amp; Stats</div>
         <div class="help-toc-item" onclick="helpScroll('help-pause',this)">🏖 Pause Mode</div>
         <div class="help-toc-item" onclick="helpScroll('help-search',this)">🔍 Search</div>
         <div class="help-toc-item" onclick="helpScroll('help-sync',this)">☁️ Cloud Sync</div>
-        <div class="help-toc-item" onclick="helpScroll('help-pwa',this)">📲 Install as App</div>
-        <div class="help-toc-item" onclick="helpScroll('help-tips',this)">💡 Tips & Examples</div>
+        <div class="help-toc-item" onclick="helpScroll('help-tips',this)">💡 Tips &amp; Examples</div>
       </div>
 
       <!-- Content -->
       <div class="help-body" id="helpBody">
 
-        <!-- Overview -->
         <div class="help-section" id="help-overview">
           <div class="help-section-title"><span class="ico">📋</span>How HomeBase Works</div>
           <div class="help-card">
@@ -2059,6 +2090,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Getting Started -->
+
         <div class="help-section" id="help-setup">
           <div class="help-section-title"><span class="ico">🚀</span>Getting Started</div>
           <div class="help-card">
@@ -2078,12 +2110,43 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Tasks -->
+
+        <div class="help-section" id="help-pwa">
+          <div class="help-section-title"><span class="ico">📲</span>Install as App</div>
+          <div class="help-card">
+            <h3>What installation does</h3>
+            <p>Installing HomeBase as an app removes the browser chrome (address bar, tabs) and adds it to your home screen or app drawer. It opens full-screen, works offline, and feels like a native app.</p>
+            <div class="help-tip">⚠️ <strong>Installation only works when served over HTTPS</strong> — opening a downloaded HTML file directly will not allow installation. You need to host it (e.g. GitHub Pages) or use <code>localhost</code>.</div>
+          </div>
+          <div class="help-card">
+            <h3>Installing on Android (Chrome)</h3>
+            <p>Open HomeBase in Chrome from your GitHub Pages URL. Tap the <strong>📲 Install App</strong> button in the sidebar — Chrome will show a native install prompt. Tap <strong>Install</strong>.</p>
+            <p style="margin-top:8px">Alternatively: tap the <strong>⋮ menu</strong> → <strong>Add to Home Screen</strong>.</p>
+          </div>
+          <div class="help-card">
+            <h3>Installing on iPhone / iPad (Safari)</h3>
+            <p>Open HomeBase in <strong>Safari</strong> (not Chrome — iOS only supports PWA install from Safari). Tap the <strong>📲 Install App</strong> button in the sidebar for step-by-step instructions, or:</p>
+            <ol>
+              <li>Tap the <strong>Share button</strong> (□↑) in Safari's toolbar</li>
+              <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+              <li>Tap <strong>Add</strong></li>
+            </ol>
+          </div>
+          <div class="help-card">
+            <h3>Updates</h3>
+            <p>When a new version is uploaded to GitHub, the app updates automatically in the background. The next time you open it, a <strong>🆕 A new version is available</strong> banner appears at the bottom of the screen. Tap <strong>Update Now</strong> to reload with the latest version immediately.</p>
+          </div>
+        </div>
+
+        <!-- Expenses -->
+
         <div class="help-section" id="help-tasks">
           <div class="help-section-title"><span class="ico">✅</span>Tasks</div>
           <div class="help-card">
             <h3>Recurring vs one-time tasks</h3>
             <p><strong>Recurring tasks</strong> repeat on selected days of the week and show up automatically each week. <strong>One-time tasks</strong> are tied to a specific date — great for seasonal jobs or things that only need doing once.</p>
             <p style="margin-top:8px">You can also add a task directly from the Week View by clicking the <strong>+ task</strong> button at the bottom of any day column — it pre-fills the date for you.</p>
+            <div class="help-tip">💡 <strong>Mobile week view:</strong> On phones the week view switches to a two-panel layout — a vertical list of day pills on the left (with a progress bar and event dot per day), and the selected day's full task list on the right. Tap any day pill to see that day. Swipe left/right on the week grid to jump to the next or previous week.</div>
           </div>
           <div class="help-card">
             <h3>Categories & ordering</h3>
@@ -2103,6 +2166,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Points & Goals -->
+
         <div class="help-section" id="help-points">
           <div class="help-section-title"><span class="ico">⭐</span>Points &amp; Weekly Goals</div>
           <div class="help-card">
@@ -2131,6 +2195,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Rewards -->
+
         <div class="help-section" id="help-rewards">
           <div class="help-section-title"><span class="ico">🏆</span>Rewards System</div>
           <div class="help-card">
@@ -2163,6 +2228,64 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Diary -->
+
+        <div class="help-section" id="help-expenses">
+          <div class="help-section-title"><span class="ico">💰</span>Expenses</div>
+          <div class="help-card">
+            <h3>Getting started</h3>
+            <p>Open the <strong>💰 Expenses</strong> section from the sidebar. Ten default categories are created automatically (Housing, Groceries, Transport, etc.). The month navigator at the top lets you browse any past month.</p>
+            <p style="margin-top:8px">The summary bar always shows <strong>Income</strong>, <strong>Expenses</strong>, and <strong>Net</strong> for the selected month at a glance.</p>
+          </div>
+          <div class="help-card">
+            <h3>Logging entries</h3>
+            <p>Go to <strong>Entries → + Add</strong>. Toggle between 💸 Expense and 💵 Income at the top of the modal. Fill in the amount, date, description, category, and optionally which person logged it.</p>
+            <p style="margin-top:8px">Entries can be edited or deleted at any time. Use the search bar and category/person filters to find specific transactions.</p>
+          </div>
+          <div class="help-card">
+            <h3>Categories &amp; budgets</h3>
+            <p>Go to <strong>Budgets</strong> to manage your expense categories. Each category has a name, icon (from the full 300+ icon picker), color, and an optional <strong>monthly budget limit</strong>.</p>
+            <p style="margin-top:8px">When spending in a category reaches <strong>80%</strong> of its budget, a yellow ⚠️ warning appears on the dashboard. At <strong>100%</strong>, it becomes a red 🚨 over-budget alert. Budget bars also appear in the Budgets tab showing how much of each limit has been used.</p>
+          </div>
+          <div class="help-card">
+            <h3>Recurring templates</h3>
+            <p>Go to <strong>Templates</strong> to set up bills that repeat on a schedule — rent, utilities, subscriptions. Each template has a name, amount, category, recurrence (weekly/monthly/yearly), start date, and optional end date. The next due date is shown for each template.</p>
+            <div class="help-tip">💡 Templates don't auto-log entries — they're reminders. When a bill is due, go to Entries → + Add and select the template's category to log it.</div>
+          </div>
+          <div class="help-card">
+            <h3>Overview charts</h3>
+            <p>The <strong>Overview</strong> tab shows three charts for the selected month: a donut chart of spending by category with percentage bars, a per-person spending comparison (when multiple people log expenses), and a 6-month income vs expenses trend line.</p>
+          </div>
+          <div class="help-card">
+            <h3>Month comparison</h3>
+            <p>The <strong>Compare</strong> tab lets you pick any two months and see them side by side. The summary card shows income, expenses, and net for both months with directional arrows and % change. The category table below shows how spending in each category changed — ↑ red means spending went up, ↓ green means it went down.</p>
+            <p style="margin-top:8px">When a category has no data in one of the months, the change column shows <strong>New</strong> or <strong>Gone</strong> rather than a misleading percentage.</p>
+          </div>
+          <div class="help-card">
+            <h3>Dashboard card</h3>
+            <p>A compact <strong>💰 This Month</strong> card sits at the bottom of the Dashboard showing income, expenses, net, and the top spending categories with budget bar progress. Budget alerts appear here first so you don't have to navigate to the Expenses section to spot overruns.</p>
+          </div>
+        </div>
+
+        <!-- Tips -->
+
+        <div class="help-section" id="help-events">
+          <div class="help-section-title"><span class="ico">📅</span>Events &amp; Appointments</div>
+          <div class="help-card">
+            <h3>Creating events</h3>
+            <p>Add events from <strong>Events & Appointments → + Add</strong>. Each event has a title, type (Event or Appointment), date, optional time, color, and an icon chosen from over 300 options including full holiday sets for all major occasions.</p>
+          </div>
+          <div class="help-card">
+            <h3>Recurring events</h3>
+            <p>Set an event to repeat <strong>weekly, monthly, or yearly</strong>. You can also set a <strong>Repeat until</strong> date so the event stops appearing after a certain date — useful for school terms, sports seasons, or any fixed-duration series.</p>
+          </div>
+          <div class="help-card">
+            <h3>Skip or reschedule an occurrence</h3>
+            <p>In the Calendar detail view, recurring events have a <strong>Skip/Move</strong> button. Use it to skip a single occurrence (the rest of the series continues as normal) or move it to a different date. A <strong>Restore</strong> button appears on skipped dates to undo the skip.</p>
+          </div>
+        </div>
+
+        <!-- Pinboard -->
+
         <div class="help-section" id="help-diary">
           <div class="help-section-title"><span class="ico">📖</span>Journal &amp; Diary</div>
           <div class="help-card">
@@ -2184,23 +2307,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Events -->
-        <div class="help-section" id="help-events">
-          <div class="help-section-title"><span class="ico">📅</span>Events &amp; Appointments</div>
-          <div class="help-card">
-            <h3>Creating events</h3>
-            <p>Add events from <strong>Events & Appointments → + Add</strong>. Each event has a title, type (Event or Appointment), date, optional time, color, and an icon chosen from over 300 options including full holiday sets for all major occasions.</p>
-          </div>
-          <div class="help-card">
-            <h3>Recurring events</h3>
-            <p>Set an event to repeat <strong>weekly, monthly, or yearly</strong>. You can also set a <strong>Repeat until</strong> date so the event stops appearing after a certain date — useful for school terms, sports seasons, or any fixed-duration series.</p>
-          </div>
-          <div class="help-card">
-            <h3>Skip or reschedule an occurrence</h3>
-            <p>In the Calendar detail view, recurring events have a <strong>Skip/Move</strong> button. Use it to skip a single occurrence (the rest of the series continues as normal) or move it to a different date. A <strong>Restore</strong> button appears on skipped dates to undo the skip.</p>
-          </div>
-        </div>
 
-        <!-- Pinboard -->
         <div class="help-section" id="help-pinboard">
           <div class="help-section-title"><span class="ico">📌</span>Pinboard</div>
           <div class="help-card">
@@ -2222,6 +2329,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- People & Stats -->
+
         <div class="help-section" id="help-people">
           <div class="help-section-title"><span class="ico">👥</span>People &amp; Stats</div>
           <div class="help-card">
@@ -2243,6 +2351,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Pause Mode -->
+
         <div class="help-section" id="help-pause">
           <div class="help-section-title"><span class="ico">🏖</span>Pause / Vacation Mode</div>
           <div class="help-card">
@@ -2258,6 +2367,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Search -->
+
         <div class="help-section" id="help-search">
           <div class="help-section-title"><span class="ico">🔍</span>Global Search</div>
           <div class="help-card">
@@ -2273,6 +2383,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Cloud Sync -->
+
         <div class="help-section" id="help-sync">
           <div class="help-section-title"><span class="ico">☁️</span>Cloud Sync</div>
           <div class="help-card">
@@ -2298,34 +2409,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         </div>
 
         <!-- Install as App -->
-        <div class="help-section" id="help-pwa">
-          <div class="help-section-title"><span class="ico">📲</span>Install as App</div>
-          <div class="help-card">
-            <h3>What installation does</h3>
-            <p>Installing HomeBase as an app removes the browser chrome (address bar, tabs) and adds it to your home screen or app drawer. It opens full-screen, works offline, and feels like a native app.</p>
-            <div class="help-tip">⚠️ <strong>Installation only works when served over HTTPS</strong> — opening a downloaded HTML file directly will not allow installation. You need to host it (e.g. GitHub Pages) or use <code>localhost</code>.</div>
-          </div>
-          <div class="help-card">
-            <h3>Installing on Android (Chrome)</h3>
-            <p>Open HomeBase in Chrome from your GitHub Pages URL. Tap the <strong>📲 Install App</strong> button in the sidebar — Chrome will show a native install prompt. Tap <strong>Install</strong>.</p>
-            <p style="margin-top:8px">Alternatively: tap the <strong>⋮ menu</strong> → <strong>Add to Home Screen</strong>.</p>
-          </div>
-          <div class="help-card">
-            <h3>Installing on iPhone / iPad (Safari)</h3>
-            <p>Open HomeBase in <strong>Safari</strong> (not Chrome — iOS only supports PWA install from Safari). Tap the <strong>📲 Install App</strong> button in the sidebar for step-by-step instructions, or:</p>
-            <ol>
-              <li>Tap the <strong>Share button</strong> (□↑) in Safari's toolbar</li>
-              <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-              <li>Tap <strong>Add</strong></li>
-            </ol>
-          </div>
-          <div class="help-card">
-            <h3>Updates</h3>
-            <p>When a new version is uploaded to GitHub, the app updates automatically in the background. The next time you open it, a <strong>🆕 A new version is available</strong> banner appears at the bottom of the screen. Tap <strong>Update Now</strong> to reload with the latest version immediately.</p>
-          </div>
-        </div>
 
-        <!-- Tips -->
         <div class="help-section" id="help-tips">
           <div class="help-section-title"><span class="ico">💡</span>Tips &amp; Examples</div>
           <div class="help-card">
@@ -2379,7 +2463,6 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
             <div class="help-tip">💡 Export regularly — especially before clearing browser data, switching browsers, or reinstalling the app.</div>
           </div>
         </div>
-
       </div>
     </div>
   </div><!-- /view-help -->
@@ -3082,8 +3165,8 @@ async function nav(view) {
 }
 async function render(view) {
   if (view==='dashboard') await renderDash();
-  else if (view==='week') await renderWeek();
-  else if (view==='calendar') await renderCal();
+  else if (view==='week') { await renderWeek(); wireSwipeGestures(); }
+  else if (view==='calendar') { await renderCal(); wireSwipeGestures(); }
   else if (view==='history') await renderHistory();
   else if (view==='stats') await renderStats();
   else if (view==='tasks') await renderTasksView();
@@ -3464,11 +3547,29 @@ async function renderDash() {
     if(!mExp.length) {
       deExp.innerHTML='<div class="empty"><div class="ico">💰</div><p>No expenses logged this month yet.</p></div>';
     } else {
-      deExp.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      deExp.innerHTML='';
+      // Budget alerts — categories at ≥80% or over
+      const alerts = expCats.filter(c=>c.budget).map(c=>({
+        ...c, spent: mExp.filter(e=>!e.isIncome&&e.categoryId===c.id).reduce((s,e)=>s+e.amount,0)
+      })).filter(c=>c.spent >= c.budget*0.8).sort((a,b)=>b.spent/b.budget - a.spent/a.budget);
+      if(alerts.length) {
+        const strip=document.createElement('div'); strip.className='budget-alert-strip';
+        alerts.forEach(c=>{
+          const pct=Math.round(c.spent/c.budget*100), over=c.spent>=c.budget;
+          const row=document.createElement('div'); row.className=`budget-alert ${over?'over':'near'}`;
+          row.innerHTML=`<span class="budget-alert-ico">${over?'🚨':'⚠️'}</span><span class="budget-alert-txt"><strong>${c.icon} ${c.name}</strong> — ${over?'over budget':'approaching limit'} (${fmt$(c.spent)} of ${fmt$(c.budget)})</span><span class="budget-alert-pct">${pct}%</span>`;
+          strip.appendChild(row);
+        });
+        deExp.appendChild(strip);
+      }
+      // Summary grid
+      const summaryGrid=document.createElement('div');
+      summaryGrid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px';
+      summaryGrid.innerHTML=`
         <div style="text-align:center"><div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em">Income</div><div style="font-size:16px;font-weight:700;color:var(--sage)">${fmt$(income)}</div></div>
         <div style="text-align:center"><div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em">Expenses</div><div style="font-size:16px;font-weight:700;color:var(--terra)">${fmt$(expense)}</div></div>
-        <div style="text-align:center"><div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em">Net</div><div style="font-size:16px;font-weight:700;color:${net>=0?'var(--sage)':'var(--terra)'}">${net<0?'-':''}${fmt$(net)}</div></div>
-      </div>`;
+        <div style="text-align:center"><div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em">Net</div><div style="font-size:16px;font-weight:700;color:${net>=0?'var(--sage)':'var(--terra)'}">${net<0?'-':''}${fmt$(net)}</div></div>`;
+      deExp.appendChild(summaryGrid);
       const topCats = expCats.filter(c=>!c.isIncome).map(c=>({
         ...c, spent: mExp.filter(e=>!e.isIncome&&e.categoryId===c.id).reduce((s,e)=>s+e.amount,0)
       })).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent).slice(0,4);
@@ -6759,7 +6860,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '6.1.1', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '6.2.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -7783,7 +7884,50 @@ async function deleteExpTemplate(id) {
 const _prevProgressMap = {};
 
 // ═══════════════════════════════════════════
-// Expense Compare
+// Swipe Gestures (mobile navigation)
+// ═══════════════════════════════════════════
+
+function addSwipeGesture(el, onLeft, onRight, threshold=50) {
+  if(!el) return;
+  let startX=0, startY=0, startTime=0;
+  el.addEventListener('touchstart', e=>{
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  }, {passive:true});
+  el.addEventListener('touchend', e=>{
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    const dt = Date.now() - startTime;
+    // Only trigger on fast horizontal swipes, not slow scrolls
+    if(Math.abs(dx) < threshold) return;
+    if(Math.abs(dy) > Math.abs(dx) * 0.8) return; // too diagonal
+    if(dt > 500) return; // too slow
+    if(dx < 0) onLeft();   // swipe left → next
+    else        onRight();  // swipe right → prev
+  }, {passive:true});
+}
+
+function wireSwipeGestures() {
+  // Week view: swipe to navigate weeks
+  const weekGrid = g('weekGrid');
+  if(weekGrid) {
+    addSwipeGesture(weekGrid,
+      ()=>{ S.wkOffset++; renderWeek(); },  // swipe left = next week
+      ()=>{ S.wkOffset--; renderWeek(); }   // swipe right = prev week
+    );
+  }
+  // Calendar: swipe to navigate months
+  const calGrid = g('calGrid');
+  if(calGrid) {
+    addSwipeGesture(calGrid,
+      ()=>{ S.calOffset++; renderCal(); },  // swipe left = next month
+      ()=>{ S.calOffset--; renderCal(); }   // swipe right = prev month
+    );
+  }
+}
+
+
 // ═══════════════════════════════════════════
 
 async function renderExpCompare() {
@@ -8029,7 +8173,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'6.0.0', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'6.2.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -8272,7 +8416,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-6.1.1';
+const CACHE = 'homebase-6.2.1';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
@@ -8401,7 +8545,7 @@ function showInstallInstructions() {
 
 // ═══════════════════════════════════════════
 
-const OB_STEPS = 5;
+const OB_STEPS = 7;
 let _obStep = 1;
 let _obPeople = [];    // [{name, color}]
 let _obCat = null;     // {name, color} or null
@@ -8430,7 +8574,7 @@ function obShowStep(n) {
   if(n===2) obRenderPeopleStep();
   if(n===3) obRenderCatStep();
   if(n===4) obRenderTaskStep();
-  if(n===5) obRenderSummary();
+  if(n===7) obRenderSummary();
 }
 
 function obRenderPeopleStep() {
@@ -8573,7 +8717,13 @@ function wireOnboarding() {
   };
   g('obSkip4').onclick=()=>{ _obTask=null; obShowStep(5); };
   g('obBack4').onclick=()=>obShowStep(3);
-  // Step 5
+  // Step 5 — Expenses intro
+  g('obNext5').onclick=()=>obShowStep(6);
+  g('obBack5').onclick=()=>obShowStep(4);
+  // Step 6 — Cloud Sync
+  g('obNext6').onclick=()=>obShowStep(7);
+  g('obBack6').onclick=()=>obShowStep(5);
+  // Step 7 — Finish
   g('obFinish').onclick=obFinish;
 }
 
