@@ -865,7 +865,21 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   .exp-toolbar .fi { font-size:13px; }
 }
 
-/* Budget alerts */
+/* Dashboard sync buttons */
+.dash-sync-btn{padding:5px 10px;font-size:11.5px;border-radius:var(--radius-sm);border:1px solid var(--border-soft);background:var(--surface-2);color:var(--text-2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all var(--t);display:flex;align-items:center;gap:5px}
+.dash-sync-btn:hover{border-color:var(--gold-dim);color:var(--text)}
+.dash-sync-btn:disabled{opacity:0.5;cursor:wait}
+/* Pinboard alert */
+.dash-pin-alert{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--gold-dim);border-radius:var(--radius);margin-bottom:0;cursor:pointer;transition:all var(--t);grid-column:1/-1}
+.dash-pin-alert:hover{background:var(--gold-glow)}
+.dash-pin-alert-ico{font-size:22px}
+.dash-pin-alert-text{flex:1;font-size:13px;font-weight:500}
+.dash-pin-alert-sub{font-size:11.5px;color:var(--text-3);margin-top:1px}
+@keyframes bell-ring{0%,100%{transform:rotate(0)}15%{transform:rotate(15deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(5deg)}}
+@keyframes pencil-bounce{0%,100%{transform:translateY(0) rotate(-10deg)}50%{transform:translateY(-4px) rotate(-15deg)}}
+.bell-anim{display:inline-block;animation:bell-ring 2s ease-in-out infinite;transform-origin:top center}
+.pencil-anim{display:inline-block;animation:pencil-bounce 1.8s ease-in-out infinite}
+
 .budget-alert-strip{margin-bottom:10px}
 .budget-alert{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);font-size:12.5px;margin-bottom:4px}
 .budget-alert.over{background:rgba(196,112,128,0.12);border:1px solid rgba(196,112,128,0.3);color:var(--terra)}
@@ -1545,7 +1559,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.2.3</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.2.6</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -1632,6 +1646,8 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <!-- DASHBOARD -->
   <div class="view active" id="view-dashboard">
     <div class="dash-grid">
+      <!-- Pinboard alert (hidden when nothing pinned/pending) -->
+      <div class="dash-pin-alert" id="dashPinAlert" style="display:none"></div>
       <!-- Row 1: Today tasks + This week progress side by side -->
       <div class="card">
         <div class="card-head">
@@ -3123,6 +3139,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const g = id => document.getElementById(id);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today = () => fmtDate(new Date());
+const fmtTime = t => { if(!t) return ''; const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
 const pts = n => n === 1 ? '1 pt' : `${n||0} pts`;
 
 // Returns HTML string for a person avatar — photo if available, else color+initial
@@ -3157,6 +3174,29 @@ async function nav(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id===`view-${view}`));
   g('topTitle').textContent = TITLES[view] || '';
   g('topActions').innerHTML = '';
+  if(view === 'dashboard') {
+    const syncWrap = document.createElement('div');
+    syncWrap.style.cssText = 'display:flex;gap:6px;align-items:center';
+    const pushBtn = document.createElement('button');
+    pushBtn.className = 'dash-sync-btn'; pushBtn.title = 'Push data to cloud';
+    pushBtn.innerHTML = '☁️ Push';
+    pushBtn.onclick = async () => {
+      pushBtn.disabled = true; pushBtn.textContent = '⏳';
+      await gistPush();
+      pushBtn.disabled = false; pushBtn.innerHTML = '☁️ Push';
+    };
+    const pullBtn = document.createElement('button');
+    pullBtn.className = 'dash-sync-btn'; pullBtn.title = 'Pull data from cloud';
+    pullBtn.innerHTML = '⬇️ Pull';
+    pullBtn.onclick = async () => {
+      pullBtn.disabled = true; pullBtn.textContent = '⏳';
+      await gistPull();
+      pullBtn.disabled = false; pullBtn.innerHTML = '⬇️ Pull';
+    };
+    // Only show if token is configured
+    if(gistToken()) { syncWrap.appendChild(pushBtn); syncWrap.appendChild(pullBtn); }
+    g('topActions').appendChild(syncWrap);
+  }
   g('topSub').textContent = view==='dashboard' ? new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '';
   // Pre-hide dashboard cards to prevent flicker
   if(view==='dashboard' && !REDUCED_MOTION) {
@@ -3351,8 +3391,32 @@ function streakEmoji(n, unit='days') {
 async function renderDash() {
   const todayStr = today();
   const dow = new Date().getDay();
-  const [chores, people, allComps, allDiary, categories, allEvts] = await Promise.all([all('chores'),all('people'),all('completions'),all('diary'),all('categories'),all('events')]);
+  const [chores, people, allComps, allDiary, categories, allEvts, allPins] = await Promise.all([all('chores'),all('people'),all('completions'),all('diary'),all('categories'),all('events'),all('pins')]);
   S.activePauses = await all('pauses').catch(()=>[]);
+  const todayComp = allComps.filter(c => c.date===todayStr);
+
+  // ── Pinboard alert ────────────────────────────────────────────
+  const pendingReminders = allPins.filter(p=>p.type==='reminder'&&!p.done);
+  const pinnedNotes = allPins.filter(p=>p.pinned&&!p.done&&p.type==='note');
+  const pinAlertEl = document.getElementById('dashPinAlert');
+  if(pinAlertEl) {
+    if(pendingReminders.length || pinnedNotes.length) {
+      pinAlertEl.style.display = '';
+      const hasReminder = pendingReminders.length > 0;
+      const count = pendingReminders.length + pinnedNotes.length;
+      const ico = hasReminder ? '<span class="bell-anim">🔔</span>' : '<span class="pencil-anim">📝</span>';
+      const title = hasReminder
+        ? `${count} reminder${count>1?'s':''} on your board`
+        : `${count} pinned note${count>1?'s':''} on your board`;
+      const items = [...pendingReminders, ...pinnedNotes];
+      const sub = items.slice(0,2).map(p=>p.title||'Untitled').join(', ') + (items.length>2?` +${items.length-2} more`:'');
+      pinAlertEl.innerHTML = `<div class="dash-pin-alert-ico">${ico}</div><div><div class="dash-pin-alert-text">${title}</div><div class="dash-pin-alert-sub">${sub}</div></div><span style="color:var(--text-3);font-size:12px">→</span>`;
+      pinAlertEl.onclick = ()=>nav('pinboard');
+    } else {
+      pinAlertEl.style.display = 'none';
+    }
+  }
+
   const todayComps = allComps.filter(c => c.date===todayStr);
   // Today tasks — filter out paused
   let dayChores = chores.filter(c => !c.isBonus && isTaskActiveFor(c, todayStr, S.person!=='all'?S.person:null));
@@ -3737,7 +3801,7 @@ async function renderDash() {
         <span style="font-size:20px">${e.icon||'📅'}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:13.5px;font-weight:500">${e.title}</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${isToday?'<span style="color:var(--gold)">Today</span>':e.date}${e.time?' · '+e.time:''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${isToday?'<span style="color:var(--gold)">Today</span>':e.date}${e.time?' · '+fmtTime(e.time):''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>
         </div>
         <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:${e.color}22;color:${e.color};font-weight:600;text-transform:uppercase;letter-spacing:0.05em">${e.type}</span>
       </div>`;
@@ -4088,7 +4152,7 @@ async function renderCalDetail(ds) {
       row.style.cssText=`background:${e.color}12;border-left-color:${e.color}`;
       const isRecurring = e.recurrence && e.recurrence!=='none';
       const isSkipped = (e.exceptions||[]).some(ex=>ex.date===ds&&!ex.movedTo);
-      row.innerHTML=`<span style="font-size:18px">${e.icon||'📅'}</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:${e.color}">${e.title}${isSkipped?' <span style="color:var(--text-3);font-size:11px">(skipped)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${e.type}${e.time?' · '+e.time:''}${e.endTime?' – '+e.endTime:''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${e.notes}</div>`:''}</div><div style="display:flex;gap:4px;flex-shrink:0">${isRecurring&&!isSkipped?`<button class="evt-skip-btn" onclick="openSkipModal(${e.id},'${ds}')">Skip/Move</button>`:''}${isSkipped?`<button class="evt-skip-btn" style="border-color:var(--sage);color:var(--sage)" onclick="unskipOccurrence(${e.id},'${ds}')">Restore</button>`:''}<button class="act-btn" onclick="openEventModal(${e.id})" style="font-size:11px;padding:3px 8px">Edit</button></div>`;
+      row.innerHTML=`<span style="font-size:18px">${e.icon||'📅'}</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:${e.color}">${e.title}${isSkipped?' <span style="color:var(--text-3);font-size:11px">(skipped)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${e.type}${e.time?' · '+fmtTime(e.time):''}${e.endTime?' – '+fmtTime(e.endTime):''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${e.notes}</div>`:''}</div><div style="display:flex;gap:4px;flex-shrink:0">${isRecurring&&!isSkipped?`<button class="evt-skip-btn" onclick="openSkipModal(${e.id},'${ds}')">Skip/Move</button>`:''}${isSkipped?`<button class="evt-skip-btn" style="border-color:var(--sage);color:var(--sage)" onclick="unskipOccurrence(${e.id},'${ds}')">Restore</button>`:''}<button class="act-btn" onclick="openEventModal(${e.id})" style="font-size:11px;padding:3px 8px">Edit</button></div>`;
       sec.appendChild(row);
     });
     wrap.appendChild(sec);
@@ -5285,7 +5349,7 @@ async function renderEvents() {
       const item=document.createElement('div'); item.className='evt-item';
       item.style.borderLeftColor=e.color;
       const recurLabel = {weekly:'↻ Weekly',monthly:'↻ Monthly',yearly:'↻ Yearly'}[e.recurrence]||'';
-      item.innerHTML=`<div class="evt-icon">${e.icon||'📅'}</div><div class="evt-body"><div class="evt-title">${e.title}</div><div class="evt-meta"><span class="evt-type ${e.type}">${e.type}</span><span class="evt-date">${e.date}${e.endDate&&e.endDate!==e.date?' → '+e.endDate:''}${e.time?' · '+e.time:''}</span>${recurLabel?`<span class="tag recur">${recurLabel}</span>`:''} ${person?`<span class="evt-person" style="color:${person.color}">👤 ${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:12px;color:var(--text-3);margin-top:4px">${e.notes}</div>`:''}</div><div class="item-actions"><button class="act-btn" onclick="openEventModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteEvent(${e.id})">Delete</button></div>`;
+      item.innerHTML=`<div class="evt-icon">${e.icon||'📅'}</div><div class="evt-body"><div class="evt-title">${e.title}</div><div class="evt-meta"><span class="evt-type ${e.type}">${e.type}</span><span class="evt-date">${e.date}${e.endDate&&e.endDate!==e.date?' → '+e.endDate:''}${e.time?' · '+fmtTime(e.time):''}</span>${recurLabel?`<span class="tag recur">${recurLabel}</span>`:''} ${person?`<span class="evt-person" style="color:${person.color}">👤 ${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:12px;color:var(--text-3);margin-top:4px">${e.notes}</div>`:''}</div><div class="item-actions"><button class="act-btn" onclick="openEventModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteEvent(${e.id})">Delete</button></div>`;
       cont.appendChild(item);
     });
   };
@@ -6879,7 +6943,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '6.2.3', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '6.2.6', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -8195,7 +8259,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'6.2.3', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'6.2.6', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -8438,7 +8502,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-6.2.3';
+const CACHE = 'homebase-6.2.6';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
