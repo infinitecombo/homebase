@@ -1559,7 +1559,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div id="sidebar">
   <div class="logo">
     <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.2.6</p>
+    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.5.1</p>
   </div>
   <nav class="nav">
     <div class="nav-label">Overview</div>
@@ -1652,7 +1652,10 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div class="card">
         <div class="card-head">
           <span class="card-title">Today's Tasks</span>
-          <button class="btn-bonus" id="dashBonusBtn">✨ Bonus</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn-bonus" id="dashMarkAllBtn" title="Complete all tasks for today">✓ All Done</button>
+            <button class="btn-bonus" id="dashBonusBtn">✨ Bonus</button>
+          </div>
         </div>
         <div id="dashChores"></div>
       </div>
@@ -2052,9 +2055,11 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         <input class="fi" type="text" id="expSearch" placeholder="Search entries…" style="flex:1">
         <select class="fi" id="expCatFilter" style="width:130px"></select>
         <select class="fi" id="expPersonFilter" style="width:110px"></select>
+        <button class="btn btn-ghost" id="importCsvBtn" style="flex-shrink:0">📤 Import CSV</button>
         <button class="btn btn-primary" id="addExpenseBtn">+ Add</button>
       </div>
       <div id="expEntryList"></div>
+      <div id="expEntryTotal" style="font-size:12px;color:var(--text-3);text-align:right;padding:10px 2px 0;border-top:1px solid var(--border-soft);margin-top:8px"></div>
     </div>
     <div id="subview-expBudgets" style="display:none">
       <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
@@ -2452,9 +2457,12 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
               <li>Create <strong>Categories</strong> (at least one Bonus category)</li>
               <li>Add <strong>5–8 Tasks</strong> per person — don't overload at the start</li>
               <li>Set up <strong>Rewards</strong> in each tier before the week starts</li>
-              <li>Set up <strong>Cloud Sync</strong> if you have multiple devices</li>
-              <li>Add the app to your home screen for easy daily access</li>
+              <li>Set monthly <strong>budgets</strong> on your expense categories in 💰 Expenses → Budgets</li>
+              <li>Add any <strong>recurring expense templates</strong> (rent, utilities, subscriptions)</li>
+              <li>Set up <strong>Cloud Sync</strong> from People → Cloud Sync if you have multiple devices</li>
+              <li>Install as an app on your phone from the sidebar for easy daily access</li>
             </ol>
+            <div class="help-tip">💡 <strong>Keyboard shortcuts:</strong> <code>←</code>/<code>→</code> to navigate week/calendar, <code>N</code> for new diary entry, <code>E</code> for quick expense, <code>B</code> for bonus task, <code>D</code> for dashboard, <code>T</code> for tasks, <code>/</code> to search.</div>
           </div>
           <div class="help-card">
             <h3>Common mistakes to avoid</h3>
@@ -2782,7 +2790,13 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 <div class="overlay" id="completeModal">
   <div class="modal">
     <div class="modal-title" id="completeTitle">Mark Complete</div>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:8px">Select who completed this task:</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <p style="font-size:13px;color:var(--text-2);flex:1;margin:0">Select who completed this task:</p>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <label style="font-size:11px;color:var(--text-3)">Date</label>
+        <input type="date" class="fi" id="completeDate" style="width:140px;font-size:12px;padding:4px 8px">
+      </div>
+    </div>
     <button class="mark-all-btn" id="markAllDoneBtn">✓ Select All</button>
     <div id="completeGrid"></div>
     <div class="comp-note-wrap">
@@ -2978,6 +2992,55 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div class="fg" style="flex:1"><label class="fl">End Date (optional)</label><input class="fi" type="date" id="mTplEnd"></div>
     </div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('expTemplateModal')">Cancel</button><button class="btn btn-primary" id="saveExpTemplateBtn">Save</button></div>
+  </div>
+</div>
+
+<!-- ── CSV IMPORT MODAL ── -->
+<div class="overlay" id="csvImportModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head"><span id="csvImportTitle">Import CSV</span><button class="modal-close" onclick="closeModal('csvImportModal')">✕</button></div>
+
+    <!-- Step 1: Paste/Upload -->
+    <div id="csvStep1">
+      <div class="fg">
+        <label class="fl">Paste CSV data or upload a file</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <label class="btn btn-ghost" style="cursor:pointer;padding:7px 14px;font-size:13px">📂 Upload file<input type="file" id="csvFileInput" accept=".csv,.txt" style="display:none"></label>
+        </div>
+        <textarea id="csvPasteArea" class="fi" rows="8" placeholder="Date,Description,Amount&#10;01/15/2025,Grocery Store,-52.40&#10;01/16/2025,Paycheck,2500.00&#10;..." style="font-family:monospace;font-size:12px;resize:vertical"></textarea>
+      </div>
+      <div class="help-tip" style="margin-bottom:12px">💡 Most bank exports work — Chase, Bank of America, Wells Fargo, and others. Amounts can be positive (income) or negative (expense). The first row should be headers.</div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('csvImportModal')">Cancel</button>
+        <button class="btn btn-primary" id="csvParseBtn">Parse →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Map columns + preview -->
+    <div id="csvStep2" style="display:none">
+      <div class="fg" style="margin-bottom:12px">
+        <label class="fl">Map columns from your CSV</label>
+        <div class="frow" style="flex-wrap:wrap;gap:8px">
+          <div style="flex:1;min-width:120px"><label style="font-size:11px;color:var(--text-3)">Date column</label><select class="fi" id="csvColDate" style="margin-top:4px"></select></div>
+          <div style="flex:1;min-width:120px"><label style="font-size:11px;color:var(--text-3)">Description column</label><select class="fi" id="csvColDesc" style="margin-top:4px"></select></div>
+          <div style="flex:1;min-width:120px"><label style="font-size:11px;color:var(--text-3)">Amount column</label><select class="fi" id="csvColAmt" style="margin-top:4px"></select></div>
+          <div style="flex:1;min-width:120px"><label style="font-size:11px;color:var(--text-3)">Type column (optional)</label><select class="fi" id="csvColType" style="margin-top:4px"><option value="">— None —</option></select></div>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label class="fl">Default category for imported entries</label>
+        <select class="fi" id="csvDefaultCat"><option value="">— No category —</option></select>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label class="fl" style="margin-bottom:6px">Preview (first 5 rows)</label>
+        <div id="csvPreview" style="font-size:12px;background:var(--surface-2);border-radius:var(--radius-sm);overflow:auto;max-height:200px"></div>
+      </div>
+      <div id="csvSummary" style="font-size:12.5px;color:var(--text-2);margin-bottom:12px"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="csvBackBtn">← Back</button>
+        <button class="btn btn-primary" id="csvImportBtn">Import</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4171,8 +4234,18 @@ async function renderCalDetail(ds) {
       const done=comps.some(cp=>cp.choreId===c.id);
       const row=document.createElement('div'); row.className='cal-task-row'+(done?' done':'');
       if(c.description) row.title=c.description;
+      // Find any completion notes for this task on this date
+      const taskComps=comps.filter(cp=>cp.choreId===c.id);
+      const notes=taskComps.filter(cp=>cp.note).map(cp=>{ const p=people.find(pp=>pp.id===cp.personId); return `${p?p.name+': ':''}${cp.note}`; });
       const dotsHtml=assignees.length?`<div class="cal-task-who">${assignees.map(p=>{const d=comps.some(cp=>cp.choreId===c.id&&cp.personId===p.id); return `<div class="comp-dot" style="background:${d?p.color:p.color+'33'}" title="${p.name}"></div>`;}).join('')}</div>`:'';
       row.innerHTML=`<div class="cdot" style="background:${color}"></div><span class="cal-task-name">${c.name}</span><span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span>${dotsHtml}<div class="check-btn${done?' checked':''}" onclick="openCompleteModal(${c.id},'${ds}')">${done?'✓':''}</div>`;
+      if(notes.length) {
+        const noteEl=document.createElement('div');
+        noteEl.style.cssText='font-size:11px;color:var(--text-3);font-style:italic;padding:3px 10px 5px 22px;line-height:1.4';
+        noteEl.textContent='💬 '+notes.join(' · ');
+        row.insertAdjacentElement('afterend', noteEl);
+        taskSec.appendChild(noteEl);
+      }
       taskSec.appendChild(row);
     });
   }
@@ -5529,7 +5602,7 @@ async function renderTasks() {
         <button class="task-reorder-btn" onclick="moveTaskOrder(${c.id},1,${c.categoryId||'null'})" ${idx===tasks.length-1?'disabled':''} title="Move down">▼</button>
       </div>`:'';
 
-      item.innerHTML=`${dragHandle}<div class="task-item-color" style="background:${color2}"></div><div class="task-item-body"><div class="task-item-top"><span class="task-item-name">${c.name}</span><span class="pts-badge">${pts(c.points)}</span>${c.isRecurring?'<span class="tag rec">↻ Recurring</span>':'<span class="tag" style="background:rgba(90,142,212,0.12);color:#5a8ed4">📅 One-time</span>'}</div>${c.description?`<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">${c.description}</div>`:''}<div class="task-item-meta">${c.isRecurring?`<div class="day-tags">${DAYS.map((d,i)=>`<span class="day-tag${c.days&&c.days.includes(i)?' on':''}">${d[0]}</span>`).join('')}</div>${c.startDate||c.endDate?`<span style="font-size:11px;color:var(--text-3)">${c.startDate||''}${c.startDate&&c.endDate?' – ':''}${c.endDate||''}</span>`:''}${c.recurEnd?`<span style="font-size:11px;color:var(--terra)">ends ${c.recurEnd}</span>`:''}`:c.date?`<span style="font-size:11px;color:var(--text-3)">${c.date}</span>`:''}${assigned.length?`<span style="font-size:11px;color:var(--text-3)">→ ${assigned.join(', ')}</span>`:''}</div></div><div class="item-actions">${reorderBtns}<button class="act-btn" onclick="openTaskModal(${c.id})">Edit</button><button class="act-btn del" onclick="deleteTask(${c.id})">Delete</button></div>`;
+      item.innerHTML=`${dragHandle}<div class="task-item-color" style="background:${color2}"></div><div class="task-item-body"><div class="task-item-top"><span class="task-item-name">${c.name}</span><span class="pts-badge">${pts(c.points)}</span>${c.isRecurring?'<span class="tag rec">↻ Recurring</span>':'<span class="tag" style="background:rgba(90,142,212,0.12);color:#5a8ed4">📅 One-time</span>'}</div>${c.description?`<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">${c.description}</div>`:''}<div class="task-item-meta">${c.isRecurring?`<div class="day-tags">${DAYS.map((d,i)=>`<span class="day-tag${c.days&&c.days.includes(i)?' on':''}">${d[0]}</span>`).join('')}</div>${c.startDate||c.endDate?`<span style="font-size:11px;color:var(--text-3)">${c.startDate||''}${c.startDate&&c.endDate?' – ':''}${c.endDate||''}</span>`:''}${c.recurEnd?`<span style="font-size:11px;color:var(--terra)">ends ${c.recurEnd}</span>`:''}`:c.date?`<span style="font-size:11px;color:var(--text-3)">${c.date}</span>`:''}${assigned.length?`<span style="font-size:11px;color:var(--text-3)">→ ${assigned.join(', ')}</span>`:''}</div></div><div class="item-actions">${reorderBtns}<button class="act-btn" onclick="openTaskModal(${c.id})">Edit</button><button class="act-btn" onclick="duplicateTask(${c.id})" title="Duplicate task">Copy</button><button class="act-btn del" onclick="deleteTask(${c.id})">Delete</button></div>`;
 
       if(manualOrder){
         item.addEventListener('dragstart',e=>{ dragSrc=item; item.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
@@ -5635,6 +5708,15 @@ async function moveCatOrder(catId, dir) {
   await put('categories',{...sorted[idx],sortOrder:newIdx});
   await put('categories',{...sorted[newIdx],sortOrder:idx});
   await renderCategories();
+}
+
+async function duplicateTask(id) {
+  const task = await get('chores', id);
+  if(!task) return;
+  const copy = {...task, name: task.name + ' (copy)'};
+  delete copy.id;
+  await put('chores', copy);
+  await renderTasks();
 }
 
 async function deleteTask(id) {
@@ -5818,11 +5900,26 @@ async function renderPersonDetail() {
 
   // Goal hit/miss heatmap
   if (person.weekGoal > 0) {
-    const goalCard = makePdetSection('🎯 Goal Hit/Miss — Last 12 Weeks', 'full');
-    const goalDiv = document.createElement('div'); goalDiv.className='hist-chart';
-    drawGoalHeatmap(goalDiv, [person], buckets12, allComps);
-    appendLegend(goalDiv,[{label:'Goal met',color:'var(--sage)',type:'box'},{label:'Partial',color:'rgba(106,171,130,0.33)',type:'box'},{label:'Missed',color:'#231f31',type:'box'}]);
-    goalCard.appendChild(goalDiv);
+    const goalCard = makePdetSection('🎯 Goal History — Last 26 Weeks', 'full');
+    const buckets26 = buildWeekBuckets(26);
+    // Build a compact calendar-style grid of 26 cells
+    const goalGrid = document.createElement('div');
+    goalGrid.style.cssText='display:grid;grid-template-columns:repeat(13,1fr);gap:4px;margin-top:4px';
+    buckets26.forEach((b,i)=>{
+      const wkPts=allComps.filter(c=>c.personId===personId&&b.dates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0);
+      const pct=person.weekGoal>0?wkPts/person.weekGoal:0;
+      const isCurrentWk = i===buckets26.length-1;
+      const bg = pct>=1?'var(--sage)':pct>=0.5?'rgba(106,171,130,0.4)':pct>0?'rgba(196,112,128,0.4)':'var(--surface-3)';
+      const cell=document.createElement('div');
+      cell.style.cssText=`background:${bg};border-radius:4px;padding:5px 4px;text-align:center;${isCurrentWk?'outline:2px solid var(--gold);outline-offset:1px':''}`;
+      cell.title=`${b.label}: ${wkPts}pts ${pct>=1?'✓ Goal met':`(${Math.round(pct*100)}%)`}`;
+      cell.innerHTML=`<div style="font-size:9px;color:var(--text-3);line-height:1">${b.label}</div><div style="font-size:11px;font-weight:600;color:var(--text);margin-top:1px">${pct>=1?'✓':wkPts>0?Math.round(pct*100)+'%':'—'}</div>`;
+      goalGrid.appendChild(cell);
+    });
+    goalCard.appendChild(goalGrid);
+    const legend=document.createElement('div'); legend.className='exp-legend'; legend.style.marginTop='8px';
+    legend.innerHTML=`<div class="exp-legend-item"><div class="exp-legend-dot" style="background:var(--sage)"></div>Goal met</div><div class="exp-legend-item"><div class="exp-legend-dot" style="background:rgba(106,171,130,0.4)"></div>50–99%</div><div class="exp-legend-item"><div class="exp-legend-dot" style="background:rgba(196,112,128,0.4)"></div>Below 50%</div><div class="exp-legend-item"><div class="exp-legend-dot" style="background:var(--surface-3)"></div>No activity</div>`;
+    goalCard.appendChild(legend);
     chartsGrid.appendChild(goalCard);
   }
 
@@ -6179,7 +6276,9 @@ async function openCompleteModal(choreId, date) {
 
   // "View As: Everyone" — show the full person-selection modal as normal
   S.pendingChoreId=choreId; S.pendingDate=date;
-  g('completeTitle').textContent=`"${chore?.name||'Task'}" — ${date}`;
+  // Set date field — editable for late logging
+  g('completeDate').value = date;
+  g('completeTitle').textContent = `"${chore?.name||'Task'}" — ${date}`;
   g('completeNote').value='';
   if(chore?.description){ const p=g('completeNote').previousElementSibling; if(p) p.querySelector('.comp-note-badge').textContent=chore.description.slice(0,40)+(chore.description.length>40?'…':''); }
   const grid=g('completeGrid'); grid.innerHTML='';
@@ -6200,7 +6299,8 @@ async function openCompleteModal(choreId, date) {
 }
 
 async function saveComplete() {
-  const {pendingChoreId:cid,pendingDate:date}=S;
+  const {pendingChoreId:cid}=S;
+  const date = g('completeDate').value || S.pendingDate;
   const [chore,allComps,people]=await Promise.all([get('chores',cid),all('completions'),all('people')]);
   const note=g('completeNote').value.trim()||null;
   const rows=g('completeGrid').querySelectorAll('.person-sel-row');
@@ -6943,7 +7043,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '6.2.6', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '6.5.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -7167,6 +7267,7 @@ function wire() {
     btn.onclick=()=>{ S.pinFilter=btn.dataset.pf; renderPinboard(); };
   });
   // Bonus Task Modal
+  g('dashMarkAllBtn').onclick = markAllDone;
   g('dashBonusBtn').onclick=()=>openBonusModal(today());
   g('wkBonusBtn').onclick=()=>openBonusModal(today());
   g('bonusCancelBtn').onclick=()=>closeModal('bonusModal');
@@ -7203,6 +7304,8 @@ function wire() {
   };
   g('mPersonPhotoRemove').onclick=e=>{ e.stopPropagation(); S.personPhoto=null; syncPersonAvatarPreview(); };
   g('mPersonName').oninput=()=>syncPersonAvatarPreview();
+  // Keyboard shortcuts
+  wireKeyboardShortcuts();
   // Mobile hamburger
   g('hamburgerBtn').onclick = toggleSidebar;
   g('sidebarBackdrop').onclick = closeSidebar;
@@ -7217,6 +7320,15 @@ function wire() {
   ['expTabOverview','expTabEntries','expTabBudgets','expTabTemplates','expTabCompare'].forEach(id=>{
     g(id).onclick=()=>{ S.expTab=id.replace('expTab','').toLowerCase(); renderExpenses(); };
   });
+  g('importCsvBtn').onclick=openCsvImportModal;
+  g('csvParseBtn').onclick=csvParse;
+  g('csvBackBtn').onclick=()=>{ g('csvStep1').style.display=''; g('csvStep2').style.display='none'; g('csvImportTitle').textContent='Import CSV — Step 1 of 2'; };
+  g('csvImportBtn').onclick=csvImport;
+  g('csvFileInput').onchange=e=>{
+    const file=e.target.files[0]; if(!file) return;
+    const r=new FileReader(); r.onload=ev=>{ g('csvPasteArea').value=ev.target.result; }; r.readAsText(file);
+  };
+  ['csvColDate','csvColDesc','csvColAmt','csvColType'].forEach(id=>{ const el=g(id); if(el) el.onchange=csvUpdatePreview; });
   g('addExpenseBtn').onclick=()=>openExpenseModal(null);
   g('addExpCatBtn').onclick=()=>openExpCatModal(null);
   g('addExpTemplateBtn').onclick=()=>openExpTemplateModal(null);
@@ -7297,7 +7409,7 @@ function wire() {
   g('confirmCancelBtn').onclick = () => { _confirmCallback=null; closeModal('confirmModal'); };
   g('confirmOkBtn').onclick = () => { closeModal('confirmModal'); if(_confirmCallback) { _confirmCallback(); _confirmCallback=null; } };
   // Modal overlay close
-  ['taskModal','catModal','evtModal','rewardModal','bonusModal','pinModal','skipEvtModal','pauseModal','personModal','completeModal','importModal','confirmModal','expenseModal','expCatModal','expTemplateModal'].forEach(id=>g(id).onclick=e=>{ if(e.target===g(id)) closeModal(id); });
+  ['taskModal','catModal','evtModal','rewardModal','bonusModal','pinModal','skipEvtModal','pauseModal','personModal','completeModal','importModal','confirmModal','expenseModal','expCatModal','expTemplateModal','csvImportModal'].forEach(id=>g(id).onclick=e=>{ if(e.target===g(id)) closeModal(id); });
   // Export / Import
   g('exportBtn').onclick = exportData;
   g('importBtn').onclick = triggerImport;
@@ -7374,6 +7486,7 @@ window.deletePinItem=deletePinItem;
 window.addPinItem=addPinItem;
 window.syncPinItems=syncPinItems;
 window.openTaskModal=openTaskModal;
+window.duplicateTask=duplicateTask;
 window.deleteTask=deleteTask;
 window.moveTaskOrder=moveTaskOrder;
 window.openSearch=openSearch;
@@ -7382,6 +7495,11 @@ window.openCatModal=openCatModal;
 window.deleteCategory=deleteCategory;
 window.openPauseModal=openPauseModal;
 window.deletePause=deletePause;
+window.openCsvImportModal=openCsvImportModal;
+window.csvParse=csvParse;
+window.csvImport=csvImport;
+window.showToast=showToast;
+window.logExpenseFromTemplate=logExpenseFromTemplate;
 window.openExpenseModal=openExpenseModal;
 window.openExpCatModal=openExpCatModal;
 window.openExpTemplateModal=openExpTemplateModal;
@@ -7524,7 +7642,7 @@ const fmt$ = n => '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigit
 
 async function ensureExpenseDefaults() {
   const cats = await all('expenseCategories');
-  if(cats.length) return;
+  if(cats.length) return; // already have categories (from cloud pull or previous setup)
   for(const c of EXP_DEFAULT_CATS) await put('expenseCategories', c);
 }
 
@@ -7599,6 +7717,21 @@ async function renderExpenses() {
 
 async function renderExpOverview(monthExp, cats, people, totalExpense, totalIncome) {
   const cont = g('expCharts'); cont.innerHTML='';
+
+  // Budget alerts at top of overview
+  const overBudget = cats.filter(c=>c.budget&&!c.isIncome).map(c=>({
+    ...c, spent: monthExp.filter(e=>!e.isIncome&&e.categoryId===c.id).reduce((s,e)=>s+e.amount,0)
+  })).filter(c=>c.spent>=c.budget*0.8).sort((a,b)=>b.spent/b.budget-a.spent/a.budget);
+  if(overBudget.length) {
+    const strip=document.createElement('div'); strip.className='budget-alert-strip';
+    overBudget.forEach(c=>{
+      const pct=Math.round(c.spent/c.budget*100), over=c.spent>=c.budget;
+      const row=document.createElement('div'); row.className=`budget-alert ${over?'over':'near'}`;
+      row.innerHTML=`<span class="budget-alert-ico">${over?'🚨':'⚠️'}</span><span class="budget-alert-txt"><strong>${c.icon} ${c.name}</strong> — ${over?'over budget':'approaching limit'} (${fmt$(c.spent)} of ${fmt$(c.budget)})</span><span class="budget-alert-pct">${pct}%</span>`;
+      strip.appendChild(row);
+    });
+    cont.appendChild(strip);
+  }
 
   // ── Donut: spending by category
   const catExp = cats.filter(c=>!c.isIncome).map(c=>{
@@ -7712,6 +7845,41 @@ async function renderExpOverview(monthExp, cats, people, totalExpense, totalInco
   trendWrap.innerHTML+=`<div class="exp-legend"><div class="exp-legend-item"><div class="exp-legend-dot" style="background:#6aab82"></div>Income</div><div class="exp-legend-item"><div class="exp-legend-dot" style="background:#c47080"></div>Expenses</div></div>`;
   trendWrap.prepend(trendWrap.querySelector('.exp-chart-title'));
   cont.appendChild(trendWrap);
+
+  // ── Running balance: cumulative day-by-day ──────────────────
+  const runWrap=document.createElement('div'); runWrap.className='exp-chart-wrap';
+  runWrap.innerHTML='<div class="exp-chart-title">Daily Running Balance — '+label(S.expMonth)+'</div>';
+  const days=expMonthDates(S.expMonth);
+  let running=0;
+  const runPts=days.map(d=>{
+    const dayExp=monthExp.filter(e=>e.date===d);
+    running+=dayExp.filter(e=>e.isIncome).reduce((s,e)=>s+e.amount,0);
+    running-=dayExp.filter(e=>!e.isIncome).reduce((s,e)=>s+e.amount,0);
+    return running;
+  });
+  const minR=Math.min(...runPts,0), maxR=Math.max(...runPts,0);
+  const range=maxR-minR||1;
+  const RW=500,RH=100,RPL=8,RPR=8,RPT=10,RPB=20;
+  const rcw=RW-RPL-RPR, rch=RH-RPT-RPB;
+  const rxOf=i=>RPL+i*(rcw/(days.length-1||1));
+  const ryOf=v=>RPT+rch*(1-(v-minR)/range);
+  const rSvg=makeSVG(RW,RH); rSvg.style.cssText='width:100%;height:auto';
+  // Zero line
+  const zy=ryOf(0);
+  svgEl('line',{x1:RPL,y1:zy,x2:RW-RPR,y2:zy,stroke:'var(--border-soft)','stroke-width':'1','stroke-dasharray':'4 3'},rSvg);
+  // Fill area above/below zero
+  if(runPts.length>1) {
+    const posPath=`M ${rxOf(0)},${zy} `+runPts.map((v,i)=>`L ${rxOf(i)},${ryOf(v)}`).join(' ')+` L ${rxOf(runPts.length-1)},${zy} Z`;
+    const negPath=`M ${rxOf(0)},${zy} `+runPts.map((v,i)=>`L ${rxOf(i)},${ryOf(v)}`).join(' ')+` L ${rxOf(runPts.length-1)},${zy} Z`;
+    svgEl('path',{d:posPath,fill:'rgba(106,171,130,0.18)',stroke:'none'},rSvg);
+    svgEl('polyline',{points:runPts.map((v,i)=>`${rxOf(i)},${ryOf(v)}`).join(' '),fill:'none',stroke:running>=0?'#6aab82':'#c47080','stroke-width':'2','stroke-linejoin':'round','stroke-linecap':'round'},rSvg);
+  }
+  // Start/end labels
+  const sl=svgEl('text',{x:RPL,y:RH-4,'text-anchor':'start',fill:'var(--text-3)','font-size':'9'},rSvg); sl.textContent='1';
+  const el=svgEl('text',{x:RW-RPR,y:RH-4,'text-anchor':'end',fill:'var(--text-3)','font-size':'9'},rSvg); el.textContent=days.length;
+  const vl=svgEl('text',{x:RW-RPR,y:ryOf(running)-4,'text-anchor':'end',fill:running>=0?'#6aab82':'#c47080','font-size':'9.5','font-weight':'600'},rSvg); vl.textContent=(running>=0?'+':'')+fmt$(running);
+  runWrap.appendChild(rSvg);
+  cont.appendChild(runWrap);
 }
 
 function renderExpEntries(monthExp, cats, people) {
@@ -7735,7 +7903,9 @@ function renderExpEntries(monthExp, cats, people) {
 
   const list=g('expEntryList'); list.innerHTML='';
   if(!filtered.length){
-    list.innerHTML='<div class="empty"><div class="ico">💸</div><p>No entries found.</p></div>'; return;
+    list.innerHTML='<div class="empty"><div class="ico">💸</div><p>No entries found.</p></div>';
+    const tot=g('expEntryTotal'); if(tot) tot.textContent='';
+    return;
   }
   filtered.forEach(e=>{
     const cat=cats.find(c=>c.id===e.categoryId);
@@ -7744,6 +7914,13 @@ function renderExpEntries(monthExp, cats, people) {
     item.innerHTML=`<div class="exp-entry-ico" style="background:${cat?.color||'var(--surface-3)'}22">${cat?.icon||'💰'}</div><div class="exp-entry-body"><div class="exp-entry-desc">${e.description||'(no description)'}</div><div class="exp-entry-meta">${e.date}${cat?' · '+cat.name:''}${person?' · '+person.name:''}</div></div><div class="exp-entry-amount ${e.isIncome?'income':'expense'}">${e.isIncome?'+':'-'}${fmt$(e.amount)}</div><div class="item-actions"><button class="act-btn" onclick="openExpenseModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteExpense(${e.id})">Del</button></div>`;
     list.appendChild(item);
   });
+  // Entry total
+  const tot=g('expEntryTotal');
+  if(tot){
+    const income=filtered.filter(e=>e.isIncome).reduce((s,e)=>s+e.amount,0);
+    const expense=filtered.filter(e=>!e.isIncome).reduce((s,e)=>s+e.amount,0);
+    tot.innerHTML=`${filtered.length} entr${filtered.length===1?'y':'ies'} · Income <span style="color:var(--sage)">${fmt$(income)}</span> · Expenses <span style="color:var(--terra)">${fmt$(expense)}</span> · Net <span style="color:${income-expense>=0?'var(--sage)':'var(--terra)'}">${income-expense<0?'-':''}${fmt$(income-expense)}</span>`;
+  }
 }
 
 async function renderExpBudgets(cats, monthExp) {
@@ -7768,7 +7945,7 @@ async function renderExpTemplates(cats, people) {
     const person=t.personId?people.find(p=>p.id===t.personId):null;
     const next=nextDueDate(t, t.startDate);
     const item=document.createElement('div'); item.className='exp-tpl-item';
-    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${cat?.color||'var(--surface-3)'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cat?.icon||'🔄'}</div><div class="exp-tpl-body"><div class="exp-tpl-name">${t.name}</div><div class="exp-tpl-meta">${t.recurrence.charAt(0).toUpperCase()+t.recurrence.slice(1)} · ${fmt$(t.amount)}${person?' · '+person.name:''}${cat?' · '+cat.name:''}</div><div class="exp-tpl-next">Next due: ${next}</div></div><div class="item-actions"><button class="act-btn" onclick="openExpTemplateModal(${t.id})">Edit</button><button class="act-btn del" onclick="deleteExpTemplate(${t.id})">Del</button></div>`;
+    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${cat?.color||'var(--surface-3)'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cat?.icon||'🔄'}</div><div class="exp-tpl-body"><div class="exp-tpl-name">${t.name}</div><div class="exp-tpl-meta">${t.recurrence.charAt(0).toUpperCase()+t.recurrence.slice(1)} · ${fmt$(t.amount)}${person?' · '+person.name:''}${cat?' · '+cat.name:''}</div><div class="exp-tpl-next">Next due: ${next}</div></div><div class="item-actions"><button class="act-btn" style="background:var(--gold);color:#13111a;border-color:var(--gold)" onclick="logExpenseFromTemplate(${t.id})">Log</button><button class="act-btn" onclick="openExpTemplateModal(${t.id})">Edit</button><button class="act-btn del" onclick="deleteExpTemplate(${t.id})">Del</button></div>`;
     list.appendChild(item);
   });
 }
@@ -7798,6 +7975,7 @@ async function openExpenseModal(id) {
   else if(!id && S.person !== 'all') pplSel.value=S.person;
 
   _openModal('expenseModal');
+  setTimeout(()=>g('mExpAmount').focus(), 80);
 }
 
 function setExpType(isIncome) {
@@ -7829,6 +8007,7 @@ async function saveExpense() {
   if(S.expEditId) entry.id=S.expEditId;
   await put('expenses',entry);
   closeModal('expenseModal');
+  showToast(S.expEditId ? '✓ Entry updated' : '✓ Entry saved', 'var(--sage)');
   await renderExpenses();
 }
 
@@ -7959,6 +8138,59 @@ async function saveExpTemplate() {
   await renderExpenses();
 }
 
+async function markAllDone() {
+  const todayStr = today();
+  const [chores, people, allComps] = await Promise.all([all('chores'), all('people'), all('completions')]);
+  S.activePauses = await all('pauses').catch(()=>[]);
+  let dayChores = chores.filter(c => !c.isBonus && isTaskActiveFor(c, todayStr, S.person!=='all'?S.person:null));
+  if(S.person !== 'all') dayChores = dayChores.filter(c => !c.assignedTo||c.assignedTo.length===0||c.assignedTo.includes(S.person));
+  const targetPeople = S.person !== 'all' ? [people.find(p=>p.id===S.person)].filter(Boolean) : people;
+  if(!dayChores.length) return;
+
+  // Snapshot for goal check
+  const ws = weekStart(0);
+  const wkDates = Array.from({length:7},(_,i)=>{ const d=new Date(ws); d.setDate(d.getDate()+i); return fmtDate(d); });
+  const beforePts = {};
+  targetPeople.forEach(p => { beforePts[p.id] = allComps.filter(c=>c.personId===p.id&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0); });
+
+  let added = 0;
+  for(const chore of dayChores) {
+    const assignees = chore.assignedTo?.length ? people.filter(p=>chore.assignedTo.includes(p.id)) : targetPeople;
+    for(const p of assignees) {
+      const alreadyDone = allComps.some(c=>c.choreId===chore.id&&c.date===todayStr&&c.personId===p.id);
+      if(!alreadyDone) { await put('completions',{choreId:chore.id,date:todayStr,personId:p.id,points:chore.points||0}); added++; }
+    }
+  }
+  if(!added) return; // nothing was incomplete
+
+  S.recentlyCompletedPersonIds = targetPeople.map(p=>p.id);
+  await render('dashboard');
+  checkGoalMet(targetPeople.map(p=>p.id), beforePts);
+}
+
+async function logExpenseFromTemplate(id) {
+  const tpl = await get('expenseTemplates', id);
+  if(!tpl) return;
+  // Pre-fill the expense modal with template data
+  S.expEditId = null;
+  S.expIsIncome = tpl.isIncome || false;
+  g('expenseModalTitle').textContent = 'Log: ' + tpl.name;
+  g('mExpAmount').value = tpl.amount;
+  g('mExpDate').value = today_str();
+  g('mExpDesc').value = tpl.name;
+  g('mExpNotes').value = '';
+  setExpType(S.expIsIncome);
+  const [cats, people] = await Promise.all([all('expenseCategories'), all('people')]);
+  const catSel = g('mExpCategory'); catSel.innerHTML = '<option value="">— Category —</option>';
+  cats.filter(c=>c.isIncome===S.expIsIncome).forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=`${c.icon} ${c.name}`; catSel.appendChild(o); });
+  if(tpl.categoryId) catSel.value = tpl.categoryId;
+  const pplSel = g('mExpPerson'); pplSel.innerHTML = '<option value="">— No person —</option>';
+  people.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; pplSel.appendChild(o); });
+  if(tpl.personId) pplSel.value = tpl.personId;
+  else if(S.person !== 'all') pplSel.value = S.person;
+  _openModal('expenseModal');
+}
+
 async function deleteExpTemplate(id) {
   await askConfirm('Delete this template?', async()=>{ await del('expenseTemplates',id); await renderExpenses(); });
 }
@@ -8015,6 +8247,186 @@ function wireSwipeGestures() {
 
 
 // ═══════════════════════════════════════════
+
+// ═══════════════════════════════════════════
+// CSV Import for Expenses
+// ═══════════════════════════════════════════
+
+let _csvRows = [], _csvHeaders = [];
+
+function parseCSVText(text) {
+  // Handles quoted fields, different line endings
+  const lines = text.trim().replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const parseRow = line => {
+    const cols = []; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch==='"'){ inQ=!inQ; }
+      else if(ch===','&&!inQ){ cols.push(cur.trim()); cur=''; }
+      else cur+=ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  };
+  return lines.filter(l=>l.trim()).map(parseRow);
+}
+
+function parseCSVDate(str) {
+  // Try various date formats
+  if(!str) return null;
+  str=str.trim().replace(/"/g,'');
+  // YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // MM/DD/YYYY or M/D/YYYY
+  const mdy=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(str);
+  if(mdy) return `${mdy[3]}-${String(mdy[1]).padStart(2,'0')}-${String(mdy[2]).padStart(2,'0')}`;
+  // MM/DD/YY
+  const mdy2=/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/.exec(str);
+  if(mdy2) return `20${mdy2[3]}-${String(mdy2[1]).padStart(2,'0')}-${String(mdy2[2]).padStart(2,'0')}`;
+  // DD/MM/YYYY (European) — heuristic: if month>12 swap
+  const dmy=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(str);
+  if(dmy&&parseInt(dmy[1])>12) return `${dmy[3]}-${String(dmy[2]).padStart(2,'0')}-${String(dmy[1]).padStart(2,'0')}`;
+  // Jan 15, 2025 style
+  const months={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+  const wordy=/^([A-Za-z]{3})\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(str);
+  if(wordy) return `${wordy[3]}-${months[wordy[1].toLowerCase()]||'01'}-${String(wordy[2]).padStart(2,'0')}`;
+  return null;
+}
+
+function autoDetectColumns(headers) {
+  const h = headers.map(h=>h.toLowerCase().replace(/[^a-z]/g,''));
+  const find = (...terms) => {
+    for(const t of terms){ const i=h.findIndex(hh=>hh.includes(t)); if(i>=0) return i; }
+    return 0;
+  };
+  return {
+    date: find('date','transdate','postdate','posteddate'),
+    desc: find('desc','description','memo','name','detail','payee','narrative'),
+    amt:  find('amount','amt','total','debit','credit','sum'),
+    type: h.findIndex(hh=>hh==='type'||hh==='transactiontype'||hh==='creditdebit'),
+  };
+}
+
+function openCsvImportModal() {
+  g('csvStep1').style.display='';
+  g('csvStep2').style.display='none';
+  g('csvPasteArea').value='';
+  g('csvImportTitle').textContent='Import CSV — Step 1 of 2';
+  _csvRows=[]; _csvHeaders=[];
+  _openModal('csvImportModal');
+}
+
+function csvParse() {
+  const text = g('csvPasteArea').value.trim();
+  if(!text){ g('csvPasteArea').focus(); return; }
+  const allRows = parseCSVText(text);
+  if(allRows.length < 2){ alert('Need at least 2 rows (header + data)'); return; }
+  _csvHeaders = allRows[0];
+  _csvRows = allRows.slice(1).filter(r=>r.some(c=>c.trim()));
+  // Populate column selectors
+  const autoMap = autoDetectColumns(_csvHeaders);
+  ['csvColDate','csvColDesc','csvColAmt','csvColType'].forEach((id,i)=>{
+    const sel=g(id); sel.innerHTML='';
+    if(id==='csvColType') sel.innerHTML='<option value="">— None —</option>';
+    _csvHeaders.forEach((h,j)=>{ const o=document.createElement('option'); o.value=j; o.textContent=h||`Column ${j+1}`; sel.appendChild(o); });
+    const autoIdx=[autoMap.date,autoMap.desc,autoMap.amt,autoMap.type][i];
+    if(autoIdx>=0&&autoIdx<_csvHeaders.length) sel.value=autoIdx;
+  });
+  // Default category select
+  all('expenseCategories').then(cats=>{
+    const sel=g('csvDefaultCat'); sel.innerHTML='<option value="">— No category —</option>';
+    cats.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=`${c.icon} ${c.name}`; sel.appendChild(o); });
+  });
+  g('csvStep1').style.display='none';
+  g('csvStep2').style.display='';
+  g('csvImportTitle').textContent='Import CSV — Step 2 of 2';
+  csvUpdatePreview();
+}
+
+function csvUpdatePreview() {
+  const di=parseInt(g('csvColDate').value), desi=parseInt(g('csvColDesc').value);
+  const ai=parseInt(g('csvColAmt').value), ti=g('csvColType').value!==''?parseInt(g('csvColType').value):-1;
+  const preview=g('csvPreview');
+  const parsed = _csvRows.slice(0,5).map(row=>csvParseRow(row,di,desi,ai,ti)).filter(Boolean);
+  if(!parsed.length){ preview.innerHTML='<div style="padding:10px;color:var(--terra)">No valid rows found — check column mapping</div>'; return; }
+  preview.innerHTML=`<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="background:var(--surface-3)">${['Date','Description','Amount','Type'].map(h=>`<th style="padding:5px 8px;text-align:left;font-size:11px;color:var(--text-3)">${h}</th>`).join('')}</tr></thead>
+    <tbody>${parsed.map(r=>`<tr style="border-top:1px solid var(--border-soft)">${[r.date||'?',r.description||'?',(r.isIncome?'+':'-')+fmt$(r.amount),r.isIncome?'💵 Income':'💸 Expense'].map(v=>`<td style="padding:5px 8px;font-size:12px">${v}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+  const total=_csvRows.map(row=>csvParseRow(row,di,desi,ai,ti)).filter(Boolean);
+  const income=total.filter(r=>r.isIncome).reduce((s,r)=>s+r.amount,0);
+  const exp=total.filter(r=>!r.isIncome).reduce((s,r)=>s+r.amount,0);
+  g('csvSummary').innerHTML=`<strong>${total.length}</strong> valid rows · Income: <span style="color:var(--sage)">${fmt$(income)}</span> · Expenses: <span style="color:var(--terra)">${fmt$(exp)}</span>`;
+  g('csvImportBtn').textContent=`Import ${total.length} entries`;
+}
+
+function csvParseRow(row, di, desi, ai, ti) {
+  const raw=v=>row[v]!==undefined?row[v].replace(/"/g,'').trim():'';
+  const dateStr=parseCSVDate(raw(di));
+  if(!dateStr) return null;
+  const amtStr=raw(ai).replace(/[$,\s]/g,'');
+  const amt=parseFloat(amtStr);
+  if(isNaN(amt)) return null;
+  const typeStr=ti>=0?raw(ti).toLowerCase():'';
+  // Determine income vs expense
+  let isIncome;
+  if(typeStr.includes('credit')||typeStr.includes('income')||typeStr.includes('deposit')||typeStr==='cr') isIncome=true;
+  else if(typeStr.includes('debit')||typeStr.includes('expense')||typeStr.includes('withdrawal')||typeStr==='dr') isIncome=false;
+  else isIncome = amt > 0; // positive = income by default
+  return { date:dateStr, description:raw(desi), amount:Math.abs(amt), isIncome };
+}
+
+async function csvImport() {
+  const di=parseInt(g('csvColDate').value), desi=parseInt(g('csvColDesc').value);
+  const ai=parseInt(g('csvColAmt').value), ti=g('csvColType').value!==''?parseInt(g('csvColType').value):-1;
+  const catId=g('csvDefaultCat').value?parseInt(g('csvDefaultCat').value):null;
+  const personId=S.person!=='all'?S.person:null;
+  const parsed=_csvRows.map(row=>csvParseRow(row,di,desi,ai,ti)).filter(Boolean);
+  if(!parsed.length) return;
+  let imported=0;
+  for(const r of parsed){
+    await put('expenses',{...r,categoryId:catId,personId,notes:null});
+    imported++;
+  }
+  closeModal('csvImportModal');
+  S.expTab='entries';
+  await renderExpenses();
+  showToast(`✓ Imported ${imported} expense${imported!==1?'s':''}`, 'var(--sage)');
+}
+
+// ── Toast notification ──────────────────────────────────────────
+function showToast(msg, color='var(--sage)') {
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid ${color};border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;font-weight:600;color:${color};z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3);pointer-events:none;white-space:nowrap`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  t.animate([{opacity:0,transform:'translateX(-50%) translateY(8px)'},{opacity:1,transform:'translateX(-50%) translateY(0)'}],{duration:220,fill:'both'});
+  setTimeout(()=>{ t.animate([{opacity:1},{opacity:0}],{duration:300,fill:'both'}).onfinish=()=>t.remove(); },2200);
+}
+
+
+// ═══════════════════════════════════════════
+function wireKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+    if(document.querySelector('.overlay.open')) return;
+    switch(e.key) {
+      case 'ArrowLeft':
+        if(S.view==='week')     { e.preventDefault(); S.wkOffset--; renderWeek(); }
+        if(S.view==='calendar') { e.preventDefault(); S.calMonth--; if(S.calMonth<0){S.calMonth=11;S.calYear--;} renderCal(); }
+        break;
+      case 'ArrowRight':
+        if(S.view==='week')     { e.preventDefault(); S.wkOffset++; renderWeek(); }
+        if(S.view==='calendar') { e.preventDefault(); S.calMonth++; if(S.calMonth>11){S.calMonth=0;S.calYear++;} renderCal(); }
+        break;
+      case 'n': case 'N': e.preventDefault(); nav('diary'); setTimeout(()=>diaryShowEditor(true),80); break;
+      case 'e': case 'E': e.preventDefault(); openExpenseModal(null); break;
+      case 'b': case 'B': e.preventDefault(); openBonusModal(today()); break;
+      case 'd': case 'D': e.preventDefault(); nav('dashboard'); break;
+      case 't': case 'T': e.preventDefault(); nav('tasks'); break;
+    }
+  });
+}
 
 async function renderExpCompare() {
   const [expenses, cats] = await Promise.all([all('expenses'), all('expenseCategories')]);
@@ -8259,7 +8671,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'6.2.6', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'6.5.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -8371,6 +8783,7 @@ async function gistPull() {
           const localDiaryPhotos = Object.fromEntries(localDiary.filter(e=>e.photo).map(e=>[e.id,e.photo]));
           const localPeoplePhotos = Object.fromEntries(localPeople.filter(p=>p.photo).map(p=>[p.id,p.photo]));
 
+          // Exclude expenseCategories from clear — handled specially to prevent duplicates with defaults
           const stores = ['chores','people','completions','diary','categories','events','rewards','earnedRewards','pins','pauses','expenseCategories','expenses','expenseTemplates'];
           await Promise.all(stores.map(store =>
             new Promise((res,rej)=>{ const req=DB.transaction(store,'readwrite').objectStore(store).clear(); req.onsuccess=res; req.onerror=rej; })
@@ -8502,7 +8915,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-6.2.6';
+const CACHE = 'homebase-6.5.1';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
@@ -8721,7 +9134,9 @@ function obRenderSummary() {
   row('👥', `<strong>${_obPeople.length}</strong> person${_obPeople.length!==1?'s':''} added: ${_obPeople.map(p=>`<span style="color:${p.color};font-weight:600">${p.name}</span>`).join(', ')}`);
   if(_obCat) row('🏷', `Category created: <strong style="color:${_obCat.color}">${_obCat.name}</strong>`);
   if(_obTask) row('✅', `Task created: <strong>${_obTask.name}</strong> — ${_obTask.points} pts${_obTask.days.length?' · '+_obTask.days.map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', '):''}`);
-  row('💡', 'You can add more people, tasks, categories, and rewards from the sidebar at any time.');
+  row('💰', '10 expense categories created — start tracking spending from <strong>💰 Expenses</strong> in the sidebar.');
+  row('☁️', 'Set up cloud sync anytime from <strong>👥 People → Cloud Sync</strong> to keep devices in sync.');
+  row('💡', 'Add more tasks, rewards, and categories from the sidebar at any time.');
 }
 
 async function obFinish() {
