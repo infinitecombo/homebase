@@ -1020,8 +1020,10 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   .bn-ico{font-size:20px;line-height:1}
   .bn-lbl{font-size:9.5px;font-weight:500;letter-spacing:0.02em}
   .bn-fab-spacer{flex:1;pointer-events:none}
-  .fab{bottom:8px;right:auto;left:50%;transform:translateX(-50%);align-items:center}
-  .fab-menu{align-items:center;margin-bottom:0;bottom:70px;left:50%;transform:translateX(-50%);position:fixed;z-index:401}
+  .fab{bottom:8px;right:auto;left:50%;transform:translateX(-50%);align-items:center;pointer-events:none}
+  .fab-btn,.fab-menu-item{pointer-events:all}
+  .fab-menu{align-items:center;margin-bottom:0;bottom:70px;left:50%;transform:translateX(-50%);position:fixed;z-index:401;pointer-events:none}
+  .fab-menu.open{pointer-events:all}
   .hamburger-btn{display:none!important}
 }
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-2);padding:4px 6px;border-radius:var(--radius-sm);transition:all var(--t);flex-shrink:0}
@@ -1670,7 +1672,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="sidebar-head">
     <div class="logo">
       <h1>HomeBase</h1>
-      <p class="sidebar-version">v7.0.3</p>
+      <p class="sidebar-version">v7.0.4</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2283,7 +2285,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.0.3</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.0.4</span>
         </div>
       </div>
     </div>
@@ -7462,7 +7464,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.0.3', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.0.4', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -9479,7 +9481,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.0.3', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.0.4', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -9723,7 +9725,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-7.0.3';
+const CACHE = 'homebase-7.0.4';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
