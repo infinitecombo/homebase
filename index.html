@@ -996,6 +996,21 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 
 .cal-evt-ico-dot{font-size:11px;line-height:1.2;cursor:pointer}
 
+/* ── Mobile more sheet ── */
+.more-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;z-index:299;padding:14px 16px 90px;max-height:88vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)}
+.more-sheet.open{transform:translateY(0)}
+.more-sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.more-sheet-item{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;border-radius:var(--radius);background:var(--surface-2);cursor:pointer;transition:background var(--t);-webkit-tap-highlight-color:transparent;border:1px solid var(--border-soft)}
+.more-sheet-item:active{background:var(--gold-glow)}
+.more-sheet-item.active{background:var(--gold-glow);border-color:var(--gold-dim)}
+.more-sheet-ico{font-size:26px;line-height:1}
+.more-sheet-lbl{font-size:11px;color:var(--text-2);font-weight:500;text-align:center}
+.more-sheet-item.active .more-sheet-lbl{color:var(--gold)}
+.more-sheet-viewas-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);font-weight:600;margin-bottom:8px}
+.more-sheet-chips{display:flex;gap:6px;flex-wrap:wrap}
+.more-sheet-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border-soft);cursor:pointer;font-size:12px;font-weight:500;color:var(--text-2);transition:all var(--t)}
+.more-sheet-chip.active{background:var(--gold-glow);border-color:var(--gold);color:var(--gold)}
+
 /* ── Mobile bottom nav ── */
 .bottom-nav{display:none}
 @media(max-width:768px){
@@ -1018,21 +1033,8 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 
   /* Sidebar: slide-in drawer */
   #sidebar {
-    position: fixed;
-    left: 0; top: 0; bottom: 0;
-    z-index: 150;
-    transform: translateX(-100%);
-    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-    width: 260px;
-    min-width: 260px;
-    box-shadow: 4px 0 32px rgba(0,0,0,0.4);
-    height: 100vh;
-    height: 100dvh; /* dynamic viewport height for mobile browsers */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    display: none; /* hidden on mobile — bottom nav + more sheet replaces it */
   }
-  #sidebar.open { transform: translateX(0); }
   /* Nav scrolls, bottom sections stay pinned */
   #sidebar .nav { flex: 1; overflow-y: auto; min-height: 0; }
   #sidebar .people-panel { flex-shrink: 0; overflow-x: auto; }
@@ -1668,7 +1670,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="sidebar-head">
     <div class="logo">
       <h1>HomeBase</h1>
-      <p class="sidebar-version">v7.0.2</p>
+      <p class="sidebar-version">v7.0.3</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -1712,6 +1714,17 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="bn-item" data-view="expenses"><span class="bn-ico">💰</span><span class="bn-lbl">Expenses</span></div>
   <div class="bn-item" id="bnMoreBtn"><span class="bn-ico">☰</span><span class="bn-lbl">More</span></div>
 </nav>
+
+<!-- Mobile more sheet -->
+<div id="moreSheetBackdrop" style="display:none;position:fixed;inset:0;z-index:298;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px)" onclick="closeMobileMore()"></div>
+<div id="moreSheet" class="more-sheet">
+  <!-- Drag handle -->
+  <div style="width:40px;height:4px;background:var(--border-soft);border-radius:2px;margin:0 auto 16px"></div>
+  <!-- View As row -->
+  <div id="moreSheetPeople" style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border-soft)"></div>
+  <!-- Nav grid -->
+  <div class="more-sheet-grid" id="moreSheetGrid"></div>
+</div>
 
 <div class="fab" id="fab">
   <div class="fab-menu" id="fabMenu">
@@ -2270,7 +2283,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.0.2</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.0.3</span>
         </div>
       </div>
     </div>
@@ -3491,6 +3504,10 @@ function parseLocal(s) { const [y,m,d]=s.split('-').map(Number); return new Date
 const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', settings:'Settings', help:'Help & Guide' };
 async function nav(view) {
   S.view = view;
+  // Close more sheet on any navigation
+  if(typeof closeMobileMore === 'function') closeMobileMore();
+  // Close desktop sidebar backdrop if open
+  if(g('sidebarBackdrop')?.style.display !== 'none') closeSidebar();
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active',
     n.dataset.view===view ||
     (n.dataset.view==='people' && view==='person-detail')
@@ -7445,7 +7462,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.0.2', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.0.3', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -7725,10 +7742,7 @@ function wire() {
 
   // Bottom nav
   document.querySelectorAll('.bn-item[data-view]').forEach(n => n.onclick = () => nav(n.dataset.view));
-  g('bnMoreBtn').onclick = () => {
-    const sb = g('sidebar'); sb.classList.add('open');
-    g('backdrop').classList.remove('hidden');
-  };
+  g('bnMoreBtn').onclick = toggleMobileMore;
 
   // Settings page buttons
   g('settingsThemeBtn').onclick = () => { toggleTheme(); renderSettings(); };
@@ -8961,7 +8975,79 @@ function renderSettings() {
 // ═══════════════════════════════════════════
 
 // ═══════════════════════════════════════════
-// Avatar System
+// Mobile More Sheet
+// ═══════════════════════════════════════════
+
+const MORE_SHEET_NAV = [
+  {view:'calendar', ico:'🗓', lbl:'Calendar'},
+  {view:'tasks',    ico:'✅', lbl:'Tasks'},
+  {view:'diary',    ico:'📖', lbl:'Diary'},
+  {view:'pinboard', ico:'📌', lbl:'Pinboard'},
+  {view:'history',  ico:'📈', lbl:'History'},
+  {view:'events',   ico:'📅', lbl:'Events'},
+  {view:'rewards',  ico:'🏆', lbl:'Rewards'},
+  {view:'stats',    ico:'🌟', lbl:'Stats'},
+  {view:'people',   ico:'👥', lbl:'People'},
+  {view:'settings', ico:'⚙️', lbl:'Settings'},
+  {view:'help',     ico:'❓', lbl:'Help'},
+];
+
+async function renderMobileMoreSheet() {
+  const sheet = g('moreSheet'); if(!sheet) return;
+
+  // View As chips
+  const pplWrap = g('moreSheetPeople');
+  if(pplWrap) {
+    const people = await all('people');
+    pplWrap.innerHTML = `<div class="more-sheet-viewas-label">View as</div><div class="more-sheet-chips" id="moreSheetChips"></div>`;
+    const chips = g('moreSheetChips');
+    const mkChip = (id, person) => {
+      const c = document.createElement('div');
+      c.className = 'more-sheet-chip' + (S.person===id?' active':'');
+      const icon = person ? avatarHtml(person, 18) : `<div class="pdot" style="background:var(--text-3)"></div>`;
+      c.innerHTML = `${icon}<span>${person?.name||'Everyone'}</span>`;
+      c.onclick = () => { S.person=id; renderSidebarPeople(); render(S.view); renderMobileMoreSheet(); };
+      chips.appendChild(c);
+    };
+    mkChip('all', null);
+    people.forEach(p => mkChip(p.id, p));
+  }
+
+  // Nav grid
+  const grid = g('moreSheetGrid'); if(!grid) return;
+  grid.innerHTML = '';
+  MORE_SHEET_NAV.forEach(({view, ico, lbl}) => {
+    const item = document.createElement('div');
+    item.className = 'more-sheet-item' + (S.view===view?' active':'');
+    item.innerHTML = `<span class="more-sheet-ico">${ico}</span><span class="more-sheet-lbl">${lbl}</span>`;
+    item.onclick = () => { closeMobileMore(); nav(view); };
+    grid.appendChild(item);
+  });
+}
+
+function toggleMobileMore() {
+  const sheet = g('moreSheet');
+  const backdrop = g('moreSheetBackdrop');
+  const isOpen = sheet.classList.contains('open');
+  if(isOpen) {
+    closeMobileMore();
+  } else {
+    renderMobileMoreSheet();
+    sheet.classList.add('open');
+    backdrop.style.display = 'block';
+    g('bnMoreBtn').classList.add('active');
+  }
+}
+
+function closeMobileMore() {
+  const sheet = g('moreSheet');
+  const backdrop = g('moreSheetBackdrop');
+  sheet.classList.remove('open');
+  backdrop.style.display = 'none';
+  g('bnMoreBtn').classList.remove('active');
+}
+
+
 // ═══════════════════════════════════════════
 
 const AVATAR_EMOJIS = [
@@ -9393,7 +9479,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.0.2', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.0.3', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -9637,7 +9723,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-7.0.2';
+const CACHE = 'homebase-7.0.3';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
