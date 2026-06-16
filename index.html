@@ -784,18 +784,14 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 .skel-line.w-half { width:50%; }
 .skel-block { height:52px; margin-bottom:8px; border-radius:var(--radius); }
 
-/* 3. Bottom nav active pill */
+/* 2. Person chip pulse on selection */
+@keyframes chipPulse{0%,100%{transform:scale(1)}45%{transform:scale(1.08)}}
+.person-chip.just-selected,.more-sheet-chip.just-selected{animation:chipPulse 0.22s ease both}
+
+/* 3. Bottom nav active pill — background pill on icon (always centered) */
 .bn-item { position:relative; }
-.bn-item.active::after {
-  content:'';
-  position:absolute;
-  bottom:6px;
-  left:50%; transform:translateX(-50%);
-  width:20px; height:3px;
-  background:var(--gold);
-  border-radius:2px;
-  animation:viewFadeIn 0.2s ease both;
-}
+.bn-item .bn-ico { border-radius:12px; padding:3px 12px; transition:background var(--t),color var(--t); display:block; }
+.bn-item.active .bn-ico { background:var(--gold-glow); }
 
 /* 4. More badge */
 .bn-badge {
@@ -1078,6 +1074,44 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .btn-skip{background:none;border:1px solid var(--border-soft);border-radius:var(--radius-sm);font-size:11px;color:var(--text-3);cursor:pointer;padding:3px 7px;font-family:'DM Sans',sans-serif;transition:all var(--t)}
 .btn-skip:hover{border-color:var(--gold-dim);color:var(--text)}
 
+/* ── Visual Polish 7.2 ── */
+/* 1. Topbar view icon */
+.topbar-view-icon{font-size:20px;margin-right:8px;vertical-align:middle;line-height:1}
+/* 2. Person detail banner */
+.pdet-banner{height:80px;border-radius:var(--radius) var(--radius) 0 0;position:relative;flex-shrink:0}
+.pdet-banner-avatar{position:absolute;bottom:-28px;left:24px;border:3px solid var(--surface);border-radius:50%}
+.pdet-header-v2{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:18px;overflow:hidden}
+.pdet-header-v2 .pdet-info{padding:38px 24px 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.pdet-header-v2 .pdet-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:700}
+.pdet-header-v2 .pdet-goal-label{font-size:12px;color:var(--text-3);margin-top:3px}
+/* 3. Pinboard color-coded cards */
+.pin-card-type-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;padding:2px 7px;border-radius:8px;margin-bottom:6px}
+/* 4. Expense overview total chip */
+.exp-chart-total-chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border-soft);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;margin-bottom:14px}
+/* 5. Reward card grid */
+.rwd-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:12px}
+.rwd-card-v2{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:18px 14px 12px;text-align:center;transition:all var(--t);position:relative;overflow:hidden}
+.rwd-card-v2:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.25);border-color:var(--border)}
+.rwd-card-v2-emoji{font-size:40px;line-height:1;display:block;margin-bottom:8px}
+.rwd-card-v2-name{font-size:13.5px;font-weight:600;margin-bottom:4px}
+.rwd-card-v2-pts{font-size:12px;color:var(--text-3);margin-bottom:8px}
+.rwd-tier-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.07em;padding:2px 9px;border-radius:10px;margin-bottom:8px;text-transform:uppercase}
+.rwd-card-v2 .item-actions{justify-content:center;padding-top:6px;border-top:1px solid var(--border-soft)}
+/* 6. Dashboard category group left border */
+.cat-group{border-left:3px solid var(--cat-color,var(--border-soft));padding-left:10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-bottom:10px}
+.cat-group-hdr{padding:4px 0 5px}
+/* 7. Diary entry cards */
+.diary-list-item{display:flex;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:7px;cursor:pointer;transition:all var(--t);position:relative;overflow:hidden}
+.diary-list-item:hover{transform:translateY(-1px);background:var(--surface-2)}
+.diary-list-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mood-color,var(--border-soft))}
+.diary-mood-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.diary-item-body{flex:1;min-width:0}
+.diary-item-date{font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
+.diary-item-preview{font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.diary-item-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.diary-item-tag{font-size:10px;background:var(--surface-3);color:var(--text-3);padding:1px 7px;border-radius:8px}
+
+/* Budget alerts */
 .budget-alert{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);font-size:12.5px;margin-bottom:4px}
 .budget-alert.over{background:rgba(196,112,128,0.12);border:1px solid rgba(196,112,128,0.3);color:var(--terra)}
 .budget-alert.near{background:rgba(224,196,106,0.1);border:1px solid rgba(224,196,106,0.25);color:var(--gold)}
@@ -1178,7 +1212,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 
   /* Topbar */
   .topbar { padding: 14px 16px 0; }
-  .topbar-left h2 { font-size: 20px; }
+  .topbar-left h2 { font-size: 22px; font-weight: 700; }
 
   /* Views */
   .view { padding: 14px 16px 80px; }
@@ -1403,6 +1437,11 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .dash-pin-preview{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Pinboard toolbar */
 .pin-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.pin-add-btn{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:600;border:1px solid transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all var(--t)}
+.pin-add-btn:hover{filter:brightness(1.15)}
+.pin-add-note{background:rgba(224,196,106,0.12);color:var(--gold);border-color:rgba(224,196,106,0.3)}
+.pin-add-list{background:rgba(106,171,130,0.12);color:var(--sage);border-color:rgba(106,171,130,0.3)}
+.pin-add-reminder{background:rgba(196,112,128,0.12);color:var(--terra);border-color:rgba(196,112,128,0.3)}
 .pin-filter-tabs{display:flex;gap:4px}
 /* ── TASK REORDER ── */
 .task-item{position:relative}
@@ -1775,7 +1814,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>HomeBase</h1>
-      <p class="sidebar-version">v7.1.0</p>
+      <p class="sidebar-version">v7.2.1</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -1964,7 +2003,9 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <option value="pinned">Pinned first</option>
       </select>
       <button class="sort-btn" id="pinToggleDone" data-show="false">Show Done</button>
-      <button class="btn btn-primary" id="addPinBtn">+ Add</button>
+      <button class="pin-add-btn pin-add-note" id="addPinNoteBtn">📝 Note</button>
+      <button class="pin-add-btn pin-add-list" id="addPinListBtn">☑️ List</button>
+      <button class="pin-add-btn pin-add-reminder" id="addPinReminderBtn">🔔 Reminder</button>
     </div>
     <div class="pin-grid" id="pinGrid"></div>
   </div>
@@ -2389,7 +2430,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.1.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.2.1</span>
         </div>
       </div>
     </div>
@@ -3519,6 +3560,7 @@ const S = {
   taskSkips: [],
   recentlyCompletedPersonIds: [],
   // pinboard
+  pinFilter: 'all', pinShowDone: false, pinSort: 'newest',
   // expense state
   expMonth: null, expTab: 'overview',
   expCatFilter: 'all', expPersonFilter: 'all',
@@ -3620,6 +3662,7 @@ function parseLocal(s) { const [y,m,d]=s.split('-').map(Number); return new Date
 // ═══════════════════════════════════════════
 // Navigation
 // ═══════════════════════════════════════════
+const VIEW_ICONS = {dashboard:'🏠',week:'📋',calendar:'🗓',history:'📈',stats:'🌟',tasks:'✅',events:'📅',rewards:'🏆',people:'👥','person-detail':'👤',diary:'📖',pinboard:'📌',expenses:'💰',settings:'⚙️',help:'❓'};
 const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', settings:'Settings', help:'Help & Guide' };
 async function nav(view) {
   S.view = view;
@@ -3634,7 +3677,10 @@ async function nav(view) {
   // Bottom nav active state
   document.querySelectorAll('.bn-item[data-view]').forEach(n => n.classList.toggle('active', n.dataset.view===view));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id===`view-${view}`));
-  g('topTitle').textContent = TITLES[view] || '';
+  const icon = VIEW_ICONS[view] || '';
+  g('topTitle').innerHTML = icon
+    ? `<span class="topbar-view-icon">${icon}</span>${TITLES[view]||''}`
+    : TITLES[view]||'';
   g('topActions').innerHTML = '';
   if(view === 'dashboard') {
     const syncWrap = document.createElement('div');
@@ -3725,7 +3771,13 @@ async function renderSidebarPeople() {
       icon = avatarHtml(person, 18);
     }
     c.innerHTML = `${icon}<span class="person-chip-name">${person?.name||'Everyone'}</span>`;
-    c.onclick = () => { S.person=id; renderSidebarPeople(); render(S.view); };
+    c.onclick = () => {
+      S.person=id;
+      c.classList.add('just-selected');
+      setTimeout(()=>c.classList.remove('just-selected'),300);
+      renderSidebarPeople();
+      render(S.view);
+    };
     cont.appendChild(c);
   };
   mkChip('all', null);
@@ -3901,7 +3953,7 @@ async function renderDash() {
   if(greetEl) {
     const hr = new Date().getHours();
     const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
-    greetEl.innerHTML = `<span class="dash-greeting-text">${greet} 👋</span><span class="dash-greeting-date">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</span>`;
+    greetEl.innerHTML = `<span class="dash-greeting-text">${greet} 👋</span>`;
   }
 
   // 9. Skeleton placeholders while data loads
@@ -3969,7 +4021,7 @@ async function renderDash() {
       }).length;
       const activeInGroup=tasks.filter(c=>!isTaskSkipped(c.id,todayStr)).length;
 
-      const group=document.createElement('div'); group.className='cat-group';
+      const group=document.createElement('div'); group.className='cat-group'; group.style.setProperty('--cat-color',color);
       const hdr=document.createElement('div'); hdr.className='cat-group-hdr';
       hdr.innerHTML=`<div class="cat-group-swatch" style="background:${color}"></div><span class="cat-group-name">${label}</span><span class="cat-group-prog">${doneInGroup}/${activeInGroup}</span><span class="cat-group-chevron">▾</span>`;
       hdr.onclick=()=>group.classList.toggle('collapsed');
@@ -4861,19 +4913,35 @@ async function renderRewardLibrary() {
 
   if (!rewards.length) { cont.innerHTML='<div class="empty"><div class="ico">🏆</div><p>No rewards yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Add Point, Goal, Credit, and Mega rewards to motivate your household.</p></div>'; return; }
 
+  const tierColors = {goal:'var(--gold)',credit:'var(--gold)',point:'#5a8ed4',mega:'var(--terra)'};
+  const tierBg     = {goal:'rgba(224,196,106,0.12)',credit:'rgba(224,196,106,0.12)',point:'rgba(90,142,212,0.12)',mega:'rgba(196,112,128,0.12)'};
   const makeCard = r => {
-    const card=document.createElement('div'); card.className='reward-card'; card.style.borderLeftColor=r.color;
-    const badgeMap={goal:'🏆 Goal Reward',credit:'💰 Credit',point:'⭐ Point Reward',mega:'🌟 Credit Reward'};
-    const metaExtra = r.type==='point'?`<span class="pts-req">${r.pointsRequired||0} pts required</span>`
-                    : r.type==='mega'?`<span class="credit-cost-badge">💰 ${r.creditCost||1} credit${(r.creditCost||1)!==1?'s':''}</span>`:'';
-    card.innerHTML=`<div class="reward-icon">${r.icon||'🏆'}</div><div class="reward-body"><div class="reward-name">${r.name}</div><div class="reward-meta"><span class="reward-type-badge ${r.type}">${badgeMap[r.type]||r.type}</span>${metaExtra}</div></div><div class="item-actions"><button class="act-btn" onclick="openRewardModal(${r.id})">Edit</button><button class="act-btn del" onclick="deleteReward(${r.id})">Delete</button></div>`;
+    const card = document.createElement('div'); card.className='rwd-card-v2';
+    card.style.cssText+=`;border-top:3px solid ${r.color||tierColors[r.type]||'var(--gold)'}`;
+    const tierLabels={goal:'Goal',credit:'Credit',point:'Points',mega:'Credit Reward'};
+    const metaPts = r.type==='point'?`${r.pointsRequired||0} pts required`
+                  : r.type==='mega'?`💰 ${r.creditCost||1} credit${(r.creditCost||1)!==1?'s':''}`
+                  : r.type==='goal'?'Earned on goal met':'';
+    card.innerHTML=`<span class="rwd-card-v2-emoji">${r.icon||'🏆'}</span>
+      <span class="rwd-tier-badge" style="background:${tierBg[r.type]||'var(--surface-3)'};color:${tierColors[r.type]||'var(--text-3)'}">${tierLabels[r.type]||r.type}</span>
+      <div class="rwd-card-v2-name">${r.name}</div>
+      ${metaPts?`<div class="rwd-card-v2-pts">${metaPts}</div>`:''}
+      <div class="item-actions"><button class="act-btn" onclick="openRewardModal(${r.id})">Edit</button><button class="act-btn del" onclick="deleteReward(${r.id})">Del</button></div>`;
     return card;
   };
+  const makeSection = (ico, title, color, items) => {
+    const sec = document.createElement('div');
+    sec.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin:14px 0 8px"><span style="font-size:14px">${ico}</span><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:${color};font-weight:600">${title}</span><span style="font-size:11px;color:var(--text-3)">${items.length}</span></div>`;
+    const grid = document.createElement('div'); grid.className='rwd-card-grid';
+    items.forEach(r => grid.appendChild(makeCard(r)));
+    sec.appendChild(grid);
+    return sec;
+  };
 
-  if(goals.length)   cont.appendChild(makeCollapsibleSection('🏆','Goal Rewards','var(--gold)',goals,makeCard));
-  if(credits.length) cont.appendChild(makeCollapsibleSection('💰','Credits','var(--gold)',credits,makeCard));
-  if(points.length)  cont.appendChild(makeCollapsibleSection('⭐','Point Rewards','#5a8ed4',points,makeCard));
-  if(mega.length)    cont.appendChild(makeCollapsibleSection('🌟','Credit Rewards','var(--terra)',mega,makeCard));
+  if(goals.length)   cont.appendChild(makeSection('🏆','Goal Rewards','var(--gold)',goals));
+  if(credits.length) cont.appendChild(makeSection('💰','Credits','var(--gold)',credits));
+  if(points.length)  cont.appendChild(makeSection('⭐','Point Rewards','#5a8ed4',points));
+  if(mega.length)    cont.appendChild(makeSection('🌟','Credit Rewards','var(--terra)',mega));
 }
 
 async function renderCreditsView() {
@@ -6239,8 +6307,14 @@ async function duplicateTask(id) {
 }
 
 async function deleteTask(id) {
-  askConfirm('Delete this task? This cannot be undone.', async () => {
-    await del('chores',id); await renderTasksView();
+  const [task, allComps] = await Promise.all([get('chores', id), all('completions')]);
+  const compCount = allComps.filter(c => c.choreId === id).length;
+  const msg = compCount > 0
+    ? `"${task?.name||'This task'}" has ${compCount} completion${compCount!==1?'s':''} in your history. Deleting it will remove the task — all earned points will be preserved in your history.`
+    : `Delete "${task?.name||'this task'}"? This cannot be undone.`;
+  askConfirm(msg, async () => {
+    await del('chores', id);
+    await renderTasksView();
   });
 }
 
@@ -6360,20 +6434,23 @@ async function renderPersonDetail() {
   if (!person) { nav('people'); return; }
 
   // Update title dynamically
-  g('topTitle').textContent = person.name;
+  g('topTitle').innerHTML = `<span class="topbar-view-icon">👤</span>${person.name}`;
 
   const cont = g('pdetContent'); cont.innerHTML='';
 
-  // ── Header ─────────────────────────────────────────────────────
-  const header = document.createElement('div'); header.className='pdet-header';
+  // ── Header with gradient banner ────────────────────────────────
+  const header = document.createElement('div'); header.className='pdet-header-v2';
+  const c1 = person.color, c2 = person.color+'44';
   header.innerHTML=`
-    <div class="pdet-avatar" style="background:${person.photo?'transparent':person.color}">${avatarHtml(person,64)}</div>
-    <div class="pdet-info">
-      <div class="pdet-name">${person.name}</div>
-      <div class="pdet-meta">${person.weekGoal?`Weekly goal: ${person.weekGoal} pts`:'No goal set'}${person.dayGoal?` · Daily: ${person.dayGoal} pts`:''}</div>
+    <div class="pdet-banner" style="background:linear-gradient(135deg,${c1} 0%,${c2} 100%)">
+      <div class="pdet-banner-avatar">${avatarHtml(person,72)}</div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost" onclick="openPersonModal(${person.id})">✏️ Edit</button>
+    <div class="pdet-info">
+      <div>
+        <div class="pdet-name">${person.name}</div>
+        <div class="pdet-goal-label">${person.weekGoal?`Weekly goal: ${person.weekGoal} pts`:'No goal set'}${person.dayGoal?` · Daily: ${person.dayGoal} pts`:''}</div>
+      </div>
+      <button class="btn btn-ghost" onclick="openPersonModal(${person.id})" style="flex-shrink:0">✏️ Edit</button>
     </div>`;
   cont.appendChild(header);
 
@@ -6571,14 +6648,33 @@ async function renderDiary() {
 
   // Entry list
   const list=g('diaryEntryList'); list.innerHTML='';
-  if(!filtered.length){ list.innerHTML=`<div class="empty"><div class="ico">📖</div><p>${S.diarySearch||S.diaryTagFilter?'No matching entries':'No entries yet — click + New Entry to start'}</p></div>`; }
+  if(!filtered.length){
+    list.innerHTML = S.diarySearch||S.diaryTagFilter
+      ? `<div style="display:flex;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);opacity:0.6"><div style="width:38px;height:38px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔍</div><div><div style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">No results</div><div style="font-size:13px;color:var(--text-2)">No entries match your search.</div></div></div>`
+      : `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:32px 20px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);text-align:center"><span style="font-size:38px">📖</span><div><div style="font-weight:600;margin-bottom:5px">No entries yet</div><div style="font-size:12px;color:var(--text-3)">Press <strong>N</strong> or tap <strong>✏️ New Entry</strong> to write your first</div></div></div>`;
+  }
   else {
     filtered.forEach(e=>{
       const person=e.personId?people.find(p=>p.id===e.personId):null;
-      const item=document.createElement('div'); item.className='diary-entry-item'+(S.diaryEntryId===e.id?' active':'');
-      const tagsHtml=(e.tags||[]).length?`<div class="dei-tags">${e.tags.map(t=>`<span class="dei-tag">#${t}</span>`).join('')}</div>`:'';
-      const photoIco=e.photo?'<div class="dei-photo-ico">📷</div>':'';
-      item.innerHTML=`<div class="dei-date">${e.mood||''} ${e.date}</div><div class="dei-preview">${(e.content||'(empty)').slice(0,80)}</div>${tagsHtml}${photoIco}${person?`<div style="font-size:10.5px;color:${person.color};margin-top:2px">${person.name}</div>`:''}`;
+      const item=document.createElement('div'); item.className='diary-list-item'+(S.diaryEntryId===e.id?' active':'');
+      // Mood color mapping for tint
+      const moodColors={
+        '😊':'#6aab82','😄':'#5abf7a','🥰':'#e07890','😌':'#6aaba8','😎':'#5a8ed4',
+        '😔':'#7a7ab0','😢':'#5a8ed4','😤':'#c97a5a','😰':'#c47080','🤔':'#a88e45',
+        '😴':'#7c6aab','🤒':'#c47080','🥳':'#e0c46a','😇':'#6aab82','🤗':'#e07890',
+        '😑':'#888','🙃':'#a88e45','🤣':'#6aab82','😭':'#5a8ed4','😶':'#888',
+      };
+      const moodColor = e.mood ? (moodColors[e.mood]||'var(--gold)') : null;
+      if(moodColor) item.style.setProperty('--mood-color', moodColor);
+      const tagsHtml = (e.tags||[]).length ? `<div class="diary-item-tags">${e.tags.slice(0,4).map(t=>`<span class="diary-item-tag">#${t}</span>`).join('')}</div>` : '';
+      item.innerHTML=`
+        <div class="diary-mood-circle" style="${moodColor?`background:${moodColor}22`:''}">${e.mood||'📖'}</div>
+        <div class="diary-item-body">
+          <div class="diary-item-date">${relDate(e.date)}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>
+          <div class="diary-item-preview">${(e.content||'').trim().slice(0,90)||'(no content)'}</div>
+          ${tagsHtml}
+        </div>
+        ${e.photo?'<span style="font-size:16px;align-self:center;flex-shrink:0">📷</span>':''}`;
       item.onclick=()=>loadEntry(e);
       list.appendChild(item);
     });
@@ -7043,10 +7139,19 @@ async function renderPinboard() {
   filtered.forEach(pin=>{
     const person=pin.personId?people.find(p=>p.id===pin.personId):null;
     const card=document.createElement('div'); card.className='pin-card'+(pin.done?' done-card':'');
-    card.style.borderTopColor=pin.color;
+    card.style.borderTopColor = pin.color;
+    card.style.borderTopWidth = '4px';
+    // Type-specific background tint
+    if(!pin.done) card.style.background = `linear-gradient(180deg,${pin.color}08 0%,transparent 60px)`;
 
     const typeIco=pin.type==='reminder'?'🔔':pin.type==='list'?'☑️':'📝';
     const typeLabel=pin.type;
+    // Type badge colors
+    const typeBadgeStyle = pin.type==='reminder'
+      ? `background:rgba(196,112,128,0.15);color:var(--terra)`
+      : pin.type==='list'
+      ? `background:rgba(106,171,130,0.15);color:var(--sage)`
+      : `background:${pin.color}22;color:${pin.color}`;
 
     // Build body content
     let bodyHtml='';
@@ -7098,7 +7203,7 @@ async function renderPinboard() {
           <button class="pin-icon-btn" onclick="deletePin(${pin.id})" title="Delete" style="color:var(--text-3)">🗑</button>
         </div>
       </div>
-      <span class="pin-type-badge ${pin.type}">${typeLabel}${pin.type==='list'&&totalCount?` · ${doneCount}/${totalCount}`:''}</span>
+      <span class="pin-type-badge ${pin.type}" style="${typeBadgeStyle}">${typeIco} ${typeLabel}${pin.type==='list'&&totalCount?` · ${doneCount}/${totalCount}`:''}</span>
       ${bodyHtml}
       <div class="pin-meta">
         ${person?`<div class="pdot" style="background:${person.color}"></div><span style="font-size:11px;color:${person.color}">${person.name}</span>`:''}
@@ -7110,11 +7215,11 @@ async function renderPinboard() {
   });
 }
 
-async function openPinModal(pinId=null) {
+async function openPinModal(pinId=null, defaultType=null) {
   S.editPinId=pinId;
   const pin=pinId?await get('pins',pinId):null;
   g('pinModalTitle').textContent=pinId?'Edit':'Add to Pinboard';
-  S.pinType=pin?.type||'note';
+  S.pinType=pin?.type||(defaultType||'note');
   S.pinColor=pin?.color||PALETTE[5];
   S.pinPinned=pin?.pinned||false;
   S.pinItems=pin?.items?pin.items.map(i=>({...i})):[];
@@ -7599,7 +7704,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.1.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.2.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -7815,7 +7920,9 @@ function wire() {
   g('pauseCancelBtn').onclick=()=>closeModal('pauseModal');
   g('pauseSaveBtn').onclick=savePause;
   // Pinboard
-  g('addPinBtn').onclick=()=>openPinModal();
+  g('addPinNoteBtn').onclick=()=>openPinModal(null,'note');
+  g('addPinListBtn').onclick=()=>openPinModal(null,'list');
+  g('addPinReminderBtn').onclick=()=>openPinModal(null,'reminder');
   g('pinCancelBtn').onclick=()=>closeModal('pinModal');
   g('pinSaveBtn').onclick=savePin;
   g('pinToggleDone').onclick=()=>{ S.pinShowDone=!S.pinShowDone; renderPinboard(); };
@@ -7948,6 +8055,7 @@ function wire() {
     if(wc) wc.textContent=`${words.length} word${words.length!==1?'s':''}`;
   });
   // People
+  g('pdetBackBtn').onclick=()=>nav('people');
   g('addPersonBtn').onclick=()=>openPersonModal();
   g('personCancelBtn').onclick=()=>closeModal('personModal');
   g('personSaveBtn').onclick=savePerson;
@@ -8353,6 +8461,13 @@ async function renderExpenses() {
 async function renderExpOverview(monthExp, cats, people, totalExpense, totalIncome) {
   const cont = g('expCharts'); cont.innerHTML='';
 
+  // Total chip at top
+  if(totalExpense > 0 || totalIncome > 0) {
+    const chip = document.createElement('div');
+    chip.innerHTML = `<div class="exp-chart-total-chip"><span>💰</span><span>${fmt$(totalExpense)} spent</span>${totalIncome>0?`<span style="color:var(--text-3)">·</span><span style="color:var(--sage)">${fmt$(totalIncome)} earned</span>`:''}${totalExpense>0&&totalIncome>0?`<span style="color:var(--text-3)">·</span><span style="color:${totalIncome-totalExpense>=0?'var(--sage)':'var(--terra)'}">${totalIncome-totalExpense<0?'-':''}${fmt$(totalIncome-totalExpense)} net</span>`:''}</div>`;
+    cont.appendChild(chip);
+  }
+
   // Budget alerts at top of overview
   const overBudget = cats.filter(c=>c.budget&&!c.isIncome).map(c=>({
     ...c, spent: monthExp.filter(e=>!e.isIncome&&e.categoryId===c.id).reduce((s,e)=>s+e.amount,0)
@@ -8544,12 +8659,23 @@ function renderExpEntries(monthExp, cats, people) {
     const tot=g('expEntryTotal'); if(tot) tot.textContent='';
     return;
   }
-  filtered.forEach(e=>{
-    const cat=cats.find(c=>c.id===e.categoryId);
-    const person=e.personId?people.find(p=>p.id===e.personId):null;
-    const item=document.createElement('div'); item.className='exp-entry-item';
-    item.innerHTML=`<div class="exp-entry-ico" style="background:${cat?.color||'var(--surface-3)'}22">${cat?.icon||'💰'}</div><div class="exp-entry-body"><div class="exp-entry-desc">${e.description||'(no description)'}</div><div class="exp-entry-meta">${e.date}${cat?' · '+cat.name:''}${person?' · '+person.name:''}</div></div><div class="exp-entry-amount ${e.isIncome?'income':'expense'}">${e.isIncome?'+':'-'}${fmt$(e.amount)}</div><div class="item-actions"><button class="act-btn" onclick="openExpenseModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteExpense(${e.id})">Del</button></div>`;
-    list.appendChild(item);
+  // Group by date with header rows
+  const byDate={};
+  filtered.forEach(e=>{if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+  Object.entries(byDate).forEach(([date,entries])=>{
+    const dayNet=entries.reduce((s,e)=>s+(e.isIncome?e.amount:-e.amount),0);
+    const hdr=document.createElement('div');
+    hdr.style.cssText='font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);padding:10px 2px 5px;border-bottom:1px solid var(--border-soft);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center';
+    const d=parseLocal(date);
+    hdr.innerHTML=`<span>${relDate(date)} <span style="font-weight:400;opacity:0.7">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></span><span style="color:${dayNet>=0?'var(--sage)':'var(--terra)'};font-size:12px">${dayNet>=0?'+':''}${fmt$(dayNet)}</span>`;
+    list.appendChild(hdr);
+    entries.forEach(e=>{
+      const cat=cats.find(c=>c.id===e.categoryId);
+      const person=e.personId?people.find(p=>p.id===e.personId):null;
+      const item=document.createElement('div'); item.className='exp-entry-item';
+      item.innerHTML=`<div class="exp-entry-ico" style="background:${cat?.color||'var(--surface-3)'}22">${cat?.icon||'💰'}</div><div class="exp-entry-body"><div class="exp-entry-desc">${e.description||'(no description)'}</div><div class="exp-entry-meta">${cat?cat.name:'Uncategorized'}${person?' · '+person.name:''}</div></div><div class="exp-entry-amount ${e.isIncome?'income':'expense'}">${e.isIncome?'+':'-'}${fmt$(e.amount)}</div><div class="item-actions"><button class="act-btn" onclick="openExpenseModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteExpense(${e.id})">Del</button></div>`;
+      list.appendChild(item);
+    });
   });
   // Entry total
   const tot=g('expEntryTotal');
@@ -9160,7 +9286,7 @@ async function renderMobileMoreSheet() {
       c.className = 'more-sheet-chip' + (S.person===id?' active':'');
       const icon = person ? avatarHtml(person, 18) : `<div class="pdot" style="background:var(--text-3)"></div>`;
       c.innerHTML = `${icon}<span>${person?.name||'Everyone'}</span>`;
-      c.onclick = () => { S.person=id; renderSidebarPeople(); render(S.view); renderMobileMoreSheet(); };
+      c.onclick = () => { S.person=id; c.classList.add('just-selected'); setTimeout(()=>c.classList.remove('just-selected'),300); renderSidebarPeople(); render(S.view); renderMobileMoreSheet(); };
       chips.appendChild(c);
     };
     mkChip('all', null);
@@ -9323,8 +9449,9 @@ async function renderHistLog() {
     entries.forEach(c=>{
       const task=chores.find(t=>t.id===c.choreId), person=c.personId?people.find(p=>p.id===c.personId):null;
       const color=categories.find(ct=>ct.id===task?.categoryId)?.color||'var(--text-3)';
+      const taskName = task?.name || '<em style="color:var(--text-3)">(deleted task)</em>';
       const row=document.createElement('div'); row.className='log-entry';
-      row.innerHTML=`<div class="log-entry-dot" style="background:${color}"></div><span class="log-entry-name">${task?.name||'Unknown task'}</span>${person?`<span style="font-size:11px;color:${person.color};font-weight:600;flex-shrink:0">${person.name}</span>`:''}<span class="log-entry-meta">${pts(c.points||0)}</span>`;
+      row.innerHTML=`<div class="log-entry-dot" style="background:${color}"></div><span class="log-entry-name">${taskName}</span>${person?`<span style="font-size:11px;color:${person.color};font-weight:600;flex-shrink:0">${person.name}</span>`:''}<span class="log-entry-meta">${pts(c.points||0)}</span>`;
       grp.appendChild(row);
       if(c.note){const n=document.createElement('div');n.className='log-entry-note';n.textContent='💬 '+c.note;grp.appendChild(n);}
     });
@@ -9633,7 +9760,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.1.0', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.2.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -9877,7 +10004,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-7.1.0';
+const CACHE = 'homebase-7.2.1';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
