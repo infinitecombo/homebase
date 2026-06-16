@@ -40,27 +40,63 @@
   --shadow: 0 4px 32px rgba(0,0,0,0.5);
   --t: 0.18s cubic-bezier(0.4,0,0.2,1);
 }
-/* ── LIGHT THEME ── */
-body.light {
-  --bg: #f4f2ee;
-  --surface: #ffffff;
-  --surface-2: #f0ede8;
-  --surface-3: #e8e4de;
-  --border: #d4cfc8;
-  --border-soft: #e4e0da;
-  --text: #1c1814;
-  --text-2: #4a4540;
-  --text-3: #8a8480;
-  --gold: #a07820;
-  --gold-dim: #c8a040;
-  --gold-glow: rgba(160,120,32,0.1);
+/* ══════════════════════════════════════
+   THEMES
+══════════════════════════════════════ */
+/* Light */
+body.theme-light {
+  --bg: #f4f2ee; --surface: #ffffff; --surface-2: #f0ede8; --surface-3: #e8e4de;
+  --border: #d4cfc8; --border-soft: #e4e0da;
+  --text: #1c1814; --text-2: #4a4540; --text-3: #8a8480;
+  --gold: #a07820; --gold-dim: #c8a040; --gold-glow: rgba(160,120,32,0.1);
   --shadow: 0 4px 32px rgba(0,0,0,0.12);
 }
-body.light .logo h1 { color: var(--gold); }
-body.light .mood-btn[title]:hover::after { background:#fff; color:var(--text-2); }
-body.light .chart-tip { background:#fff; }
-body.light .rwd-dropdown { background:#fff; }
-body.light .fab-menu { background:#fff; }
+/* Ocean */
+body.theme-ocean {
+  --bg: #090f1e; --surface: #0e1830; --surface-2: #142040; --surface-3: #1a2850;
+  --border: #1e3060; --border-soft: #182848;
+  --text: #cce4f8; --text-2: #7aa8cc; --text-3: #3d6a90;
+  --gold: #38c0d8; --gold-dim: #2090a8; --gold-glow: rgba(56,192,216,0.12);
+  --shadow: 0 4px 32px rgba(0,0,0,0.6);
+}
+/* Forest */
+body.theme-forest {
+  --bg: #0b1510; --surface: #111e16; --surface-2: #17271d; --surface-3: #1d3025;
+  --border: #243d2c; --border-soft: #1c3022;
+  --text: #d0ead4; --text-2: #7aaa88; --text-3: #3d6a4a;
+  --gold: #5abf7a; --gold-dim: #3a8f58; --gold-glow: rgba(90,191,122,0.12);
+  --shadow: 0 4px 32px rgba(0,0,0,0.6);
+}
+/* Sunset */
+body.theme-sunset {
+  --bg: #170f1e; --surface: #221530; --surface-2: #2c1c3e; --surface-3: #36234c;
+  --border: #402a5a; --border-soft: #321e48;
+  --text: #f2d8ec; --text-2: #c090b4; --text-3: #7a5070;
+  --gold: #e0709a; --gold-dim: #b05070; --gold-glow: rgba(224,112,154,0.12);
+  --shadow: 0 4px 32px rgba(0,0,0,0.6);
+}
+/* Compatibility alias — body.light still works as theme-light */
+body.light {
+  --bg: #f4f2ee; --surface: #ffffff; --surface-2: #f0ede8; --surface-3: #e8e4de;
+  --border: #d4cfc8; --border-soft: #e4e0da;
+  --text: #1c1814; --text-2: #4a4540; --text-3: #8a8480;
+  --gold: #a07820; --gold-dim: #c8a040; --gold-glow: rgba(160,120,32,0.1);
+  --shadow: 0 4px 32px rgba(0,0,0,0.12);
+}
+body.theme-light .mood-btn[title]:hover::after,body.light .mood-btn[title]:hover::after{background:#fff;color:var(--text-2)}
+body.theme-light .chart-tip,body.light .chart-tip{background:#fff}
+body.theme-light .rwd-dropdown,body.light .rwd-dropdown{background:#fff}
+body.theme-light .fab-menu,body.light .fab-menu{background:#fff}
+body.theme-light .reminder-banner,body.light .reminder-banner{color:#fff;background:#a07820}
+
+/* Theme picker swatch */
+.theme-swatches{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.theme-swatch{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform var(--t)}
+.theme-swatch:hover{transform:scale(1.08)}
+.theme-swatch-circle{width:40px;height:40px;border-radius:50%;border:3px solid transparent;transition:border-color var(--t);display:flex;align-items:center;justify-content:center;font-size:16px}
+.theme-swatch.active .theme-swatch-circle{border-color:var(--gold)}
+.theme-swatch-name{font-size:10px;color:var(--text-3);font-weight:500;text-align:center}
+
 
 /* ── PHASE 15 — UX ── */
 /* Theme toggle in sidebar */
@@ -91,12 +127,65 @@ html,body{height:100%;overflow:hidden}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh}
 
 /* ── SIDEBAR ── */
-#sidebar{width:228px;min-width:228px;background:var(--surface);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;height:100vh}
-.logo{padding:22px 20px 18px;border-bottom:1px solid var(--border-soft)}
-.logo h1{font-family:'Playfair Display',serif;font-size:23px;color:var(--gold);letter-spacing:0.02em;line-height:1}
-.logo p{font-size:10px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-top:3px}
+#sidebar{width:228px;min-width:228px;background:var(--surface);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;height:100vh;overflow:hidden;transition:width 0.25s ease,min-width 0.25s ease}
+.logo{flex:1;min-width:0;overflow:hidden}
+.logo h1{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);letter-spacing:0.02em;line-height:1;white-space:nowrap;overflow:hidden}
+.logo p{font-size:10px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-top:3px;white-space:nowrap;overflow:hidden}
 .nav{flex:1;padding:14px 10px;overflow-y:auto}
-.nav-label{font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);padding:12px 10px 5px}
+/* ── Sidebar structure ── */
+.sidebar-head{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 16px 8px}
+.sidebar-version{font-size:10px;color:var(--text-3);margin-top:2px}
+.sidebar-collapse-btn{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;padding:2px 4px;line-height:1;transition:all var(--t);flex-shrink:0;margin-top:4px;border-radius:4px}
+.sidebar-collapse-btn:hover{color:var(--text);background:var(--surface-2)}
+/* Group labels */
+.nav-group-label{font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);padding:14px 11px 4px;font-weight:600}
+.nav-divider{height:1px;background:var(--border-soft);margin:8px 11px}
+.nav-label-text{transition:opacity 0.2s}
+/* Collapsed sidebar */
+#sidebar.collapsed{width:56px;min-width:56px}
+#sidebar.collapsed .logo p, #sidebar.collapsed .nav-group-label,
+#sidebar.collapsed .nav-divider, #sidebar.collapsed .nav-label-text,
+#sidebar.collapsed .people-panel, #sidebar.collapsed .data-bar .data-bar-label{display:none}
+#sidebar.collapsed .logo{display:none}
+#sidebar.collapsed .sidebar-head{justify-content:center;padding:14px 0}
+#sidebar.collapsed .sidebar-collapse-btn{transform:rotate(180deg);margin:0}
+#sidebar.collapsed .nav-item{justify-content:center;padding:10px;gap:0}
+#sidebar.collapsed .nav-icon{font-size:18px}
+/* Tooltip on collapsed items */
+#sidebar.collapsed .nav-item{position:relative}
+#sidebar.collapsed .nav-item:hover::after{content:attr(data-tooltip);position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:var(--surface-3);color:var(--text);font-size:12px;padding:5px 10px;border-radius:var(--radius-sm);white-space:nowrap;pointer-events:none;z-index:200;border:1px solid var(--border-soft)}
+/* Person chip label hide in collapsed */
+#sidebar.collapsed .person-chip-name{display:none}
+
+/* Completion log */
+.log-date-group{margin-bottom:16px}
+.log-date-header{font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);font-weight:600;padding:6px 0 4px;border-bottom:1px solid var(--border-soft);margin-bottom:6px}
+.log-entry{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);margin-bottom:4px;transition:background var(--t)}
+.log-entry:hover{background:var(--surface-2)}
+.log-entry-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.log-entry-name{flex:1;font-size:13px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-entry-meta{font-size:11.5px;color:var(--text-3);flex-shrink:0}
+.log-entry-note{font-size:11px;color:var(--text-3);font-style:italic;padding:2px 10px 4px 28px}
+/* Reward history */
+.rwd-hist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:6px}
+.rwd-hist-body{flex:1;min-width:0}
+.rwd-hist-name{font-size:13.5px;font-weight:600}
+.rwd-hist-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+#subview-rwdLib,#subview-rwdEarned,#subview-rwdCredits,#subview-rwdHistory{padding:4px 0}
+
+/* ── Avatar display ── */
+.person-avatar-ico{display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;overflow:hidden}
+.person-avatar-ico img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.avatar-type-tabs{display:flex;gap:0;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border-soft);margin-bottom:10px}
+.avatar-type-tab{flex:1;padding:7px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text-3);background:var(--surface-2);transition:all var(--t)}
+.avatar-type-tab.active{background:var(--gold-glow);color:var(--gold)}
+.avatar-emoji-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-height:200px;overflow-y:auto;padding:2px}
+.avatar-emoji-opt{font-size:26px;padding:5px 2px;border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:background var(--t);border:2px solid transparent;line-height:1.2}
+.avatar-emoji-opt:hover{background:var(--surface-3)}
+.avatar-emoji-opt.selected{border-color:var(--gold);background:var(--gold-glow)}
+.settings-section{margin-bottom:22px}
+.settings-section-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:10px}
+
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-2);font-size:13.5px;transition:all var(--t);margin-bottom:1px;user-select:none}
 .nav-item:hover{background:var(--surface-2);color:var(--text)}
 .nav-item.active{background:var(--surface-3);color:var(--gold);font-weight:500}
@@ -880,7 +969,12 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 .bell-anim{display:inline-block;animation:bell-ring 2s ease-in-out infinite;transform-origin:top center}
 .pencil-anim{display:inline-block;animation:pencil-bounce 1.8s ease-in-out infinite}
 
-.budget-alert-strip{margin-bottom:10px}
+.w-chore.skipped,.cal-task-row.skipped{opacity:0.45}
+.w-chore.skipped .w-chore-name,.cal-task-row.skipped .cal-task-name{text-decoration:line-through}
+.skip-ico{font-size:11px;color:var(--text-3);flex-shrink:0;margin-right:2px}
+.btn-skip{background:none;border:1px solid var(--border-soft);border-radius:var(--radius-sm);font-size:11px;color:var(--text-3);cursor:pointer;padding:3px 7px;font-family:'DM Sans',sans-serif;transition:all var(--t)}
+.btn-skip:hover{border-color:var(--gold-dim);color:var(--text)}
+
 .budget-alert{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);font-size:12.5px;margin-bottom:4px}
 .budget-alert.over{background:rgba(196,112,128,0.12);border:1px solid rgba(196,112,128,0.3);color:var(--terra)}
 .budget-alert.near{background:rgba(224,196,106,0.1);border:1px solid rgba(224,196,106,0.25);color:var(--gold)}
@@ -901,6 +995,19 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 .wday-pill-evt{width:5px;height:5px;border-radius:50%;background:var(--gold);margin:3px auto 0}
 
 .cal-evt-ico-dot{font-size:11px;line-height:1.2;cursor:pointer}
+
+/* ── Mobile bottom nav ── */
+.bottom-nav{display:none}
+@media(max-width:768px){
+  .bottom-nav{display:flex;align-items:stretch;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--surface);border-top:1px solid var(--border-soft);z-index:150;padding-bottom:env(safe-area-inset-bottom,0)}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:color var(--t);color:var(--text-3);-webkit-tap-highlight-color:transparent}
+  .bn-item:not(.bn-fab-spacer):active,.bn-item.active{color:var(--gold)}
+  .bn-ico{font-size:20px;line-height:1}
+  .bn-lbl{font-size:9.5px;font-weight:500;letter-spacing:0.02em}
+  .bn-fab-spacer{flex:1;pointer-events:none}
+  .fab{bottom:68px}
+  .hamburger-btn{display:none!important}
+}
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-2);padding:4px 6px;border-radius:var(--radius-sm);transition:all var(--t);flex-shrink:0}
 .hamburger-btn:hover{background:var(--surface-2);color:var(--text)}
 
@@ -1091,7 +1198,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   .vtab { white-space: nowrap; flex-shrink: 0; padding: 9px 12px; }
 
   /* Views with tab bars: flex column so tabs stay visible at top */
-  #view-tasks.active, #view-events.active, #view-rewards.active, #view-expenses.active {
+  #view-tasks.active, #view-events.active, #view-rewards.active, #view-expenses.active, #view-history.active {
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1500,7 +1607,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
     <div id="obStep6" style="display:none">
       <div class="ob-icon-row">☁️🔄</div>
       <div class="ob-title">Keep Devices in Sync</div>
-      <div class="ob-sub">HomeBase can sync all your data to a private <strong>GitHub Gist</strong> — a free file on your GitHub account. This lets you use HomeBase on your phone, tablet, and laptop with the same data.<br><br><strong>To set it up:</strong> go to <strong>👥 People → Cloud Sync</strong>, click "Generate token ↗", and paste the token. Push to cloud after big changes, pull on a new device to get the latest.<br><br>Photos are kept local only — everything else syncs.</div>
+      <div class="ob-sub">HomeBase can sync all your data to a private <strong>GitHub Gist</strong> — a free file on your GitHub account. This lets you use HomeBase on your phone, tablet, and laptop with the same data.<br><br><strong>To set it up:</strong> go to <strong>👥 Settings → Cloud Sync</strong>, click "Generate token ↗", and paste the token. Push to cloud after big changes, pull on a new device to get the latest.<br><br>Photos are kept local only — everything else syncs.</div>
       <div class="ob-actions">
         <button class="ob-skip" id="obBack6">← Back</button>
         <button class="btn btn-primary" id="obNext6" style="padding:10px 28px;font-size:14px">Next →</button>
@@ -1557,44 +1664,54 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 
 <!-- ═══ SIDEBAR ═══ -->
 <div id="sidebar">
-  <div class="logo">
-    <h1>HomeBase</h1>
-    <p>Tasks &amp; Journal &nbsp;·&nbsp; v6.5.1</p>
+  <div class="sidebar-head">
+    <div class="logo">
+      <h1>HomeBase</h1>
+      <p class="sidebar-version">v7.0.1</p>
+    </div>
+    <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
   <nav class="nav">
-    <div class="nav-label">Overview</div>
-    <div class="nav-item active" data-view="dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
-    <div class="nav-item" data-view="week"><span class="nav-icon">📋</span>Week View</div>
-    <div class="nav-item" data-view="calendar"><span class="nav-icon">🗓</span>Calendar</div>
-    <div class="nav-item" data-view="history"><span class="nav-icon">📈</span>History</div>
-    <div class="nav-item" data-view="stats"><span class="nav-icon">🌟</span>Stats</div>
-    <div class="nav-label">Manage</div>
-    <div class="nav-item" data-view="tasks"><span class="nav-icon">✅</span>Tasks</div>
-    <div class="nav-item" data-view="events"><span class="nav-icon">📅</span>Events</div>
-    <div class="nav-item" data-view="rewards"><span class="nav-icon">🏆</span>Rewards</div>
-    <div class="nav-item" data-view="people"><span class="nav-icon">👥</span>People</div>
-    <div class="nav-label">Journal</div>
-    <div class="nav-item" data-view="diary"><span class="nav-icon">📖</span>Diary</div>
-    <div class="nav-item" data-view="pinboard"><span class="nav-icon">📌</span>Pinboard</div>
-    <div class="nav-item" data-view="expenses"><span class="nav-icon">💰</span>Expenses</div>
-    <div class="nav-label">Info</div>
-    <div class="nav-item" data-view="help"><span class="nav-icon">❓</span>Help & Guide</div>
+    <div class="nav-group-label">Daily</div>
+    <div class="nav-item active" data-view="dashboard"><span class="nav-icon">🏠</span><span class="nav-label-text">Dashboard</span></div>
+    <div class="nav-item" data-view="week"><span class="nav-icon">📋</span><span class="nav-label-text">Week View</span></div>
+    <div class="nav-item" data-view="calendar"><span class="nav-icon">🗓</span><span class="nav-label-text">Calendar</span></div>
+
+    <div class="nav-group-label">Track</div>
+    <div class="nav-item" data-view="tasks"><span class="nav-icon">✅</span><span class="nav-label-text">Tasks</span></div>
+    <div class="nav-item" data-view="expenses"><span class="nav-icon">💰</span><span class="nav-label-text">Expenses</span></div>
+    <div class="nav-item" data-view="diary"><span class="nav-icon">📖</span><span class="nav-label-text">Diary</span></div>
+    <div class="nav-item" data-view="pinboard"><span class="nav-icon">📌</span><span class="nav-label-text">Pinboard</span></div>
+
+    <div class="nav-group-label">Review</div>
+    <div class="nav-item" data-view="history"><span class="nav-icon">📈</span><span class="nav-label-text">History</span></div>
+    <div class="nav-item" data-view="events"><span class="nav-icon">📅</span><span class="nav-label-text">Events</span></div>
+    <div class="nav-item" data-view="rewards"><span class="nav-icon">🏆</span><span class="nav-label-text">Rewards</span></div>
+    <div class="nav-item" data-view="stats"><span class="nav-icon">🌟</span><span class="nav-label-text">Stats</span></div>
+
+    <div class="nav-divider"></div>
+    <div class="nav-item" data-view="people"><span class="nav-icon">👥</span><span class="nav-label-text">People</span></div>
+    <div class="nav-item" data-view="help"><span class="nav-icon">❓</span><span class="nav-label-text">Help</span></div>
+    <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span><span class="nav-label-text">Settings</span></div>
   </nav>
   <div class="people-panel" id="sidebarPeople">
     <span class="people-panel-label">View as</span>
     <div class="person-chip active" data-id="all">
-      <div class="pdot" style="background:var(--text-3)"></div>Everyone
+      <div class="pdot" style="background:var(--text-3)"></div><span class="person-chip-name">Everyone</span>
     </div>
-  </div>
-  <div class="data-bar">
-    <button class="theme-toggle-btn" id="themeToggleBtn"><span class="theme-toggle-ico" id="themeIco">☀️</span><span id="themeLabel">Light Mode</span></button>
-    <button class="data-btn install-btn" id="pwaInstallBtn" style="display:none" title="Install HomeBase as an app">📲 Install App</button>
-    <button class="data-btn export-btn" id="exportBtn" title="Export all data to a .json backup file">💾 Export</button>
-    <button class="data-btn import-btn" id="importBtn" title="Import data from a .json backup file">📂 Import</button>
   </div>
 </div>
 
 <!-- Floating Action Button -->
+<!-- Mobile bottom nav -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bn-item" data-view="dashboard"><span class="bn-ico">🏠</span><span class="bn-lbl">Home</span></div>
+  <div class="bn-item" data-view="week"><span class="bn-ico">📋</span><span class="bn-lbl">Week</span></div>
+  <div class="bn-item bn-fab-spacer"></div>
+  <div class="bn-item" data-view="expenses"><span class="bn-ico">💰</span><span class="bn-lbl">Expenses</span></div>
+  <div class="bn-item" id="bnMoreBtn"><span class="bn-ico">☰</span><span class="bn-lbl">More</span></div>
+</nav>
+
 <div class="fab" id="fab">
   <div class="fab-menu" id="fabMenu">
     <div class="fab-menu-item" onclick="fabAction('expense')"><span class="fab-menu-ico">💰</span>Log Expense</div>
@@ -1738,6 +1855,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div class="vtab active" id="rwdTabLib">Reward Library</div>
       <div class="vtab" id="rwdTabEarned">Earned Rewards</div>
       <div class="vtab" id="rwdTabCredits">💰 Credits</div>
+      <div class="vtab" id="rwdTabHistory">History</div>
     </div>
     <!-- Library sub-view -->
     <div id="subview-rwdLib">
@@ -1777,7 +1895,10 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:10px;font-weight:600">Available Credit Rewards</div>
         <div id="megaRewardList"></div>
       </div>
-  </div>
+    </div><!-- /subview-rwdCredits -->
+    <div id="subview-rwdHistory" style="display:none">
+      <div id="rwdHistoryList"></div>
+    </div>
 </div><!-- /view-rewards -->
 
   <!-- WEEK VIEW -->
@@ -1796,7 +1917,8 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="view" id="view-calendar">
     <div class="cal-nav">
       <button class="btn btn-ghost" id="calPrev">← Prev</button>
-      <span class="cal-month" id="calLabel"></span>
+      <span class="cal-month" id="calLabel" style="cursor:pointer" title="Click to jump to a month"></span>
+      <input type="month" id="calJumpInput" style="display:none;border:1px solid var(--border-soft);background:var(--surface-2);color:var(--text);border-radius:var(--radius-sm);padding:4px 8px;font-size:13px;font-family:'DM Sans',sans-serif">
       <button class="btn btn-ghost" id="calNext">Next →</button>
       <button class="btn btn-ghost" id="calToday" style="margin-left:auto">Today</button>
     </div>
@@ -1806,6 +1928,12 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 
   <!-- HISTORY -->
   <div class="view" id="view-history">
+    <div class="view-tabs" id="histTabs">
+      <div class="vtab active" id="histTabCharts">Charts</div>
+      <div class="vtab" id="histTabLog">Completion Log</div>
+    </div>
+    <!-- Charts sub-view -->
+    <div id="subview-histCharts">
     <div class="hist-controls">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em">Period:</span>
@@ -1817,6 +1945,17 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap" id="histPersonTabs"></div>
     </div>
     <div class="hist-grid" id="histGrid"></div>
+    </div>
+    <!-- Log sub-view -->
+    <div id="subview-histLog" style="display:none">
+      <div class="exp-toolbar" style="margin-top:8px">
+        <select class="fi" id="logPersonFilter" style="width:130px"></select>
+        <input class="fi" type="text" id="logSearch" placeholder="Search tasks…" style="flex:1">
+        <input class="fi" type="date" id="logDateFrom" style="width:145px">
+        <input class="fi" type="date" id="logDateTo" style="width:145px">
+      </div>
+      <div id="histLogList"></div>
+    </div>
   </div>
 
   <!-- STATS -->
@@ -1881,65 +2020,6 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <button class="btn btn-primary" id="addPersonBtn">+ Add Person</button>
     </div>
     <div id="peopleList"></div>
-    <!-- Household Settings -->
-    <div style="margin-top:28px">
-      <div class="sec-title" style="font-family:'Playfair Display',serif;font-size:17px;margin-bottom:14px">⚙️ Household Settings</div>
-      <div class="card">
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Week starts on</div>
-            <div class="setting-sub">Affects all weekly calculations, streaks, and reward periods</div>
-          </div>
-          <select class="fi" id="weekStartDaySel" style="width:130px">
-            <option value="0">Sunday</option>
-            <option value="1">Monday</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Daily reminder</div>
-            <div class="setting-sub">Show a banner when you open the app after this time</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <input type="time" class="fi" id="reminderTimeSel" style="width:110px" value="">
-            <div class="toggle" id="reminderToggle"></div>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">Pause / Vacation Mode</div>
-            <div class="setting-sub">Suspend scheduled tasks for a date range, optionally for specific people only</div>
-          </div>
-          <button class="btn btn-ghost" id="addPauseBtn" style="font-size:12px;padding:5px 12px">+ Add Pause</button>
-        </div>
-        <div id="pauseList" style="margin-top:4px"></div>
-      </div>
-    </div>
-
-    <!-- GitHub Gist Sync -->
-    <div style="margin-top:22px">
-      <div class="sec-title" style="font-family:'Playfair Display',serif;font-size:17px;margin-bottom:14px">☁️ Cloud Sync</div>
-      <div class="card">
-        <div class="setting-row">
-          <div style="flex:1;min-width:0">
-            <div class="setting-label">GitHub Personal Access Token</div>
-            <div class="setting-sub">Paste a token with <strong>gist</strong> scope — data syncs to a private Gist. <a href="https://github.com/settings/tokens/new?description=HomeBase+Sync&scopes=gist" target="_blank" style="color:var(--gold)">Generate token ↗</a></div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:12px">
-          <input class="fi" type="password" id="gistTokenInput" placeholder="ghp_xxxxxxxxxxxx" style="flex:1;font-family:monospace;font-size:13px">
-          <button class="btn btn-ghost" id="gistSaveTokenBtn" style="flex-shrink:0">Save</button>
-        </div>
-        <div id="gistStatus" style="font-size:12px;color:var(--text-3);margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="gistPushBtn" style="font-size:13px;flex:1">☁️ Push to Cloud</button>
-          <button class="btn btn-ghost" id="gistPullBtn" style="font-size:13px;flex:1">⬇️ Pull from Cloud</button>
-        </div>
-        <div style="font-size:11.5px;color:var(--text-3);margin-top:10px">
-          Last synced: <span id="gistLastSync">Never</span>
-        </div>
-      </div>
-    </div>
   </div><!-- /view-people -->
 
   <!-- PERSON DETAIL -->
@@ -2055,6 +2135,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         <input class="fi" type="text" id="expSearch" placeholder="Search entries…" style="flex:1">
         <select class="fi" id="expCatFilter" style="width:130px"></select>
         <select class="fi" id="expPersonFilter" style="width:110px"></select>
+        <button class="btn btn-ghost" id="exportCsvBtn" style="flex-shrink:0">📥 Export CSV</button>
         <button class="btn btn-ghost" id="importCsvBtn" style="flex-shrink:0">📤 Import CSV</button>
         <button class="btn btn-primary" id="addExpenseBtn">+ Add</button>
       </div>
@@ -2081,6 +2162,125 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       </div>
       <div id="expTemplateList"></div>
     </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="view" id="view-settings">
+
+    <!-- Household -->
+    <div class="settings-section">
+      <div class="settings-section-title">🏠 Household</div>
+      <div class="card">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Week starts on</div>
+            <div class="setting-sub">Affects all weekly calculations, streaks, and reward periods</div>
+          </div>
+          <select class="fi" id="weekStartDaySel" style="width:130px">
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Daily reminder</div>
+            <div class="setting-sub">Show a banner when you open the app after this time</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="time" class="fi" id="reminderTimeSel" style="width:110px">
+            <div class="toggle" id="reminderToggle"></div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Pause / Vacation Mode</div>
+            <div class="setting-sub">Suspend scheduled tasks for a date range, optionally per person</div>
+          </div>
+          <button class="btn btn-ghost" id="addPauseBtn" style="font-size:12px;padding:5px 12px">+ Add Pause</button>
+        </div>
+        <div id="pauseList" style="margin-top:4px"></div>
+      </div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="settings-section">
+      <div class="settings-section-title">🎨 Appearance</div>
+      <div class="card">
+        <div class="setting-label" style="margin-bottom:4px">Theme</div>
+        <div class="setting-sub">Choose a colour scheme for HomeBase</div>
+        <div class="theme-swatches" id="themeSwatches"></div>
+      </div>
+    </div>
+
+    <!-- Cloud Sync -->
+    <div class="settings-section">
+      <div class="settings-section-title">☁️ Cloud Sync</div>
+      <div class="card">
+        <div class="setting-row">
+          <div style="flex:1;min-width:0">
+            <div class="setting-label">GitHub Personal Access Token</div>
+            <div class="setting-sub">Token with <strong>gist</strong> scope — syncs to a private Gist. <a href="https://github.com/settings/tokens/new?description=HomeBase+Sync&scopes=gist" target="_blank" style="color:var(--gold)">Generate token ↗</a></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:12px">
+          <input class="fi" type="password" id="gistTokenInput" placeholder="ghp_xxxxxxxxxxxx" style="flex:1;font-family:monospace;font-size:13px">
+          <button class="btn btn-ghost" id="gistSaveTokenBtn" style="flex-shrink:0">Save</button>
+        </div>
+        <div id="gistStatus" style="font-size:12px;color:var(--text-3);margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="gistPushBtn" style="font-size:13px;flex:1">☁️ Push to Cloud</button>
+          <button class="btn btn-ghost" id="gistPullBtn" style="font-size:13px;flex:1">⬇️ Pull from Cloud</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--text-3);margin-top:10px">Last synced: <span id="gistLastSync">Never</span></div>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div class="settings-section">
+      <div class="settings-section-title">💾 Data</div>
+      <div class="card">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Export backup</div>
+            <div class="setting-sub">Download all data as a JSON file</div>
+          </div>
+          <button class="btn btn-ghost" id="settingsExportBtn">💾 Export</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Import backup</div>
+            <div class="setting-sub">Restore from a JSON backup file</div>
+          </div>
+          <button class="btn btn-ghost" id="settingsImportBtn">📂 Import</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Install as app</div>
+            <div class="setting-sub">Add HomeBase to your home screen for quick access</div>
+          </div>
+          <button class="btn btn-ghost" id="settingsPwaBtn">📲 Install</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="settings-section">
+      <div class="settings-section-title">ℹ️ About</div>
+      <div class="card">
+        <div class="setting-row">
+          <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.0.1</span>
+        </div>
+      </div>
+    </div>
+    <!-- Hidden legacy elements needed by wire() -->
+    <span style="display:none">
+      <button id="themeToggleBtn"><span id="themeIco"></span><span id="themeLabel"></span></button>
+      <button id="settingsThemeBtn"><span id="settingsThemeIco"></span><span id="settingsThemeLabel"></span></button>
+      <button id="pwaInstallBtn"></button>
+      <button id="exportBtn"></button>
+      <button id="importBtn"></button>
+    </span>
   </div>
 
   <!-- HELP -->
@@ -2227,7 +2427,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
           </div>
           <div class="help-card">
             <h3>Week start day</h3>
-            <p>Go to <strong>People → Household Settings</strong> to choose whether weeks start on Sunday or Monday. This affects all calculations: streaks, weekly totals, reward periods, and history charts.</p>
+            <p>Go to <strong>Settings → Household</strong> to choose whether weeks start on Sunday or Monday. This affects all calculations: streaks, weekly totals, reward periods, and history charts.</p>
           </div>
         </div>
 
@@ -2397,7 +2597,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
           </div>
           <div class="help-card">
             <h3>Setting up a pause</h3>
-            <p>Go to <strong>People → Household Settings → Pause / Vacation Mode → + Add Pause</strong>. Set a start and end date, an optional note (e.g. "Family vacation"), and optionally select specific people. Leave all people unselected to pause the whole household.</p>
+            <p>Go to <strong>Settings → Household → Pause / Vacation Mode → + Add Pause</strong>. Set a start and end date, an optional note (e.g. "Family vacation"), and optionally select specific people. Leave all people unselected to pause the whole household.</p>
             <p style="margin-top:8px">This lets households handle situations where only some members are away — the people at home still see their tasks normally.</p>
             <div class="help-tip">💡 Active pauses show an orange <strong>Active</strong> badge. Past pauses fade out automatically but remain visible for reference.</div>
           </div>
@@ -2430,7 +2630,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
           <div class="help-card">
             <h3>First-time setup</h3>
             <ol>
-              <li>Go to <strong>People → Cloud Sync</strong></li>
+              <li>Go to <strong>Settings → Cloud Sync</strong></li>
               <li>Click <strong>Generate token ↗</strong> to open GitHub (you need a free GitHub account)</li>
               <li>Give the token a name, check only the <strong>gist</strong> scope, click Generate</li>
               <li>Copy the token (starts with <code>ghp_</code>) and paste it into HomeBase</li>
@@ -2453,16 +2653,42 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
             <h3>Week 1 checklist</h3>
             <ol>
               <li>Add everyone in <strong>People</strong> with name, color, and weekly goal</li>
-              <li>Set your <strong>week start day</strong> in Household Settings</li>
+              <li>Set your <strong>week start day</strong> in Settings → Household</li>
               <li>Create <strong>Categories</strong> (at least one Bonus category)</li>
               <li>Add <strong>5–8 Tasks</strong> per person — don't overload at the start</li>
               <li>Set up <strong>Rewards</strong> in each tier before the week starts</li>
               <li>Set monthly <strong>budgets</strong> on your expense categories in 💰 Expenses → Budgets</li>
               <li>Add any <strong>recurring expense templates</strong> (rent, utilities, subscriptions)</li>
-              <li>Set up <strong>Cloud Sync</strong> from People → Cloud Sync if you have multiple devices</li>
-              <li>Install as an app on your phone from the sidebar for easy daily access</li>
+              <li>Set up <strong>Cloud Sync</strong> from Settings → Cloud Sync if you have multiple devices</li>
+              <li>Install as an app from Settings → Data for easy daily access</li>
             </ol>
-            <div class="help-tip">💡 <strong>Keyboard shortcuts:</strong> <code>←</code>/<code>→</code> to navigate week/calendar, <code>N</code> for new diary entry, <code>E</code> for quick expense, <code>B</code> for bonus task, <code>D</code> for dashboard, <code>T</code> for tasks, <code>/</code> to search.</div>
+            <div class="help-tip">💡 <strong>Keyboard shortcuts:</strong> <code>←</code>/<code>→</code> navigate week/calendar · <code>N</code> new diary entry · <code>E</code> quick expense · <code>B</code> bonus task · <code>D</code> dashboard · <code>T</code> tasks · <code>/</code> search</div>
+
+            <h3 style="margin-top:18px">Recent additions you might have missed</h3>
+            <div class="help-card">
+              <h3>⊘ Skip a task occurrence</h3>
+              <p>Tap any task to open the complete modal, then tap <strong>⊘ Skip</strong> to skip that single occurrence without it counting as missed. The task shows greyed-out with a ⊘ icon. Tap again and choose <strong>↺ Unskip</strong> to undo it.</p>
+            </div>
+            <div class="help-card">
+              <h3>📋 Copy a task</h3>
+              <p>In Tasks, each task row has a <strong>Copy</strong> button. It creates an identical duplicate named "Task (copy)" instantly — open it to adjust the name, days, or assignment.</p>
+            </div>
+            <div class="help-card">
+              <h3>📅 Log a task for a past date</h3>
+              <p>When the complete modal opens, the <strong>Date</strong> field is editable. Change it to any past date to log a completion retroactively.</p>
+            </div>
+            <div class="help-card">
+              <h3>📤 Import expenses from CSV</h3>
+              <p>In Expenses → Entries, tap <strong>📤 Import CSV</strong>. Paste or upload a bank export — Chase, Bank of America, Wells Fargo, and most generic CSV formats are auto-detected. A two-step preview lets you confirm column mapping before importing.</p>
+            </div>
+            <div class="help-card">
+              <h3>📈 Running balance & goal history</h3>
+              <p>The Expenses → Overview tab now includes a <strong>daily running balance</strong> chart showing cumulative net through the month. The person detail page shows a <strong>26-week goal history grid</strong> — green for weeks the goal was met, orange for partial, grey for no activity.</p>
+            </div>
+            <div class="help-card">
+              <h3>📱 Mobile bottom nav & themes</h3>
+              <p>On phones, a bottom tab bar (Home · Week · Expenses · More) replaces the hamburger menu. Swipe left/right on the week or calendar to navigate. Five colour themes are available in <strong>Settings → Appearance</strong>: Dark, Light, Ocean, Forest, Sunset.</p>
+            </div>
           </div>
           <div class="help-card">
             <h3>Common mistakes to avoid</h3>
@@ -2762,7 +2988,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="modal">
     <div class="modal-title" id="personModalTitle">Add Person</div>
     <!-- Photo + name row -->
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
       <div class="avatar-upload-wrap" id="mPersonAvatarWrap" title="Click to upload photo">
         <div class="avatar" id="mPersonAvatarPreview" style="width:56px;height:56px;font-size:22px">?</div>
         <div class="avatar-upload-overlay">📷</div>
@@ -2770,6 +2996,24 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
         <button class="avatar-remove" id="mPersonPhotoRemove" style="display:none" title="Remove photo">✕</button>
       </div>
       <div class="fg" style="flex:1;margin-bottom:0"><label class="fl">Name</label><input class="fi" id="mPersonName" placeholder="e.g. Alex"></div>
+    </div>
+    <!-- Avatar type picker -->
+    <div class="fg">
+      <label class="fl">Avatar</label>
+      <div class="avatar-type-tabs">
+        <div class="avatar-type-tab active" id="avatarTabEmoji" onclick="switchAvatarTab('emoji')">😊 Built-in</div>
+        <div class="avatar-type-tab" id="avatarTabPhoto" onclick="switchAvatarTab('photo')">📷 Photo</div>
+        <div class="avatar-type-tab" id="avatarTabNone" onclick="switchAvatarTab('none')">● Color dot</div>
+      </div>
+      <div id="avatarEmojiSection">
+        <div class="avatar-emoji-grid" id="avatarEmojiGrid"></div>
+      </div>
+      <div id="avatarPhotoSection" style="display:none">
+        <button class="btn btn-ghost" onclick="g('mPersonPhotoInput').click()" style="width:100%;margin-bottom:6px">📷 Upload photo</button>
+        <div id="avatarPhotoPreviewRow" style="display:none;align-items:center;gap:10px;font-size:12px;color:var(--text-3)">
+          <span>Photo uploaded</span><button class="act-btn del" onclick="clearPersonPhoto()">Remove</button>
+        </div>
+      </div>
     </div>
     <div class="fg">
       <label class="fl">Color</label>
@@ -2805,6 +3049,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" id="completeCancelBtn">Cancel</button>
+      <button class="btn-skip" id="completeSkipBtn" title="Skip this occurrence — won't count as missed">⊘ Skip</button>
       <button class="btn btn-primary" id="completeSaveBtn">Confirm</button>
   </div>
 </div></div>
@@ -3069,7 +3314,7 @@ function loadSetting(key) { try { const v=localStorage.getItem('hb_'+key); retur
 let DB;
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('HomeBaseDB', 9);
+    const r = indexedDB.open('HomeBaseDB', 10);
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('chores'))
@@ -3109,6 +3354,11 @@ function openDB() {
       }
       if (!d.objectStoreNames.contains('expenseTemplates'))
         d.createObjectStore('expenseTemplates', { keyPath: 'id', autoIncrement: true });
+      // v10: Task skips
+      if (!d.objectStoreNames.contains('taskSkips')) {
+        const s = d.createObjectStore('taskSkips', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('choreId', 'choreId'); s.createIndex('date', 'date');
+      }
     };
     r.onsuccess = e => { DB = e.target.result; res(); };
     r.onerror = () => rej(r.error);
@@ -3128,6 +3378,7 @@ const S = {
   view: 'dashboard',
   person: 'all',
   wkOffset: 0, wkSelDay: null, _wkSelOffset: null,
+  histTab: 'charts',
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth(),
   calSel: null,
@@ -3145,7 +3396,7 @@ const S = {
   weekStartDay: 0, // 0=Sunday, 1=Monday
   // stats view
   statsTab: 'household',
-  activePauses: [],
+  taskSkips: [],
   recentlyCompletedPersonIds: [],
   // pinboard
   // expense state
@@ -3207,11 +3458,17 @@ const pts = n => n === 1 ? '1 pt' : `${n||0} pts`;
 
 // Returns HTML string for a person avatar — photo if available, else color+initial
 function avatarHtml(person, size=40) {
-  if (!person) return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.4)}px;background:var(--surface-3)">?</div>`;
-  const fs = Math.round(size * 0.4);
+  if (!person) return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.45)}px;background:var(--surface-3)">?</div>`;
   if (person.photo) {
-    return `<img src="${person.photo}" class="avatar-photo" style="width:${size}px;height:${size}px" alt="${person.name}">`;
+    return `<img src="${person.photo}" class="avatar-photo" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="${person.name}">`;
   }
+  if (person.avatarEmoji) {
+    // Emoji avatar — size up to fill the circle nicely
+    const fs = Math.round(size * 0.62);
+    return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${fs}px;background:${person.color}22;border:2px solid ${person.color}44;display:flex;align-items:center;justify-content:center;line-height:1">${person.avatarEmoji}</div>`;
+  }
+  // Initial letter fallback
+  const fs = Math.round(size * 0.42);
   return `<div class="avatar" style="width:${size}px;height:${size}px;font-size:${fs}px;background:${person.color}">${person.name[0].toUpperCase()}</div>`;
 }
 
@@ -3230,10 +3487,15 @@ function parseLocal(s) { const [y,m,d]=s.split('-').map(Number); return new Date
 // ═══════════════════════════════════════════
 // Navigation
 // ═══════════════════════════════════════════
-const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', help:'Help & Guide' };
+const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', settings:'Settings', help:'Help & Guide' };
 async function nav(view) {
   S.view = view;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view===view||n.dataset.view==='people'&&view==='person-detail'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active',
+    n.dataset.view===view ||
+    (n.dataset.view==='people' && view==='person-detail')
+  ));
+  // Bottom nav active state
+  document.querySelectorAll('.bn-item[data-view]').forEach(n => n.classList.toggle('active', n.dataset.view===view));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id===`view-${view}`));
   g('topTitle').textContent = TITLES[view] || '';
   g('topActions').innerHTML = '';
@@ -3245,7 +3507,11 @@ async function nav(view) {
     pushBtn.innerHTML = '☁️ Push';
     pushBtn.onclick = async () => {
       pushBtn.disabled = true; pushBtn.textContent = '⏳';
-      await gistPush();
+      try {
+        await gistPush();
+        const s=g('gistStatus'), ok=s&&!s.textContent.startsWith('✗');
+        showToast(ok?'✓ Pushed to cloud':(s?.textContent||'✗ Push failed'), ok?'var(--sage)':'var(--terra)');
+      } catch(e){ showToast('✗ '+e.message,'var(--terra)'); }
       pushBtn.disabled = false; pushBtn.innerHTML = '☁️ Push';
     };
     const pullBtn = document.createElement('button');
@@ -3253,7 +3519,12 @@ async function nav(view) {
     pullBtn.innerHTML = '⬇️ Pull';
     pullBtn.onclick = async () => {
       pullBtn.disabled = true; pullBtn.textContent = '⏳';
-      await gistPull();
+      try {
+        await gistPull();
+        const s=g('gistStatus'), ok=s&&!s.textContent.startsWith('✗');
+        if(ok) showToast('✓ Pulled from cloud','var(--sage)');
+        else showToast(s?.textContent||'✗ Pull failed','var(--terra)');
+      } catch(e){ showToast('✗ '+e.message,'var(--terra)'); }
       pullBtn.disabled = false; pullBtn.innerHTML = '⬇️ Pull';
     };
     // Only show if token is configured
@@ -3296,6 +3567,7 @@ async function render(view) {
   else if (view==='diary') await renderDiary();
   else if (view==='pinboard') await renderPinboard();
   else if (view==='expenses') await renderExpenses();
+  else if (view==='settings')  renderSettings();
   else if (view==='help') { /* static content, nothing to render */ }
 }
 
@@ -3306,18 +3578,21 @@ async function renderSidebarPeople() {
   const people = await all('people');
   const cont = g('sidebarPeople');
   cont.innerHTML = '<span class="people-panel-label">View as</span>';
-  const mkChip = (id, color, label, photo) => {
+  const mkChip = (id, person) => {
     const c = document.createElement('div');
     c.className = 'person-chip' + (S.person===id?' active':'');
-    const icon = photo
-      ? `<img src="${photo}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-      : `<div class="pdot" style="background:${color}"></div>`;
-    c.innerHTML = `${icon}${label}`;
+    let icon;
+    if(!person) {
+      icon = `<div class="pdot" style="background:var(--text-3)"></div>`;
+    } else {
+      icon = avatarHtml(person, 18);
+    }
+    c.innerHTML = `${icon}<span class="person-chip-name">${person?.name||'Everyone'}</span>`;
     c.onclick = () => { S.person=id; renderSidebarPeople(); render(S.view); };
     cont.appendChild(c);
   };
-  mkChip('all','var(--text-3)','Everyone',null);
-  people.forEach(p => mkChip(p.id, p.color, p.name, p.photo||null));
+  mkChip('all', null);
+  people.forEach(p => mkChip(p.id, p));
 }
 
 // ═══════════════════════════════════════════
@@ -3400,9 +3675,31 @@ function eventOnDate(evt, dateStr) {
 function calcWeekStreak(person, allComps) {
   if (!person.weekGoal || person.weekGoal <= 0) return 0;
   let streak = 0;
-  // Start from last completed week and go back
-  const now = new Date();
-  // Find the most recently completed week's start (last Sunday)
+  let gracesUsed = 0;
+  const maxGrace = calcGraceTokens(person, allComps); // earned but not yet spent
+  const thisWkStart = weekStart(0);
+  for (let wk = 1; wk <= 52; wk++) {
+    const wStart = new Date(thisWkStart); wStart.setDate(wStart.getDate() - wk*7);
+    const wDates = Array.from({length:7},(_,i)=>{ const d=new Date(wStart); d.setDate(d.getDate()+i); return fmtDate(d); });
+    const wPts = allComps.filter(c=>c.personId===person.id&&wDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0);
+    if (wPts >= person.weekGoal) {
+      streak++;
+    } else if (gracesUsed < maxGrace) {
+      // Consume a grace token to protect the streak
+      gracesUsed++;
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+// Grace tokens: earn 1 for every 4 consecutive goal-met weeks (raw, without grace protection)
+// Max 2 grace tokens at a time
+function calcRawStreak(person, allComps) {
+  if (!person.weekGoal || person.weekGoal <= 0) return 0;
+  let streak = 0;
   const thisWkStart = weekStart(0);
   for (let wk = 1; wk <= 52; wk++) {
     const wStart = new Date(thisWkStart); wStart.setDate(wStart.getDate() - wk*7);
@@ -3412,6 +3709,13 @@ function calcWeekStreak(person, allComps) {
     else break;
   }
   return streak;
+}
+
+function calcGraceTokens(person, allComps) {
+  // Look at last 26 weeks to count consecutive runs, award 1 token per 4-week run
+  // Cap at 2 tokens
+  const rawStreak = calcRawStreak(person, allComps);
+  return Math.min(2, Math.floor(rawStreak / 4));
 }
 
 // Consecutive scheduled days a task was completed, looking back from today (or yesterday if not yet due today)
@@ -3456,6 +3760,7 @@ async function renderDash() {
   const dow = new Date().getDay();
   const [chores, people, allComps, allDiary, categories, allEvts, allPins] = await Promise.all([all('chores'),all('people'),all('completions'),all('diary'),all('categories'),all('events'),all('pins')]);
   S.activePauses = await all('pauses').catch(()=>[]);
+  S.taskSkips = await all('taskSkips').catch(()=>[]);
   const todayComp = allComps.filter(c => c.date===todayStr);
 
   // ── Pinboard alert ────────────────────────────────────────────
@@ -3486,7 +3791,7 @@ async function renderDash() {
   if (S.person!=='all') dayChores = dayChores.filter(c => !c.assignedTo||c.assignedTo.length===0||c.assignedTo.includes(S.person));
   const dc = g('dashChores');
   dc.innerHTML = '';
-  if (!dayChores.length) { dc.innerHTML='<div class="empty"><div class="ico">🌟</div><p>No tasks today!</p></div>'; }
+  if (!dayChores.length) { dc.innerHTML='<div class="empty"><div class="ico">🌟</div><p>You\'re all caught up!</p><p style="font-size:12px;color:var(--text-3);margin-top:4px">No tasks scheduled for today.</p></div>'; }
   else {
     // Group tasks by category, respecting sortOrder
     const sortedCats=[...categories].sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id));
@@ -3502,14 +3807,16 @@ async function renderDash() {
       const color=cat?cat.color:'var(--text-3)';
       const label=cat?cat.name:'Uncategorized';
       const doneInGroup=tasks.filter(c=>{
+        if(isTaskSkipped(c.id, todayStr)) return false;
         return S.person!=='all'
           ? todayComps.some(cp=>cp.choreId===c.id&&cp.personId===S.person)
           : todayComps.some(cp=>cp.choreId===c.id);
       }).length;
+      const activeInGroup=tasks.filter(c=>!isTaskSkipped(c.id,todayStr)).length;
 
       const group=document.createElement('div'); group.className='cat-group';
       const hdr=document.createElement('div'); hdr.className='cat-group-hdr';
-      hdr.innerHTML=`<div class="cat-group-swatch" style="background:${color}"></div><span class="cat-group-name">${label}</span><span class="cat-group-prog">${doneInGroup}/${tasks.length}</span><span class="cat-group-chevron">▾</span>`;
+      hdr.innerHTML=`<div class="cat-group-swatch" style="background:${color}"></div><span class="cat-group-name">${label}</span><span class="cat-group-prog">${doneInGroup}/${activeInGroup}</span><span class="cat-group-chevron">▾</span>`;
       hdr.onclick=()=>group.classList.toggle('collapsed');
       group.appendChild(hdr);
 
@@ -3518,8 +3825,9 @@ async function renderDash() {
         const done=S.person!=='all'
           ? todayComps.some(cp=>cp.choreId===c.id&&cp.personId===S.person)
           : todayComps.some(cp=>cp.choreId===c.id);
-        const row=document.createElement('div'); row.className='chore-row-compact'+(done?' done':'');
-        row.innerHTML=`<div class="cdot" style="background:${color}"></div><span class="chore-name" style="flex:1">${c.name}${c.description?` <span style="font-size:10.5px;color:var(--text-3)">— ${c.description}</span>`:''}</span><span class="pts-badge">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+        const skipped = isTaskSkipped(c.id, todayStr);
+        const row=document.createElement('div'); row.className='chore-row-compact'+(done?' done':'')+(skipped?' skipped':'');
+        row.innerHTML=`<div class="cdot" style="background:${color}"></div><span class="chore-name" style="flex:1">${c.name}${c.description?` <span style="font-size:10.5px;color:var(--text-3)">— ${c.description}</span>`:''}</span><span class="pts-badge">${pts(c.points)}</span>${skipped?'<span class="skip-ico" title="Skipped">⊘</span>':''}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
         row.querySelector('.check-btn').onclick=(e)=>{ e.stopPropagation(); animCheckBurst(e.currentTarget); openCompleteModal(c.id,todayStr); };
         row.onclick=()=>openCompleteModal(c.id,todayStr);
         body.appendChild(row);
@@ -3578,11 +3886,12 @@ async function renderDash() {
       const pct = goal>0 ? Math.min(100,Math.round(earned/goal*100)) : 0;
       const goalMet = goal>0 && earned>=goal;
       const wkStreak = calcWeekStreak(p, allComps);
+      const graceTokens = calcGraceTokens(p, allComps);
       const streakHtml = wkStreak>0
-        ? `<span class="streak-badge ${wkStreak>=5?'gold':'fire'}" title="${wkStreak} week${wkStreak!==1?'s':''} in a row">${streakEmoji(wkStreak,'weeks')} <span class="streak-num">${wkStreak}</span>wk</span>`
+        ? `<span class="streak-badge ${wkStreak>=5?'gold':'fire'}" title="${wkStreak} week${wkStreak!==1?'s':''} in a row${graceTokens>0?` · ${graceTokens} grace token${graceTokens>1?'s':''} earned`:''}">${streakEmoji(wkStreak,'weeks')} <span class="streak-num">${wkStreak}</span>wk${graceTokens>0?` <span style="opacity:0.7" title="Grace tokens">🛡️${graceTokens>1?graceTokens:''}`:''}</span>`
         : '';
       const d=document.createElement('div'); d.className='prog-block';
-      d.innerHTML=`<div class="prog-row"><div class="prog-name"><div class="pdot" style="background:${p.color}"></div>${p.name}${streakHtml?` ${streakHtml}`:''}</div><span class="prog-val" style="color:${goalMet?'var(--sage)':'var(--text-3)'}">${earned}${goal?' / '+goal+' pts':' pts'}${goalMet?' 🎉':''}</span></div><div class="prog-bg"><div class="prog-fill" style="width:${pct}%;background:${p.color}"></div></div>`;
+      d.innerHTML=`<div class="prog-row"><div class="prog-name">${avatarHtml(p,22)}${p.name}${streakHtml?` ${streakHtml}`:''}</div><span class="prog-val" style="color:${goalMet?'var(--sage)':'var(--text-3)'}">${earned}${goal?' / '+goal+' pts':' pts'}${goalMet?' 🎉':''}</span></div><div class="prog-bg"><div class="prog-fill" style="width:${pct}%;background:${p.color}"></div></div>`;
       pr.appendChild(d);
       // Progress bar animation
       if(!REDUCED_MOTION) {
@@ -3646,7 +3955,7 @@ async function renderDash() {
   const sorted = [...allDiary].sort((a,b)=>b.date.localeCompare(a.date));
   const recent = S.person==='all' ? sorted[0] : sorted.find(e=>e.personId===S.person);
   const dd = g('dashDiary');
-  if (!recent) { dd.innerHTML='<div class="empty"><div class="ico">📖</div><p>No entries yet — start writing!</p></div>'; }
+  if (!recent) { dd.innerHTML='<div class="empty"><div class="ico">📖</div><p>No diary entries yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Press <strong>N</strong> or tap <strong>✏️ New Entry</strong> to write your first entry.</p></div>'; }
   else {
     const person = recent.personId ? people.find(p=>p.id===recent.personId) : null;
     dd.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold)">${recent.date}</span>${recent.mood?`<span style="font-size:20px">${recent.mood}`:''}${person?`<span style="font-size:11px;color:${person.color}">${person.name}</span>`:''}${recent.mood?'</span>':''}</div><p style="font-size:13.5px;color:var(--text-2);line-height:1.65">${(recent.content||'').slice(0,320)}${(recent.content||'').length>320?'…':''}</p>`;
@@ -3659,7 +3968,7 @@ async function renderDash() {
     // Show: active reminders (not done) + pinned notes/lists (not done)
     const dashPins = allPins.filter(p=>!p.done && (p.type==='reminder' || p.pinned)).sort((a,b)=>b.createdAt?.localeCompare(a.createdAt||'')||0).slice(0,6);
     if (!dashPins.length) {
-      dp.innerHTML='<div class="empty"><div class="ico">📌</div><p>No pinned notes or active reminders</p></div>';
+      dp.innerHTML='<div class="empty"><div class="ico">📌</div><p>Nothing on the board.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Go to <strong>📌 Pinboard</strong> to add notes, lists, or reminders.</p></div>';
     } else {
       dp.innerHTML='';
       dashPins.forEach(pin=>{
@@ -3691,6 +4000,33 @@ async function renderDash() {
       deExp.innerHTML='<div class="empty"><div class="ico">💰</div><p>No expenses logged this month yet.</p></div>';
     } else {
       deExp.innerHTML='';
+      // Template due-date prompt
+      const templates = await all('expenseTemplates').catch(()=>[]);
+      const todayD = new Date(), weekEndD = new Date(todayD); weekEndD.setDate(weekEndD.getDate()+7);
+      const dueTemplates = templates.filter(t => {
+        if(t.endDate && t.endDate < fmtDate(todayD)) return false;
+        const next = nextDueDate(t, t.startDate);
+        return next <= fmtDate(weekEndD);
+      });
+      if(dueTemplates.length) {
+        const dueEl = document.createElement('div');
+        dueEl.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(224,196,106,0.08);border:1px solid rgba(224,196,106,0.25);border-radius:var(--radius-sm);margin-bottom:10px;cursor:pointer';
+        dueEl.innerHTML=`<span style="font-size:14px">🔔</span><span style="font-size:12.5px;flex:1"><strong>${dueTemplates.length}</strong> recurring bill${dueTemplates.length>1?'s':''} due this week — <span style="color:var(--gold)">${dueTemplates.slice(0,2).map(t=>t.name).join(', ')}${dueTemplates.length>2?'…':''}</span></span>`;
+        dueEl.onclick=()=>{ S.expTab='templates'; nav('expenses'); };
+        deExp.appendChild(dueEl);
+      }
+      // This week expenses
+      const ws=weekStart(0);
+      const wsDates=Array.from({length:7},(_,i)=>{ const d=new Date(ws); d.setDate(d.getDate()+i); return fmtDate(d); });
+      const weekExp=allExp.filter(e=>wsDates.includes(e.date));
+      const wkSpend=weekExp.filter(e=>!e.isIncome).reduce((s,e)=>s+e.amount,0);
+      const wkInc=weekExp.filter(e=>e.isIncome).reduce((s,e)=>s+e.amount,0);
+      if(wkSpend>0||wkInc>0){
+        const wkRow=document.createElement('div');
+        wkRow.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:5px 0 10px;border-bottom:1px solid var(--border-soft);margin-bottom:10px';
+        wkRow.innerHTML=`<span style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-3);font-weight:600">This Week</span><span style="font-size:13px;font-weight:600"><span style="color:var(--terra)">${fmt$(wkSpend)}</span> spent${wkInc>0?` · <span style="color:var(--sage)">${fmt$(wkInc)}</span> in`:''}</span>`;
+        deExp.appendChild(wkRow);
+      }
       // Budget alerts — categories at ≥80% or over
       const alerts = expCats.filter(c=>c.budget).map(c=>({
         ...c, spent: mExp.filter(e=>!e.isIncome&&e.categoryId===c.id).reduce((s,e)=>s+e.amount,0)
@@ -3855,7 +4191,7 @@ async function renderDash() {
     .filter(e => e.date >= todayStr && e.date <= fmtDate(new Date(Date.now() + 14*86400000)))
     .sort((a,b) => a.date.localeCompare(b.date))
     .slice(0, 5);
-  if (!upcoming.length) { de.innerHTML='<div class="empty"><div class="ico">📅</div><p>No events in the next 2 weeks</p></div>'; }
+  if (!upcoming.length) { de.innerHTML='<div class="empty"><div class="ico">📅</div><p>No events coming up.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Add birthdays, appointments, and reminders in <strong>📅 Events</strong>.</p></div>'; }
   else {
     de.innerHTML = upcoming.map(e => {
       const person = e.personId ? people.find(p=>p.id===e.personId) : null;
@@ -3954,6 +4290,7 @@ async function renderWeek() {
 
   const [chores,people,allComps,categories,allEvts] = await Promise.all([all('chores'),all('people'),all('completions'),all('categories'),all('events')]);
   S.activePauses = await all('pauses').catch(()=>[]);
+  S.taskSkips = await all('taskSkips').catch(()=>[]);
   const allTasks=chores;
   const todayStr = today();
 
@@ -4013,16 +4350,26 @@ async function renderWeek() {
             ?allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===S.person)
             :assignees.length===0?allComps.some(cp=>cp.choreId===c.id&&cp.date===ds)
             :assignees.every(p=>allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id));
-          const item=document.createElement('div'); item.className='w-chore'+(done?' done':'');
+          const skpd=isTaskSkipped(c.id,ds);
+          const item=document.createElement('div'); item.className='w-chore'+(done?' done':'')+(skpd?' skipped':'');
           if(c.description) item.title=c.description;
           const showDots=S.person==='all'&&assignees.length>0;
           const dotsHtml=showDots?`<div class="comp-dots">${assignees.map(p=>{
             const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
             return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${p.name}${comp?' ✓':''}"></div>`;
           }).join('')}</div>`:(done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}</span>${dotsHtml}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
           item.onclick=(e)=>{ animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
           detail.appendChild(item);
+          // Show completion notes
+          const taskComps = allComps.filter(cp=>cp.choreId===c.id&&cp.date===ds&&cp.note);
+          taskComps.forEach(cp=>{
+            const p=people.find(pp=>pp.id===cp.personId);
+            const noteEl=document.createElement('div');
+            noteEl.className='log-entry-note';
+            noteEl.textContent=`💬 ${p?p.name+': ':''}${cp.note}`;
+            detail.appendChild(noteEl);
+          });
         });
       } else if(!dayEvts.length) {
         const empty=document.createElement('div');
@@ -4123,8 +4470,13 @@ async function renderWeek() {
           const tooltip=comp?.note?`${p.name}: ${comp.note}`:p.name+(comp?' ✓':'');
           return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${tooltip}"></div>`;
         }).join('')}</div>` : (done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-        item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name">${c.name}</span>${dotsHtml}`;
-        item.onclick=()=>openCompleteModal(c.id,ds);
+        item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name">${c.name}</span>${dotsHtml}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+        // Quick-complete: single click toggles when viewing as specific person
+        if(S.person !== 'all') {
+          item.onclick=(e)=>{ animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
+        } else {
+          item.onclick=()=>openCompleteModal(c.id,ds);
+        }
         body.appendChild(item);
       });
       const dayBonusComps=allComps.filter(c=>c.date===ds&&c.isBonus&&(S.person==='all'||c.personId===S.person));
@@ -4299,12 +4651,15 @@ async function renderRewardsView() {
   g('rwdTabLib').classList.toggle('active', S.rwdTab==='library');
   g('rwdTabEarned').classList.toggle('active', S.rwdTab==='earned');
   g('rwdTabCredits').classList.toggle('active', S.rwdTab==='credits');
-  g('subview-rwdLib').style.display    = S.rwdTab==='library'?'':'none';
-  g('subview-rwdEarned').style.display = S.rwdTab==='earned'?'':'none';
-  g('subview-rwdCredits').style.display= S.rwdTab==='credits'?'':'none';
+  g('rwdTabHistory').classList.toggle('active', S.rwdTab==='history');
+  g('subview-rwdLib').style.display     = S.rwdTab==='library'?'':'none';
+  g('subview-rwdEarned').style.display  = S.rwdTab==='earned'?'':'none';
+  g('subview-rwdCredits').style.display = S.rwdTab==='credits'?'':'none';
+  g('subview-rwdHistory').style.display = S.rwdTab==='history'?'':'none';
   if (S.rwdTab==='library')  await renderRewardLibrary();
   else if (S.rwdTab==='earned')  await renderEarnedRewards();
   else if (S.rwdTab==='credits') await renderCreditsView();
+  else if (S.rwdTab==='history') await renderRwdHistory();
 }
 
 function applySort(arr, sortKey) {
@@ -4349,7 +4704,7 @@ async function renderRewardLibrary() {
   const points  = applySort(rewards.filter(r=>r.type==='point'),   S.rwdSort);
   const mega    = applySort(rewards.filter(r=>r.type==='mega'),    S.rwdSort);
 
-  if (!rewards.length) { cont.innerHTML='<div class="empty"><div class="ico">🏆</div><p>No rewards yet. Add some to motivate your household!</p></div>'; return; }
+  if (!rewards.length) { cont.innerHTML='<div class="empty"><div class="ico">🏆</div><p>No rewards yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Add Point, Goal, Credit, and Mega rewards to motivate your household.</p></div>'; return; }
 
   const makeCard = r => {
     const card=document.createElement('div'); card.className='reward-card'; card.style.borderLeftColor=r.color;
@@ -5068,6 +5423,15 @@ function hideTip() {
 // ── Main render ────────────────────────────────────────────────────
 
 async function renderHistory() {
+  // Tab switching
+  const tab = S.histTab || 'charts';
+  g('histTabCharts').classList.toggle('active', tab==='charts');
+  g('histTabLog').classList.toggle('active', tab==='log');
+  g('subview-histCharts').style.display = tab==='charts' ? '' : 'none';
+  g('subview-histLog').style.display    = tab==='log'    ? '' : 'none';
+
+  if(tab === 'log') { await renderHistLog(); return; }
+
   const [people, allComps, chores, categories, allEarned, allRewards] =
     await Promise.all([all('people'),all('completions'),all('chores'),all('categories'),all('earnedRewards'),all('rewards')]);
 
@@ -5558,7 +5922,7 @@ async function renderTasks() {
   // Update sort buttons
   makeSortBar(['taskSortAZ','taskSortZA','taskSortPtsAsc','taskSortPtsDesc'], S.taskSort, s=>{ S.taskSort=s; renderTasks(); });
 
-  if(!chores.length){ cont.innerHTML='<div class="empty"><div class="ico">✅</div><p>No tasks yet. Add your first!</p></div>'; return; }
+  if(!chores.length){ cont.innerHTML='<div class="empty"><div class="ico">✅</div><p>No tasks yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Tap <strong>+ Add Task</strong> above to create your first recurring or one-time task.</p></div>'; return; }
 
   const catMap = Object.fromEntries(categories.map(c=>[c.id,c]));
   const sortedCats = [...categories].sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id));
@@ -6279,6 +6643,10 @@ async function openCompleteModal(choreId, date) {
   // Set date field — editable for late logging
   g('completeDate').value = date;
   g('completeTitle').textContent = `"${chore?.name||'Task'}" — ${date}`;
+  // Update skip button label
+  const skipped = isTaskSkipped(choreId, date);
+  g('completeSkipBtn').textContent = skipped ? '↺ Unskip' : '⊘ Skip';
+  g('completeSkipBtn').title = skipped ? 'Remove skip — task will show as incomplete again' : 'Skip this occurrence — won\'t count as missed';
   g('completeNote').value='';
   if(chore?.description){ const p=g('completeNote').previousElementSibling; if(p) p.querySelector('.comp-note-badge').textContent=chore.description.slice(0,40)+(chore.description.length>40?'…':''); }
   const grid=g('completeGrid'); grid.innerHTML='';
@@ -6290,7 +6658,7 @@ async function openCompleteModal(choreId, date) {
   people.forEach(p=>{
     const done=allComps.some(c=>c.choreId===choreId&&c.date===date&&c.personId===p.id);
     const row=document.createElement('div'); row.className='person-sel-row'+(done?' on':'');
-    row.innerHTML=`<div class="pdot" style="background:${p.color}"></div><span style="flex:1">${p.name}</span>${done?'<span style="color:var(--sage);font-size:12px">✓ Done</span>':''}`;
+    row.innerHTML=`${avatarHtml(p,28)}<span style="flex:1">${p.name}</span>${done?'<span style="color:var(--sage);font-size:12px">✓ Done</span>':''}`;
     row.dataset.pid=p.id; row.dataset.was=done;
     row.onclick=()=>row.classList.toggle('on');
     grid.appendChild(row);
@@ -6728,7 +7096,7 @@ async function runSearch(query) {
   const cont=g('searchResults');
   if(!q){ cont.innerHTML='<div class="search-empty">Start typing to search…</div>'; return; }
 
-  const [chores,diaryEntries,events,pins]=await Promise.all([all('chores'),all('diary'),all('events'),all('pins')]);
+  const [chores,diaryEntries,events,pins,expenses,expCats]=await Promise.all([all('chores'),all('diary'),all('events'),all('pins'),all('expenses'),all('expenseCategories')]);
 
   const results=[];
 
@@ -6749,12 +7117,24 @@ async function runSearch(query) {
   pins.filter(p=>p.title?.toLowerCase().includes(q)||(p.content||'').toLowerCase().includes(q)||(p.items||[]).some(i=>i.text?.toLowerCase().includes(q)))
     .forEach(p=>results.push({type:'pin',ico:p.type==='list'?'☑️':p.type==='reminder'?'🔔':'📝',title:p.title||'Untitled',meta:p.type,action:()=>{ closeSearch(); nav('pinboard'); },raw:p}));
 
+  // Expenses
+  expenses.filter(e=>(e.description||'').toLowerCase().includes(q)||(e.notes||'').toLowerCase().includes(q))
+    .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8)
+    .forEach(e=>{
+      const cat=expCats.find(c=>c.id===e.categoryId);
+      results.push({type:'expense',ico:cat?.icon||'💰',
+        title:e.description||'(no description)',
+        meta:`${e.isIncome?'+':'-'}${fmt$(e.amount)} · ${e.date}${cat?' · '+cat.name:''}`,
+        action:()=>{ closeSearch(); S.expMonth=e.date.slice(0,7); S.expTab='entries'; nav('expenses'); },
+        raw:e});
+    });
+
   if(!results.length){ cont.innerHTML=`<div class="search-empty">No results for "<strong>${query}</strong>"</div>`; return; }
 
   cont.innerHTML='';
-  const byType={task:[],diary:[],event:[],pin:[]};
-  results.forEach(r=>byType[r.type].push(r));
-  const typeLabels={task:'Tasks',diary:'Diary',event:'Events',pin:'Pinboard'};
+  const byType={task:[],diary:[],event:[],pin:[],expense:[]};
+  results.forEach(r=>{ if(byType[r.type]) byType[r.type].push(r); });
+  const typeLabels={task:'Tasks',diary:'Diary',event:'Events',pin:'Pinboard',expense:'Expenses'};
 
   Object.entries(byType).forEach(([type,items])=>{
     if(!items.length) return;
@@ -6961,6 +7341,11 @@ async function openPersonModal(personId=null) {
   g('mPersonDay').value=person?.dayGoal||'';
   S.personColor=person?.color||PALETTE[4];
   S.personPhoto=person?.photo||null;
+  _selectedEmoji=person?.avatarEmoji||null;
+  _avatarMode=S.personPhoto?'photo':(_selectedEmoji?'emoji':'none');
+  switchAvatarTab(_avatarMode);
+  buildAvatarEmojiGrid(_selectedEmoji);
+  const ppr=g('avatarPhotoPreviewRow'); if(ppr) ppr.style.display=S.personPhoto?'flex':'none';
   renderColors('mPersonColors',S.personColor,c=>{
     S.personColor=c;
     syncPersonAvatarPreview();
@@ -6973,29 +7358,45 @@ function syncPersonAvatarPreview() {
   const wrap=g('mPersonAvatarWrap'), preview=g('mPersonAvatarPreview'), removeBtn=g('mPersonPhotoRemove');
   if (!wrap||!preview) return;
   const name=g('mPersonName').value.trim()||'?';
-  if (S.personPhoto) {
-    preview.outerHTML.includes('img') ? null : null; // reset
-    wrap.querySelector('.avatar,img')?.remove();
-    const img=document.createElement('img');
-    img.src=S.personPhoto; img.className='avatar-photo'; img.style.cssText='width:56px;height:56px';
-    img.id='mPersonAvatarPreview';
-    wrap.insertBefore(img,wrap.querySelector('.avatar-upload-overlay'));
-    removeBtn.style.display='flex';
-  } else {
-    const existing=wrap.querySelector('.avatar-photo');
+  if (S.personPhoto && _avatarMode==='photo') {
+    // Show photo
+    const existing=wrap.querySelector('.avatar-photo,img.avatar-photo');
     if(existing) existing.remove();
-    let div=wrap.querySelector('.avatar');
-    if(!div){ div=document.createElement('div'); div.className='avatar'; div.id='mPersonAvatarPreview'; div.style.cssText='width:56px;height:56px;font-size:22px'; wrap.insertBefore(div,wrap.querySelector('.avatar-upload-overlay')); }
+    let el=wrap.querySelector('#mPersonAvatarPreview');
+    if(el&&el.tagName!=='IMG'){el.remove();}
+    const img=document.createElement('img');
+    img.src=S.personPhoto; img.className='avatar-photo'; img.id='mPersonAvatarPreview';
+    img.style.cssText='width:56px;height:56px;border-radius:50%;object-fit:cover';
+    wrap.insertBefore(img,wrap.querySelector('.avatar-upload-overlay'));
+    if(removeBtn) removeBtn.style.display='flex';
+  } else if (_avatarMode==='emoji' && _selectedEmoji) {
+    // Show emoji
+    let div=wrap.querySelector('#mPersonAvatarPreview');
+    if(div&&div.tagName==='IMG'){div.remove(); div=null;}
+    if(!div){ div=document.createElement('div'); div.className='avatar'; div.id='mPersonAvatarPreview'; div.style.cssText='width:56px;height:56px;font-size:32px;display:flex;align-items:center;justify-content:center;border-radius:50%'; wrap.insertBefore(div,wrap.querySelector('.avatar-upload-overlay')); }
+    div.style.background=S.personColor+'22';
+    div.style.border=`2px solid ${S.personColor}44`;
+    div.textContent=_selectedEmoji;
+    if(removeBtn) removeBtn.style.display='none';
+  } else {
+    // Initial letter
+    const existing=wrap.querySelector('.avatar-photo,img');
+    if(existing&&existing.tagName==='IMG') existing.remove();
+    let div=wrap.querySelector('#mPersonAvatarPreview');
+    if(!div||div.tagName==='IMG'){ div=document.createElement('div'); div.className='avatar'; div.id='mPersonAvatarPreview'; div.style.cssText='width:56px;height:56px;font-size:22px'; wrap.insertBefore(div,wrap.querySelector('.avatar-upload-overlay')); }
     div.style.background=S.personColor;
+    div.style.border='none';
     div.textContent=name[0].toUpperCase();
-    removeBtn.style.display='none';
+    if(removeBtn) removeBtn.style.display='none';
   }
 }
 
 async function savePerson() {
   const name=g('mPersonName').value.trim();
   if(!name){ g('mPersonName').focus(); return; }
-  const p={name,color:S.personColor,weekGoal:parseInt(g('mPersonWeek').value)||0,dayGoal:parseInt(g('mPersonDay').value)||0,photo:S.personPhoto||null};
+  const avatarEmoji=_avatarMode==='emoji'?(_selectedEmoji||null):null;
+  const p={name,color:S.personColor,weekGoal:parseInt(g('mPersonWeek').value)||0,dayGoal:parseInt(g('mPersonDay').value)||0,
+    photo:_avatarMode==='photo'?(S.personPhoto||null):null, avatarEmoji};
   if(S.editPersonId) p.id=S.editPersonId;
   await put('people',p); closeModal('personModal'); await renderSidebarPeople(); await renderPeople();
   if(S.view==='person-detail'&&S.detailPersonId===p.id) await renderPersonDetail();
@@ -7043,7 +7444,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '6.5.1', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.0.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -7304,6 +7705,36 @@ function wire() {
   };
   g('mPersonPhotoRemove').onclick=e=>{ e.stopPropagation(); S.personPhoto=null; syncPersonAvatarPreview(); };
   g('mPersonName').oninput=()=>syncPersonAvatarPreview();
+  // Sidebar collapse toggle
+  g('sidebarCollapseBtn').onclick = () => {
+    const sb = g('sidebar');
+    const collapsed = sb.classList.toggle('collapsed');
+    saveSetting('sidebarCollapsed', collapsed);
+    // Add tooltips to nav items when collapsed
+    document.querySelectorAll('.nav-item[data-view]').forEach(n => {
+      n.setAttribute('data-tooltip', n.querySelector('.nav-label-text')?.textContent || '');
+    });
+  };
+  // Restore collapsed state
+  if(loadSetting('sidebarCollapsed') === 'true') {
+    g('sidebar').classList.add('collapsed');
+    document.querySelectorAll('.nav-item[data-view]').forEach(n =>
+      n.setAttribute('data-tooltip', n.querySelector('.nav-label-text')?.textContent || ''));
+  }
+
+  // Bottom nav
+  document.querySelectorAll('.bn-item[data-view]').forEach(n => n.onclick = () => nav(n.dataset.view));
+  g('bnMoreBtn').onclick = () => {
+    const sb = g('sidebar'); sb.classList.add('open');
+    g('backdrop').classList.remove('hidden');
+  };
+
+  // Settings page buttons
+  g('settingsThemeBtn').onclick = () => { toggleTheme(); renderSettings(); };
+  g('settingsExportBtn').onclick = exportData;
+  g('settingsImportBtn').onclick = triggerImport;
+  g('settingsPwaBtn').onclick = () => { nav('help'); setTimeout(() => helpScroll('help-pwa', null), 80); };
+
   // Keyboard shortcuts
   wireKeyboardShortcuts();
   // Mobile hamburger
@@ -7320,6 +7751,7 @@ function wire() {
   ['expTabOverview','expTabEntries','expTabBudgets','expTabTemplates','expTabCompare'].forEach(id=>{
     g(id).onclick=()=>{ S.expTab=id.replace('expTab','').toLowerCase(); renderExpenses(); };
   });
+  g('exportCsvBtn').onclick = exportExpensesCsv;
   g('importCsvBtn').onclick=openCsvImportModal;
   g('csvParseBtn').onclick=csvParse;
   g('csvBackBtn').onclick=()=>{ g('csvStep1').style.display=''; g('csvStep2').style.display='none'; g('csvImportTitle').textContent='Import CSV — Step 1 of 2'; };
@@ -7336,6 +7768,23 @@ function wire() {
   g('saveExpCatBtn').onclick=saveExpCat;
   g('saveExpTemplateBtn').onclick=saveExpTemplate;
   g('expSearch').oninput=e=>{ S.expSearch=e.target.value; renderExpenses(); };
+  // History tabs (Charts / Log)
+  g('histTabCharts').onclick=()=>{ S.histTab='charts'; renderHistory(); };
+  g('histTabLog').onclick=()=>{ S.histTab='log'; renderHistory(); };
+
+  // Calendar go-to-date
+  g('calLabel').onclick=()=>{
+    const ji=g('calJumpInput'); ji.style.display=ji.style.display==='none'?'':'none';
+    if(ji.style.display!=='none'){ ji.value=`${S.calYear}-${String(S.calMonth+1).padStart(2,'0')}`; ji.focus(); }
+  };
+  g('calJumpInput').onchange=e=>{
+    const [y,m]=e.target.value.split('-').map(Number);
+    S.calYear=y; S.calMonth=m-1; g('calJumpInput').style.display='none'; renderCal();
+  };
+
+  // Rewards history tab
+  g('rwdTabHistory').onclick=()=>{ S.rwdTab='history'; renderRewards(); };
+
   // Gist sync
   wireGistSync();
   // Global search
@@ -7359,6 +7808,12 @@ function wire() {
     g('markAllDoneBtn').textContent=allOn?'✓ Select All':'✓ Deselect All';
   };
   g('completeCancelBtn').onclick=()=>closeModal('completeModal');
+  g('completeSkipBtn').onclick=()=>{
+    const cid=S.pendingChoreId, dt=g('completeDate').value||S.pendingDate;
+    if(isTaskSkipped(cid,dt)){ unskipTaskOccurrence(cid,dt); }
+    else { skipTaskOccurrence(cid,dt); }
+    closeModal('completeModal');
+  };
   g('completeSaveBtn').onclick=saveComplete;
   // Week summary navigation
   g('sumWkPrev').onclick=()=>{ S.sumWkOffset=Math.min(S.sumWkOffset+1,51); renderDash(); };
@@ -7486,6 +7941,8 @@ window.deletePinItem=deletePinItem;
 window.addPinItem=addPinItem;
 window.syncPinItems=syncPinItems;
 window.openTaskModal=openTaskModal;
+window.skipTaskOccurrence=skipTaskOccurrence;
+window.unskipTaskOccurrence=unskipTaskOccurrence;
 window.duplicateTask=duplicateTask;
 window.deleteTask=deleteTask;
 window.moveTaskOrder=moveTaskOrder;
@@ -7526,6 +7983,8 @@ window.removeBonusComp=removeBonusComp;
 window.claimMegaReward=claimMegaReward;
 window.claimReward=claimReward;
 window.toggleEarnedUsed=toggleEarnedUsed;
+window.switchAvatarTab=switchAvatarTab;
+window.clearPersonPhoto=clearPersonPhoto;
 window.syncPersonAvatarPreview=syncPersonAvatarPreview;
 window.openPersonDetail=openPersonDetail;
 window.openPersonModal=openPersonModal;
@@ -7535,22 +7994,46 @@ window.toggleFab=toggleFab;
 window.openCompleteModal=openCompleteModal;
 
 // ═══════════════════════════════════════════
-// Theme Toggle
+// Theme Engine
 // ═══════════════════════════════════════════
-function applyTheme(light) {
-  document.body.classList.toggle('light', light);
-  const ico = g('themeIco'), lbl = g('themeLabel');
-  if(ico) ico.textContent = light ? '🌙' : '☀️';
-  if(lbl) lbl.textContent = light ? 'Dark Mode' : 'Light Mode';
-  // Update PWA theme color
+const THEMES = [
+  { id:'dark',   name:'Dark',   emoji:'🌑', bg:'#13111a', accent:'#e0c46a' },
+  { id:'light',  name:'Light',  emoji:'☀️', bg:'#f4f2ee', accent:'#a07820' },
+  { id:'ocean',  name:'Ocean',  emoji:'🌊', bg:'#090f1e', accent:'#38c0d8' },
+  { id:'forest', name:'Forest', emoji:'🌲', bg:'#0b1510', accent:'#5abf7a' },
+  { id:'sunset', name:'Sunset', emoji:'🌸', bg:'#170f1e', accent:'#e0709a' },
+];
+function applyTheme(themeId) {
+  THEMES.forEach(t => document.body.classList.remove('theme-'+t.id, 'light'));
+  if(themeId !== 'dark') {
+    document.body.classList.add('theme-'+themeId);
+    if(themeId === 'light') document.body.classList.add('light');
+  }
+  saveSetting('theme', themeId);
+  const t = THEMES.find(t=>t.id===themeId)||THEMES[0];
   const tc = document.getElementById('metaThemeColor');
-  if(tc) tc.content = light ? '#f4f2ee' : '#13111a';
+  if(tc) tc.content = t.bg;
 }
-
 function toggleTheme() {
-  const isLight = document.body.classList.toggle('light');
-  saveSetting('lightTheme', isLight);
-  applyTheme(isLight);
+  const cur = loadSetting('theme')||'dark';
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+  renderSettings();
+}
+function loadTheme() {
+  if(loadSetting('lightTheme') === 'true' && !loadSetting('theme')) saveSetting('theme', 'light');
+  applyTheme(loadSetting('theme') || 'dark');
+}
+function renderThemeSwatches() {
+  const cont = g('themeSwatches'); if(!cont) return;
+  const cur = loadSetting('theme') || 'dark';
+  cont.innerHTML = '';
+  THEMES.forEach(t => {
+    const sw = document.createElement('div');
+    sw.className = 'theme-swatch' + (t.id===cur?' active':'');
+    sw.innerHTML = `<div class="theme-swatch-circle" style="background:${t.bg};border-color:${t.id===cur?t.accent:'transparent'}"><span style="font-size:18px">${t.emoji}</span></div><div class="theme-swatch-name">${t.name}</div>`;
+    sw.onclick = () => { applyTheme(t.id); renderThemeSwatches(); };
+    cont.appendChild(sw);
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -7926,12 +8409,23 @@ function renderExpEntries(monthExp, cats, people) {
 async function renderExpBudgets(cats, monthExp) {
   const list=g('expCatList'); list.innerHTML='';
   if(!cats.length){list.innerHTML='<div class="empty"><p>No categories yet.</p></div>';return;}
+  const now=new Date(), daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const dayOfMonth=now.getDate(), monthPct=dayOfMonth/daysInMonth;
   cats.forEach(c=>{
     const spent=monthExp.filter(e=>!e.isIncome&&e.categoryId===c.id).reduce((s,e)=>s+e.amount,0);
     const pct=c.budget?Math.min(100,Math.round(spent/c.budget*100)):null;
     const over=c.budget&&spent>c.budget;
+    // Pacing: are you ahead/behind of expected spend for this point in the month?
+    let pacingHtml='';
+    if(c.budget&&!over&&pct!==null){
+      const expectedPct=Math.round(monthPct*100);
+      const diff=pct-expectedPct;
+      if(diff>10) pacingHtml=`<span style="font-size:10px;color:var(--terra);margin-left:6px">↑ ${diff}% over pace</span>`;
+      else if(diff<-15) pacingHtml=`<span style="font-size:10px;color:var(--sage);margin-left:6px">↓ ${Math.abs(diff)}% under pace</span>`;
+      else pacingHtml=`<span style="font-size:10px;color:var(--text-3);margin-left:6px">On pace</span>`;
+    }
     const item=document.createElement('div'); item.className='exp-cat-item';
-    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${c.color}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${c.icon}</div><div class="exp-cat-body"><div style="display:flex;align-items:center;gap:8px"><span class="exp-cat-name">${c.name}</span>${c.isIncome?'<span style="font-size:10px;background:rgba(106,171,130,0.2);color:var(--sage);padding:1px 6px;border-radius:8px">Income</span>':''}</div>${c.budget?`<div class="exp-cat-budget-bar"><div class="exp-cat-budget-fill" style="width:${pct}%;background:${over?'var(--terra)':c.color}"></div></div><div class="exp-cat-budget-label">${fmt$(spent)} of ${fmt$(c.budget)} budget${over?' <span style="color:var(--terra)">⚠ Over budget</span>':''}</div>`:`<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${fmt$(spent)} spent · No budget set</div>`}</div><div class="item-actions"><button class="act-btn" onclick="openExpCatModal(${c.id})">Edit</button><button class="act-btn del" onclick="deleteExpCat(${c.id})">Del</button></div>`;
+    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${c.color}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${c.icon}</div><div class="exp-cat-body"><div style="display:flex;align-items:center;gap:8px"><span class="exp-cat-name">${c.name}</span>${c.isIncome?'<span style="font-size:10px;background:rgba(106,171,130,0.2);color:var(--sage);padding:1px 6px;border-radius:8px">Income</span>':''}</div>${c.budget?`<div class="exp-cat-budget-bar"><div class="exp-cat-budget-fill" style="width:${pct}%;background:${over?'var(--terra)':c.color}"></div></div><div class="exp-cat-budget-label">${fmt$(spent)} of ${fmt$(c.budget)} budget${over?' <span style="color:var(--terra)">⚠ Over budget</span>':''}${pacingHtml}</div>`:`<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${fmt$(spent)} spent · No budget set</div>`}</div><div class="item-actions"><button class="act-btn" onclick="openExpCatModal(${c.id})">Edit</button><button class="act-btn del" onclick="deleteExpCat(${c.id})">Del</button></div>`;
     list.appendChild(item);
   });
 }
@@ -7944,8 +8438,9 @@ async function renderExpTemplates(cats, people) {
     const cat=cats.find(c=>c.id===t.categoryId);
     const person=t.personId?people.find(p=>p.id===t.personId):null;
     const next=nextDueDate(t, t.startDate);
+    const todayS=fmtDate(new Date()), dueSoon=next<=fmtDate(new Date(new Date().setDate(new Date().getDate()+7)));
     const item=document.createElement('div'); item.className='exp-tpl-item';
-    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${cat?.color||'var(--surface-3)'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cat?.icon||'🔄'}</div><div class="exp-tpl-body"><div class="exp-tpl-name">${t.name}</div><div class="exp-tpl-meta">${t.recurrence.charAt(0).toUpperCase()+t.recurrence.slice(1)} · ${fmt$(t.amount)}${person?' · '+person.name:''}${cat?' · '+cat.name:''}</div><div class="exp-tpl-next">Next due: ${next}</div></div><div class="item-actions"><button class="act-btn" style="background:var(--gold);color:#13111a;border-color:var(--gold)" onclick="logExpenseFromTemplate(${t.id})">Log</button><button class="act-btn" onclick="openExpTemplateModal(${t.id})">Edit</button><button class="act-btn del" onclick="deleteExpTemplate(${t.id})">Del</button></div>`;
+    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${cat?.color||'var(--surface-3)'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cat?.icon||'🔄'}</div><div class="exp-tpl-body"><div class="exp-tpl-name">${t.name}${dueSoon?` <span style="font-size:10px;background:rgba(224,196,106,0.2);color:var(--gold);padding:1px 6px;border-radius:8px;font-weight:600">Due soon</span>`:''}</div><div class="exp-tpl-meta">${t.recurrence.charAt(0).toUpperCase()+t.recurrence.slice(1)} · ${fmt$(t.amount)}${person?' · '+person.name:''}${cat?' · '+cat.name:''}</div><div class="exp-tpl-next">Next due: ${next}</div></div><div class="item-actions"><button class="act-btn" style="background:var(--gold);color:#13111a;border-color:var(--gold)" onclick="logExpenseFromTemplate(${t.id})">Log</button><button class="act-btn" onclick="openExpTemplateModal(${t.id})">Edit</button><button class="act-btn del" onclick="deleteExpTemplate(${t.id})">Del</button></div>`;
     list.appendChild(item);
   });
 }
@@ -8142,6 +8637,7 @@ async function markAllDone() {
   const todayStr = today();
   const [chores, people, allComps] = await Promise.all([all('chores'), all('people'), all('completions')]);
   S.activePauses = await all('pauses').catch(()=>[]);
+  S.taskSkips = await all('taskSkips').catch(()=>[]);
   let dayChores = chores.filter(c => !c.isBonus && isTaskActiveFor(c, todayStr, S.person!=='all'?S.person:null));
   if(S.person !== 'all') dayChores = dayChores.filter(c => !c.assignedTo||c.assignedTo.length===0||c.assignedTo.includes(S.person));
   const targetPeople = S.person !== 'all' ? [people.find(p=>p.id===S.person)].filter(Boolean) : people;
@@ -8248,8 +8744,42 @@ function wireSwipeGestures() {
 
 // ═══════════════════════════════════════════
 
-// ═══════════════════════════════════════════
-// CSV Import for Expenses
+async function exportExpensesCsv() {
+  const [expenses, cats, people] = await Promise.all([all('expenses'), all('expenseCategories'), all('people')]);
+  // Apply current filters
+  const ym = S.expMonth || fmtDate(new Date()).slice(0,7);
+  const dates = expMonthDates(ym);
+  let rows = expenses.filter(e => e.date >= dates[0] && e.date <= dates[dates.length-1]);
+  if(S.expCatFilter && S.expCatFilter !== 'all') rows = rows.filter(e => e.categoryId == S.expCatFilter);
+  if(S.expPersonFilter && S.expPersonFilter !== 'all') rows = rows.filter(e => e.personId == S.expPersonFilter);
+  rows.sort((a,b) => a.date.localeCompare(b.date));
+
+  const escCsv = v => `"${String(v||'').replace(/"/g,'""')}"`;
+  const header = ['Date','Description','Amount','Type','Category','Person','Notes'];
+  const lines = [header.join(',')];
+  rows.forEach(e => {
+    const cat = cats.find(c=>c.id===e.categoryId);
+    const person = e.personId ? people.find(p=>p.id===e.personId) : null;
+    lines.push([
+      escCsv(e.date),
+      escCsv(e.description||''),
+      e.isIncome ? e.amount : -e.amount,
+      escCsv(e.isIncome ? 'Income' : 'Expense'),
+      escCsv(cat?.name||''),
+      escCsv(person?.name||''),
+      escCsv(e.notes||''),
+    ].join(','));
+  });
+
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `homebase-expenses-${ym}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`✓ Exported ${rows.length} entries`, 'var(--sage)');
+}
+
+
 // ═══════════════════════════════════════════
 
 let _csvRows = [], _csvHeaders = [];
@@ -8406,6 +8936,196 @@ function showToast(msg, color='var(--sage)') {
 
 
 // ═══════════════════════════════════════════
+function renderSettings() {
+  // Theme swatches
+  renderThemeSwatches();
+  // Sync gist status
+  renderGistStatus();
+  // Sync pause list
+  renderPauseList();
+  // Sync week start day
+  const saved = parseInt(loadSetting('weekStartDay')||'0');
+  const sel = g('weekStartDaySel'); if(sel) sel.value = saved;
+  // Sync reminder toggle
+  const rt = g('reminderToggle');
+  if(rt) {
+    rt.innerHTML = '';
+    const t = document.createElement('div'); t.className = 'toggle' + (loadSetting('reminderEnabled') === 'true' ? ' on' : '');
+    t.onclick = () => { const on = t.classList.toggle('on'); saveSetting('reminderEnabled', on); };
+    rt.appendChild(t);
+  }
+}
+
+
+// ═══════════════════════════════════════════
+
+// ═══════════════════════════════════════════
+// Avatar System
+// ═══════════════════════════════════════════
+
+const AVATAR_EMOJIS = [
+  // Faces & people
+  '🧑','👩','👨','👧','👦','🧒','👴','👵','🧓',
+  '👱','👱‍♀️','🧔','🧔‍♀️','🧕','👲',
+  // Skin tones (medium)
+  '🧑🏽','👩🏽','👨🏽','👧🏽','👦🏽',
+  // Roles & professions
+  '👮','👷','💂','🕵️','🧑‍⚕️','🧑‍🍳','🧑‍💻','🧑‍🎨',
+  '🧑‍🎓','🧑‍🔬','🧑‍🏫','🧑‍🚀','🧑‍🎤','🧑‍🍼','🧑‍🌾','🧑‍🔧',
+  // Fantasy & fun
+  '🧙','🧙‍♀️','🦸','🦸‍♀️','🦹','🦹‍♀️','🧝','🧝‍♀️',
+  '🧛','🧟','🥷','🤴','👸','🤵','👰',
+  // Animals
+  '🐱','🐶','🦊','🐻','🐼','🦁','🐯','🐸',
+  '🐺','🦝','🐨','🐹','🐰','🐧','🦋','🦄',
+  // Sports & activity
+  '⚽','🏀','🎸','🎮','📚','🎨','🏋️','🧘',
+];
+
+let _avatarMode = 'emoji'; // 'emoji' | 'photo' | 'none'
+let _selectedEmoji = null;
+
+function switchAvatarTab(mode) {
+  _avatarMode = mode;
+  ['emoji','photo','none'].forEach(m => {
+    g('avatarTab'+m.charAt(0).toUpperCase()+m.slice(1))?.classList.toggle('active', m===mode);
+  });
+  g('avatarEmojiSection').style.display = mode==='emoji' ? '' : 'none';
+  g('avatarPhotoSection').style.display = mode==='photo' ? '' : 'none';
+}
+
+function buildAvatarEmojiGrid(selectedEmoji) {
+  const grid = g('avatarEmojiGrid'); if(!grid) return;
+  grid.innerHTML = '';
+  AVATAR_EMOJIS.forEach(e => {
+    const btn = document.createElement('div');
+    btn.className = 'avatar-emoji-opt' + (e===selectedEmoji?' selected':'');
+    btn.textContent = e;
+    btn.onclick = () => {
+      _selectedEmoji = e;
+      grid.querySelectorAll('.avatar-emoji-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      syncPersonAvatarPreview();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function clearPersonPhoto() {
+  window._personPhotoData = null;
+  const prev = g('mPersonAvatarPreview');
+  if(prev) { prev.style.backgroundImage=''; prev.textContent = _selectedEmoji||'?'; }
+  g('avatarPhotoPreviewRow').style.display='none';
+  g('mPersonPhotoRemove').style.display='none';
+}
+
+// Render an avatar for a person — returns an element
+function makePersonAvatar(person, size=28) {
+  const el = document.createElement('div');
+  el.className = 'person-avatar-ico';
+  el.style.cssText = `width:${size}px;height:${size}px;font-size:${Math.round(size*0.55)}px;background:${person.color}22;border:2px solid ${person.color}44`;
+  if(person.photo) {
+    const img = document.createElement('img');
+    img.src = person.photo; img.alt = person.name;
+    el.appendChild(img);
+  } else if(person.avatarEmoji) {
+    el.textContent = person.avatarEmoji;
+  } else {
+    // Colored dot fallback — initial letter
+    el.style.background = person.color;
+    el.style.color = '#fff';
+    el.style.fontWeight = '700';
+    el.style.fontSize = Math.round(size*0.45)+'px';
+    el.textContent = (person.name||'?')[0].toUpperCase();
+  }
+  return el;
+}
+
+
+// ═══════════════════════════════════════════
+
+async function renderHistLog() {
+  const [chores, people, allComps, categories] = await Promise.all([all('chores'),all('people'),all('completions'),all('categories')]);
+  const pSel = g('logPersonFilter');
+  if(pSel && !pSel.dataset.wired) {
+    pSel.innerHTML = '<option value="">All People</option>';
+    people.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; pSel.appendChild(o); });
+    if(S.person !== 'all') pSel.value = S.person;
+    pSel.onchange = renderHistLog; pSel.dataset.wired = '1';
+  }
+  if(g('logSearch') && !g('logSearch').dataset.wired) { g('logSearch').oninput = renderHistLog; g('logSearch').dataset.wired = '1'; }
+  if(g('logDateFrom') && !g('logDateFrom').dataset.wired) {
+    const to=new Date(), from=new Date(); from.setDate(from.getDate()-30);
+    g('logDateFrom').value=fmtDate(from); g('logDateTo').value=fmtDate(to);
+    g('logDateFrom').onchange=renderHistLog; g('logDateTo').onchange=renderHistLog; g('logDateFrom').dataset.wired='1';
+  }
+  const personId=g('logPersonFilter')?.value||'', search=(g('logSearch')?.value||'').toLowerCase();
+  const dateFrom=g('logDateFrom')?.value||'', dateTo=g('logDateTo')?.value||'';
+  let comps=[...allComps].filter(c=>!c.isBonus);
+  if(personId) comps=comps.filter(c=>c.personId==personId);
+  if(dateFrom) comps=comps.filter(c=>c.date>=dateFrom);
+  if(dateTo)   comps=comps.filter(c=>c.date<=dateTo);
+  if(search)   comps=comps.filter(c=>{ const t=chores.find(t=>t.id===c.choreId); return t?.name?.toLowerCase().includes(search)||(c.note||'').toLowerCase().includes(search); });
+  comps.sort((a,b)=>b.date.localeCompare(a.date)||a.choreId-b.choreId);
+  const list=g('histLogList'); list.innerHTML='';
+  if(!comps.length){list.innerHTML='<div class="empty"><div class="ico">📋</div><p>No completions found.</p></div>';return;}
+  const totalPts=comps.reduce((s,c)=>s+(c.points||0),0);
+  const sumEl=document.createElement('div'); sumEl.style.cssText='font-size:12px;color:var(--text-3);margin-bottom:10px;text-align:right';
+  sumEl.textContent=`${comps.length} completions · ${totalPts} pts`; list.appendChild(sumEl);
+  const byDate={};
+  comps.forEach(c=>{if(!byDate[c.date])byDate[c.date]=[];byDate[c.date].push(c);});
+  Object.entries(byDate).forEach(([date,entries])=>{
+    const grp=document.createElement('div'); grp.className='log-date-group';
+    const hdr=document.createElement('div'); hdr.className='log-date-header';
+    hdr.textContent=parseLocal(date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    grp.appendChild(hdr);
+    entries.forEach(c=>{
+      const task=chores.find(t=>t.id===c.choreId), person=c.personId?people.find(p=>p.id===c.personId):null;
+      const color=categories.find(ct=>ct.id===task?.categoryId)?.color||'var(--text-3)';
+      const row=document.createElement('div'); row.className='log-entry';
+      row.innerHTML=`<div class="log-entry-dot" style="background:${color}"></div><span class="log-entry-name">${task?.name||'Unknown task'}</span>${person?`<span style="font-size:11px;color:${person.color};font-weight:600;flex-shrink:0">${person.name}</span>`:''}<span class="log-entry-meta">${pts(c.points||0)}</span>`;
+      grp.appendChild(row);
+      if(c.note){const n=document.createElement('div');n.className='log-entry-note';n.textContent='💬 '+c.note;grp.appendChild(n);}
+    });
+    list.appendChild(grp);
+  });
+}
+
+async function renderRwdHistory() {
+  const [earned,rewards,people]=await Promise.all([all('earnedRewards'),all('rewards'),all('people')]);
+  const list=g('rwdHistoryList'); list.innerHTML='';
+  if(!earned.length){list.innerHTML='<div class="empty"><div class="ico">🏆</div><p>No rewards claimed yet.</p></div>';return;}
+  [...earned].sort((a,b)=>(b.claimedAt||b.weekStart||'').localeCompare(a.claimedAt||a.weekStart||'')).forEach(e=>{
+    const rwd=rewards.find(r=>r.id===e.rewardId), person=e.personId?people.find(p=>p.id===e.personId):null;
+    const d=e.claimedAt?new Date(e.claimedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):(e.weekStart||'');
+    const used=e.used?`<span style="font-size:10px;background:rgba(106,171,130,0.2);color:var(--sage);padding:2px 7px;border-radius:8px;flex-shrink:0">✓ Used</span>`:`<span style="font-size:10px;background:var(--surface-3);color:var(--text-3);padding:2px 7px;border-radius:8px;flex-shrink:0">Pending</span>`;
+    const item=document.createElement('div'); item.className='rwd-hist-item';
+    item.innerHTML=`<span style="font-size:22px">${rwd?.emoji||'🏆'}</span><div class="rwd-hist-body"><div class="rwd-hist-name">${rwd?.name||'Unknown'}</div><div class="rwd-hist-meta">${person?`<span style="color:${person.color};font-weight:600">${person.name}</span> · `:''}${d}${rwd?.tier?' · '+rwd.tier:''}</div></div>${used}`;
+    list.appendChild(item);
+  });
+}
+
+async function skipTaskOccurrence(choreId, dateStr) {
+  const existing = S.taskSkips.find(s=>s.choreId===choreId&&s.date===dateStr);
+  if(existing) return;
+  await put('taskSkips', {choreId, date:dateStr});
+  S.taskSkips = await all('taskSkips').catch(()=>[]);
+  await render(S.view);
+  showToast('⊘ Occurrence skipped', 'var(--text-3)');
+}
+
+async function unskipTaskOccurrence(choreId, dateStr) {
+  const skip = S.taskSkips.find(s=>s.choreId===choreId&&s.date===dateStr);
+  if(!skip) return;
+  await del('taskSkips', skip.id);
+  S.taskSkips = await all('taskSkips').catch(()=>[]);
+  await render(S.view);
+}
+
+function isTaskSkipped(choreId, dateStr) {
+  return S.taskSkips.some(s=>s.choreId===choreId&&s.date===dateStr);
+}
+
 function wireKeyboardShortcuts() {
   document.addEventListener('keydown', e => {
     if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
@@ -8661,21 +9381,22 @@ function updateGistLastSync() {
 
 async function gistCollectData() {
   const [chores,people,completions,diary,categories,events,rewards,earnedRewards,pins,pauses,
-    expenseCategories,expenses,expenseTemplates] =
+    expenseCategories,expenses,expenseTemplates,taskSkips] =
     await Promise.all([all('chores'),all('people'),all('completions'),all('diary'),
       all('categories'),all('events'),all('rewards'),all('earnedRewards'),
       all('pins'),all('pauses').catch(()=>[]),
-      all('expenseCategories').catch(()=>[]),all('expenses').catch(()=>[]),all('expenseTemplates').catch(()=>[])]);
+      all('expenseCategories').catch(()=>[]),all('expenses').catch(()=>[]),all('expenseTemplates').catch(()=>[]),
+      all('taskSkips').catch(()=>[])]);
 
   // Strip base64 photos — they're too large for Gist sync (kept locally only)
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'6.5.1', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.0.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
-    expenseCategories, expenses, expenseTemplates };
+    expenseCategories, expenses, expenseTemplates, taskSkips };
 }
 
 function gistDataSizeKb(data) {
@@ -8784,7 +9505,7 @@ async function gistPull() {
           const localPeoplePhotos = Object.fromEntries(localPeople.filter(p=>p.photo).map(p=>[p.id,p.photo]));
 
           // Exclude expenseCategories from clear — handled specially to prevent duplicates with defaults
-          const stores = ['chores','people','completions','diary','categories','events','rewards','earnedRewards','pins','pauses','expenseCategories','expenses','expenseTemplates'];
+          const stores = ['chores','people','completions','diary','categories','events','rewards','earnedRewards','pins','pauses','expenseCategories','expenses','expenseTemplates','taskSkips'];
           await Promise.all(stores.map(store =>
             new Promise((res,rej)=>{ const req=DB.transaction(store,'readwrite').objectStore(store).clear(); req.onsuccess=res; req.onerror=rej; })
           ));
@@ -8915,7 +9636,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-6.5.1';
+const CACHE = 'homebase-7.0.1';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
@@ -9134,9 +9855,9 @@ function obRenderSummary() {
   row('👥', `<strong>${_obPeople.length}</strong> person${_obPeople.length!==1?'s':''} added: ${_obPeople.map(p=>`<span style="color:${p.color};font-weight:600">${p.name}</span>`).join(', ')}`);
   if(_obCat) row('🏷', `Category created: <strong style="color:${_obCat.color}">${_obCat.name}</strong>`);
   if(_obTask) row('✅', `Task created: <strong>${_obTask.name}</strong> — ${_obTask.points} pts${_obTask.days.length?' · '+_obTask.days.map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', '):''}`);
-  row('💰', '10 expense categories created — start tracking spending from <strong>💰 Expenses</strong> in the sidebar.');
-  row('☁️', 'Set up cloud sync anytime from <strong>👥 People → Cloud Sync</strong> to keep devices in sync.');
-  row('💡', 'Add more tasks, rewards, and categories from the sidebar at any time.');
+  row('💰', 'Expense categories created — track spending from <strong>💰 Expenses</strong> in the sidebar.');
+  row('☁️', 'Set up cloud sync anytime from <strong>⚙️ Settings → Cloud Sync</strong> to keep devices in sync.');
+  row('💡', 'Add more tasks, rewards, and categories from the sidebar at any time. Everything is in <strong>⚙️ Settings</strong> to configure.');
 }
 
 async function obFinish() {
@@ -9237,9 +9958,9 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
   const savedWsd2=loadSetting('weekStartDay');
   if(savedWsd2!==null){ S.weekStartDay=parseInt(savedWsd2); }
   // Apply saved theme before render
-  if(loadSetting('lightTheme')) applyTheme(true);
-  // PWA init (icons + manifest + SW)
-  initPwa(!!loadSetting('lightTheme'));
+  loadTheme();
+  // PWA init
+  initPwa(document.body.classList.contains('light'));
   wire();
   wireOnboarding();
   await renderSidebarPeople();
