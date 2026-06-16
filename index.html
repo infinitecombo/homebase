@@ -748,11 +748,114 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   80%  { transform:translateY(-38px); opacity:1 }
   100% { transform:translateY(-50px); opacity:0 }
 }
-@keyframes hb-pop-in {
-  0%   { transform:scale(0.6);  opacity:0 }
-  70%  { transform:scale(1.12); opacity:1 }
-  100% { transform:scale(1);    opacity:1 }
+/* ═══════════════════════════════
+   VISUAL POLISH v7.1
+═══════════════════════════════ */
+
+/* 1. View fade-in transition */
+@keyframes viewFadeIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
 }
+.view.active { animation: viewFadeIn 0.18s ease both; }
+
+/* 6. Progress bar glow at 100% */
+@keyframes goalGlow {
+  0%,100% { box-shadow:0 0 6px var(--gold); }
+  50%     { box-shadow:0 0 18px var(--gold), 0 0 4px var(--gold-dim); }
+}
+.prog-fill.goal-met { animation: goalGlow 2s ease-in-out infinite; }
+
+/* 8. Modal slide-up animation (replaces spring pop) */
+@keyframes hb-pop-in {
+  from { opacity:0; transform:translateY(24px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+/* 9. Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skel { border-radius:6px; background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%); background-size:400px 100%; animation:shimmer 1.4s ease-in-out infinite; }
+.skel-line { height:12px; margin-bottom:8px; }
+.skel-line.w-full { width:100%; }
+.skel-line.w-3q   { width:75%; }
+.skel-line.w-half { width:50%; }
+.skel-block { height:52px; margin-bottom:8px; border-radius:var(--radius); }
+
+/* 3. Bottom nav active pill */
+.bn-item { position:relative; }
+.bn-item.active::after {
+  content:'';
+  position:absolute;
+  bottom:6px;
+  left:50%; transform:translateX(-50%);
+  width:20px; height:3px;
+  background:var(--gold);
+  border-radius:2px;
+  animation:viewFadeIn 0.2s ease both;
+}
+
+/* 4. More badge */
+.bn-badge {
+  position:absolute;
+  top:-2px; right:-4px;
+  min-width:16px; height:16px;
+  background:var(--terra);
+  color:#fff;
+  border-radius:8px;
+  font-size:9px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 3px;
+  line-height:1;
+  border:2px solid var(--bg);
+  pointer-events:none;
+}
+
+/* 5. Dashboard greeting */
+.dash-greeting {
+  padding:12px 0 6px;
+  margin-bottom:2px;
+}
+.dash-greeting-text {
+  font-family:'Playfair Display',serif;
+  font-size:22px;
+  font-weight:700;
+  color:var(--text);
+  display:block;
+}
+.dash-greeting-date {
+  font-size:12px;
+  color:var(--text-3);
+  margin-top:2px;
+  display:block;
+}
+
+/* 7. Card hover lift (desktop only) */
+@media(min-width:769px) {
+  .card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border-color: var(--border);
+  }
+}
+
+/* 10. Theme accent tinting */
+body.theme-ocean #sidebar   { border-right-color: rgba(56,192,216,0.2); }
+body.theme-ocean .card      { border-color: rgba(56,192,216,0.12); }
+body.theme-ocean .nav-item.active { border-left-color: var(--gold); }
+body.theme-forest #sidebar  { border-right-color: rgba(90,191,122,0.2); }
+body.theme-forest .card     { border-color: rgba(90,191,122,0.12); }
+body.theme-sunset #sidebar  { border-right-color: rgba(224,112,154,0.2); }
+body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
+
 @keyframes hb-slide-in-right {
   from { transform:translateX(18px); opacity:0 }
   to   { transform:translateX(0);    opacity:1 }
@@ -1672,7 +1775,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="sidebar-head">
     <div class="logo">
       <h1>HomeBase</h1>
-      <p class="sidebar-version">v7.0.4</p>
+      <p class="sidebar-version">v7.1.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -1714,7 +1817,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   <div class="bn-item" data-view="week"><span class="bn-ico">📋</span><span class="bn-lbl">Week</span></div>
   <div class="bn-item bn-fab-spacer"></div>
   <div class="bn-item" data-view="expenses"><span class="bn-ico">💰</span><span class="bn-lbl">Expenses</span></div>
-  <div class="bn-item" id="bnMoreBtn"><span class="bn-ico">☰</span><span class="bn-lbl">More</span></div>
+  <div class="bn-item" id="bnMoreBtn"><span class="bn-ico" style="position:relative">☰<span class="bn-badge" id="moreBadge" style="display:none"></span></span><span class="bn-lbl">More</span></div>
 </nav>
 
 <!-- Mobile more sheet -->
@@ -1778,6 +1881,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
 
   <!-- DASHBOARD -->
   <div class="view active" id="view-dashboard">
+    <div class="dash-greeting" id="dashGreeting"></div>
     <div class="dash-grid">
       <!-- Pinboard alert (hidden when nothing pinned/pending) -->
       <div class="dash-pin-alert" id="dashPinAlert" style="display:none"></div>
@@ -2285,7 +2389,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.0.4</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.1.0</span>
         </div>
       </div>
     </div>
@@ -3470,6 +3574,19 @@ const g = id => document.getElementById(id);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today = () => fmtDate(new Date());
 const fmtTime = t => { if(!t) return ''; const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
+
+// Relative date display: "Today", "Yesterday", "Mon Jun 9", "Jun 9, 2024"
+function relDate(dateStr) {
+  if(!dateStr) return '';
+  const d = parseLocal(dateStr), now = new Date();
+  const todayD = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.round((d - todayD) / 86400000);
+  if(diff === 0)  return 'Today';
+  if(diff === -1) return 'Yesterday';
+  if(diff > -7 && diff < 0) return d.toLocaleDateString('en-US',{weekday:'short'});
+  if(d.getFullYear() === now.getFullYear()) return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
 const pts = n => n === 1 ? '1 pt' : `${n||0} pts`;
 
 // Returns HTML string for a person avatar — photo if available, else color+initial
@@ -3778,10 +3895,28 @@ function streakEmoji(n, unit='days') {
 async function renderDash() {
   const todayStr = today();
   const dow = new Date().getDay();
+
+  // 5. Greeting
+  const greetEl = g('dashGreeting');
+  if(greetEl) {
+    const hr = new Date().getHours();
+    const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+    greetEl.innerHTML = `<span class="dash-greeting-text">${greet} 👋</span><span class="dash-greeting-date">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</span>`;
+  }
+
+  // 9. Skeleton placeholders while data loads
+  const dpSkel = g('dashProgress');
+  if(dpSkel && !dpSkel.children.length) dpSkel.innerHTML = [1,2].map(()=>`<div class="skel-block skel" style="height:48px;margin-bottom:8px"></div>`).join('');
+  const dcSkel = g('dashChores');
+  if(dcSkel && !dcSkel.children.length) dcSkel.innerHTML = [1,2,3].map(()=>`<div class="skel skel-line w-full" style="margin-bottom:8px"></div>`).join('');
+
   const [chores, people, allComps, allDiary, categories, allEvts, allPins] = await Promise.all([all('chores'),all('people'),all('completions'),all('diary'),all('categories'),all('events'),all('pins')]);
   S.activePauses = await all('pauses').catch(()=>[]);
   S.taskSkips = await all('taskSkips').catch(()=>[]);
   const todayComp = allComps.filter(c => c.date===todayStr);
+
+  // 4. More badge
+  updateMoreBadge(allPins);
 
   // ── Pinboard alert ────────────────────────────────────────────
   const pendingReminders = allPins.filter(p=>p.type==='reminder'&&!p.done);
@@ -3911,7 +4046,7 @@ async function renderDash() {
         ? `<span class="streak-badge ${wkStreak>=5?'gold':'fire'}" title="${wkStreak} week${wkStreak!==1?'s':''} in a row${graceTokens>0?` · ${graceTokens} grace token${graceTokens>1?'s':''} earned`:''}">${streakEmoji(wkStreak,'weeks')} <span class="streak-num">${wkStreak}</span>wk${graceTokens>0?` <span style="opacity:0.7" title="Grace tokens">🛡️${graceTokens>1?graceTokens:''}`:''}</span>`
         : '';
       const d=document.createElement('div'); d.className='prog-block';
-      d.innerHTML=`<div class="prog-row"><div class="prog-name">${avatarHtml(p,22)}${p.name}${streakHtml?` ${streakHtml}`:''}</div><span class="prog-val" style="color:${goalMet?'var(--sage)':'var(--text-3)'}">${earned}${goal?' / '+goal+' pts':' pts'}${goalMet?' 🎉':''}</span></div><div class="prog-bg"><div class="prog-fill" style="width:${pct}%;background:${p.color}"></div></div>`;
+      d.innerHTML=`<div class="prog-row"><div class="prog-name">${avatarHtml(p,22)}${p.name}${streakHtml?` ${streakHtml}`:''}</div><span class="prog-val" style="color:${goalMet?'var(--sage)':'var(--text-3)'}">${earned}${goal?' / '+goal+' pts':' pts'}${goalMet?' 🎉':''}</span></div><div class="prog-bg"><div class="prog-fill${goalMet?' goal-met':''}" style="width:${pct}%;background:${p.color}"></div></div>`;
       pr.appendChild(d);
       // Progress bar animation
       if(!REDUCED_MOTION) {
@@ -7464,7 +7599,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.0.4', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.1.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -8253,9 +8388,11 @@ async function renderExpOverview(monthExp, cats, people, totalExpense, totalInco
     let offset=0;
     catExp.forEach(c=>{
       const pct = c.total/totalExpense;
-      const dashLen = pct*circ, gapLen = circ-dashLen;
+      const gap = circ > 50 ? 4 : 2; // gap in px between segments
+      const dashLen = Math.max(0, pct*circ - gap), gapLen = circ-dashLen;
       const seg = svgEl('circle',{cx,cy,r,'stroke-width':stroke,fill:'none',stroke:c.color,
         'stroke-dasharray':`${dashLen} ${gapLen}`,'stroke-dashoffset':-offset*circ,
+        'stroke-linecap':'round',
         style:'transform:rotate(-90deg);transform-origin:50% 50%'},svg);
       offset += pct;
     });
@@ -8976,8 +9113,23 @@ function renderSettings() {
 
 // ═══════════════════════════════════════════
 
-// ═══════════════════════════════════════════
-// Mobile More Sheet
+async function updateMoreBadge(pins) {
+  const badge = g('moreBadge'); if(!badge) return;
+  const allPins = pins || await all('pins').catch(()=>[]);
+  const templates = await all('expenseTemplates').catch(()=>[]);
+  const weekEnd = fmtDate(new Date(Date.now()+7*86400000));
+  const alertCount =
+    allPins.filter(p=>(p.type==='reminder'&&!p.done)||(p.pinned&&!p.done&&p.type==='note')).length +
+    templates.filter(t=>{ if(t.endDate&&t.endDate<today()) return false; return nextDueDate(t,t.startDate)<=weekEnd; }).length;
+  if(alertCount > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = alertCount > 9 ? '9+' : alertCount;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+
 // ═══════════════════════════════════════════
 
 const MORE_SHEET_NAV = [
@@ -9166,7 +9318,7 @@ async function renderHistLog() {
   Object.entries(byDate).forEach(([date,entries])=>{
     const grp=document.createElement('div'); grp.className='log-date-group';
     const hdr=document.createElement('div'); hdr.className='log-date-header';
-    hdr.textContent=parseLocal(date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    hdr.textContent=relDate(date)+' — '+parseLocal(date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     grp.appendChild(hdr);
     entries.forEach(c=>{
       const task=chores.find(t=>t.id===c.choreId), person=c.personId?people.find(p=>p.id===c.personId):null;
@@ -9481,7 +9633,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.0.4', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.1.0', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -9725,7 +9877,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-7.0.4';
+const CACHE = 'homebase-7.1.0';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
