@@ -184,6 +184,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .avatar-emoji-opt:hover{background:var(--surface-3)}
 .avatar-emoji-opt.selected{border-color:var(--gold);background:var(--gold-glow)}
 .settings-section{margin-bottom:22px}
+/* Toggle switch */
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;cursor:pointer;background:var(--surface-3);border:1px solid var(--border);border-radius:24px;transition:all var(--t)}
+.toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:2px;top:2px;background:var(--text-3);border-radius:50%;transition:all var(--t)}
+.toggle-switch input:checked + .toggle-slider{background:var(--gold-glow);border-color:var(--gold-dim)}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px);background:var(--gold)}
 .settings-section-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:10px}
 
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-2);font-size:13.5px;transition:all var(--t);margin-bottom:1px;user-select:none}
@@ -1814,7 +1821,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>HomeBase</h1>
-      <p class="sidebar-version">v7.2.1</p>
+      <p class="sidebar-version">v7.4.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2371,6 +2378,18 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <div class="setting-sub">Choose a colour scheme for HomeBase</div>
         <div class="theme-swatches" id="themeSwatches"></div>
       </div>
+      <div class="card" style="margin-top:12px">
+        <div class="setting-row">
+          <div style="flex:1;min-width:0">
+            <div class="setting-label">🔊 Sound effects</div>
+            <div class="setting-sub">Play sounds for completing tasks, meeting goals, and claiming rewards</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="soundToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <!-- Cloud Sync -->
@@ -2430,7 +2449,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.2.1</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.4.0</span>
         </div>
       </div>
     </div>
@@ -5205,6 +5224,7 @@ async function claimReward(rewardId, personId, weekStart) {
     if (remainingPts < (reward.pointsRequired||0)) return;
   }
   await put('earnedRewards',{rewardId,personId,weekStart,claimedDate:today(),used:false,usedDate:null});
+  playSound('reward');
   // Confetti burst on reward claim
   const claimBtn = document.querySelector('.reward-claim-chip.claimable, .rwd-claim-btn');
   setTimeout(()=>animConfetti(claimBtn||document.querySelector('.card')), 50);
@@ -5219,6 +5239,7 @@ async function claimMegaReward(rewardId, personId) {
   const creditsSpent=allEarned.filter(e=>e.personId===personId&&allRewards.find(r=>r.id===e.rewardId)?.type==='mega').reduce((s,e)=>{const r=allRewards.find(rr=>rr.id===e.rewardId);return s+(r?.creditCost||1);},0);
   if(creditsEarned-creditsSpent<cost) return;
   await put('earnedRewards',{rewardId,personId,weekStart:'credit-'+today(),claimedDate:today(),used:false,usedDate:null});
+  playSound('reward');
   await renderCreditsView();
 }
 
@@ -6870,6 +6891,7 @@ async function openCompleteModal(choreId, date) {
     if(existing) {
       // Uncheck — remove completion and re-render
       await del('completions', existing.id);
+      playSound('uncheck');
       S.recentlyCompletedPersonIds=[];
       await render(S.view);
     } else {
@@ -6878,6 +6900,7 @@ async function openCompleteModal(choreId, date) {
       const wkDates=Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return fmtDate(d);});
       const beforePts={[S.person]: allComps.filter(c=>c.personId===S.person&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0)};
       await put('completions',{choreId,date,personId:S.person,points:chore?.points||0});
+      playSound('complete');
       S.recentlyCompletedPersonIds=[S.person];
       await render(S.view);
       if(chore?.points) setTimeout(()=>{
@@ -6941,6 +6964,7 @@ async function saveComplete() {
   }
 
   S.recentlyCompletedPersonIds = addedPersonIds;
+  if(addedPersonIds.length) playSound('complete');
 
   closeModal('completeModal');
   await render(S.view);
@@ -7519,6 +7543,7 @@ async function checkGoalMet(addedPersonIds, beforePtsSnapshot) {
   });
   if(justMet.length) {
     console.log('[HomeBase] 🎉 Goal met by:', justMet.map(p=>p.name));
+    playSound('goal');
     setTimeout(()=>showGoalMetOverlay(justMet), 400);
   }
 }
@@ -7704,7 +7729,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.2.1', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.4.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -9205,6 +9230,54 @@ async function csvImport() {
 }
 
 // ── Toast notification ──────────────────────────────────────────
+// ═══════════════════════════════════════════
+// Sound Effects (Web Audio — synthesized, zero files)
+// ═══════════════════════════════════════════
+let _audioCtx = null;
+function _getAudioCtx() {
+  if(_audioCtx === null) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { _audioCtx = false; }
+  }
+  return _audioCtx || null;
+}
+function soundEnabled() { return loadSetting('soundEnabled') !== false; } // default ON
+
+// Play a sequence of tones. notes = [{freq, start, dur, type, gain}]
+function _playTones(notes) {
+  if(!soundEnabled()) return;
+  const ctx = _getAudioCtx(); if(!ctx) return;
+  if(ctx.state === 'suspended') ctx.resume();
+  const now = ctx.currentTime;
+  notes.forEach(n => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = n.type || 'sine';
+    osc.frequency.value = n.freq;
+    const t0 = now + (n.start||0);
+    const peak = n.gain ?? 0.18;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + (n.dur||0.15));
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + (n.dur||0.15) + 0.02);
+  });
+}
+
+const SOUNDS = {
+  // Soft pop for task completion
+  complete: () => _playTones([{freq:523.25,dur:0.12,type:'sine',gain:0.16},{freq:783.99,start:0.05,dur:0.14,type:'sine',gain:0.13}]),
+  // Gentle "uncheck" blip
+  uncheck:  () => _playTones([{freq:392,dur:0.09,type:'sine',gain:0.10}]),
+  // Cheerful ascending chime for goal met
+  goal:     () => _playTones([{freq:523.25,dur:0.18,type:'triangle',gain:0.17},{freq:659.25,start:0.12,dur:0.18,type:'triangle',gain:0.17},{freq:783.99,start:0.24,dur:0.22,type:'triangle',gain:0.18},{freq:1046.5,start:0.38,dur:0.32,type:'triangle',gain:0.16}]),
+  // Sparkle for reward claim
+  reward:   () => _playTones([{freq:880,dur:0.1,type:'sine',gain:0.14},{freq:1108.7,start:0.07,dur:0.1,type:'sine',gain:0.13},{freq:1318.5,start:0.14,dur:0.16,type:'sine',gain:0.14}]),
+  // Subtle tick for general positive action
+  tick:     () => _playTones([{freq:660,dur:0.06,type:'sine',gain:0.08}]),
+};
+function playSound(name) { try { SOUNDS[name]?.(); } catch(e){} }
+
 function showToast(msg, color='var(--sage)') {
   const t=document.createElement('div');
   t.style.cssText=`position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid ${color};border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;font-weight:600;color:${color};z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3);pointer-events:none;white-space:nowrap`;
@@ -9233,6 +9306,15 @@ function renderSettings() {
     const t = document.createElement('div'); t.className = 'toggle' + (loadSetting('reminderEnabled') === 'true' ? ' on' : '');
     t.onclick = () => { const on = t.classList.toggle('on'); saveSetting('reminderEnabled', on); };
     rt.appendChild(t);
+  }
+  // Sync sound toggle
+  const st = g('soundToggle');
+  if(st) {
+    st.checked = soundEnabled();
+    st.onchange = () => {
+      saveSetting('soundEnabled', st.checked);
+      if(st.checked) playSound('tick'); // preview when enabling
+    };
   }
 }
 
@@ -9760,7 +9842,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.2.1', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.4.0', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -10004,7 +10086,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-7.2.1';
+const CACHE = 'homebase-7.4.0';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
