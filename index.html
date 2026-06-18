@@ -2595,9 +2595,15 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
             <button class="btn" id="cloudTabSignUp" style="flex:1;border-radius:0;border:none;background:transparent;color:var(--text-2);font-size:13px;padding:7px 0" onclick="cloudShowTab('signup')">Create Account</button>
           </div>
           <input class="fi" type="email" id="cloudEmail" placeholder="your@email.com" style="margin-bottom:8px">
-          <input class="fi" type="password" id="cloudPassword" placeholder="Password" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')cloudAuth()">
+          <div style="position:relative;margin-bottom:8px">
+            <input class="fi" type="password" id="cloudPassword" placeholder="Password" style="padding-right:36px;margin-bottom:0" onkeydown="if(event.key==='Enter')cloudAuth()">
+            <button type="button" onclick="cloudToggleEye('cloudPassword',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:15px;padding:0;line-height:1">👁</button>
+          </div>
           <div id="cloudPasswordConfirmWrap" style="display:none;margin-bottom:8px">
-            <input class="fi" type="password" id="cloudPasswordConfirm" placeholder="Confirm password" onkeydown="if(event.key==='Enter')cloudAuth()">
+            <div style="position:relative">
+              <input class="fi" type="password" id="cloudPasswordConfirm" placeholder="Confirm password" style="padding-right:36px;margin-bottom:0" onkeydown="if(event.key==='Enter')cloudAuth()">
+              <button type="button" onclick="cloudToggleEye('cloudPasswordConfirm',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:15px;padding:0;line-height:1">👁</button>
+            </div>
           </div>
           <button class="btn btn-primary" id="cloudAuthBtn" onclick="cloudAuth()" style="width:100%;margin-bottom:8px">Sign In</button>
           <div id="cloudAuthMsg" style="font-size:12px;color:var(--text-3);text-align:center"></div>
@@ -2623,7 +2629,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
             <div style="width:36px;height:36px;border-radius:50%;background:var(--gold-glow);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">☁️</div>
             <div style="flex:1;min-width:0">
               <div class="setting-label" style="margin-bottom:0" id="cloudUserEmail" style="word-break:break-all"></div>
-              <div class="setting-sub" id="cloudUserStatus">Signed in</div>
+              <div class="setting-sub" id="cloudUserStatus">Signed in · session saved</div>
             </div>
           </div>
           <div id="cloudHouseholdSection">
@@ -11268,6 +11274,7 @@ function getSupa() {
 // ── Auth state & UI helpers ─────────────────
 let _cloudUser = null;   // current auth user
 let _cloudHH   = null;   // current household row
+let _cloudMode = 'signin'; // 'signin' | 'signup' — tracks which tab is active
 
 function cloudSetError(msg) {
   const el = g('cloudAuthError');
@@ -11282,6 +11289,7 @@ function cloudSetMsg(msg, color='var(--text-3)') {
 }
 
 function cloudShowTab(tab) {
+  _cloudMode = tab;
   const signIn = tab === 'signin';
   const tabSI = g('cloudTabSignIn'), tabSU = g('cloudTabSignUp');
   const btn    = g('cloudAuthBtn');
@@ -11302,6 +11310,14 @@ function cloudShowTab(tab) {
   cloudSetError('');
   cloudSetMsg('');
   g('cloudEmail')?.focus();
+}
+
+function cloudToggleEye(inputId, btn) {
+  const input = g(inputId);
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.style.color = show ? 'var(--gold)' : 'var(--text-3)';
 }
 
 function cloudUpdateUI() {
@@ -11344,22 +11360,27 @@ async function cloudAuth() {
   const supa = getSupa();
   if (!supa) { cloudSetError('Cloud not available — check your connection.'); return; }
 
-  const email = g('cloudEmail')?.value.trim();
-  const pass  = g('cloudPassword')?.value;
-  const isSignUp = g('cloudTabSignUp')?.style.background?.includes('gold');
+  const email    = g('cloudEmail')?.value.trim();
+  const pass     = g('cloudPassword')?.value;
+  const isSignUp = _cloudMode === 'signup';
 
+  // Validate before touching the button
   if (!email || !pass) { cloudSetError('Enter your email and password.'); return; }
+  if (isSignUp) {
+    const confirm = g('cloudPasswordConfirm')?.value;
+    if (pass !== confirm) { cloudSetError('Passwords do not match.'); return; }
+    if (pass.length < 6)  { cloudSetError('Password must be at least 6 characters.'); return; }
+  }
 
+  // Disable button — re-enabled in finally so it always unblocks
   const btn = g('cloudAuthBtn');
+  const origLabel = isSignUp ? 'Create Account' : 'Sign In';
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   cloudSetError('');
 
   try {
     let result;
     if (isSignUp) {
-      const confirm = g('cloudPasswordConfirm')?.value;
-      if (pass !== confirm) { cloudSetError('Passwords don\'t match.'); return; }
-      if (pass.length < 6)  { cloudSetError('Password must be at least 6 characters.'); return; }
       result = await supa.auth.signUp({ email, password: pass });
     } else {
       result = await supa.auth.signInWithPassword({ email, password: pass });
@@ -11368,15 +11389,17 @@ async function cloudAuth() {
     if (result.error) throw result.error;
 
     if (isSignUp && !result.data?.session) {
-      // Email confirmation required
-      cloudSetMsg('✓ Account created! Check your email to confirm before signing in.', 'var(--sage)');
+      // Email confirmation flow — tell user to check email
+      cloudSetMsg('✓ Account created! Check your email to confirm, then sign in.', 'var(--sage)');
       if (g('cloudPassword')) g('cloudPassword').value = '';
       cloudShowTab('signin');
     } else {
-      _cloudUser = result.data.user || result.data.session?.user;
-      cloudSetMsg('');
+      // Signed in — onAuthStateChange will fire and update UI,
+      // but we also update immediately so it feels instant
+      _cloudUser = result.data?.user || result.data?.session?.user;
       if (g('cloudEmail'))    g('cloudEmail').value    = '';
       if (g('cloudPassword')) g('cloudPassword').value = '';
+      cloudSetMsg('');
       await cloudLoadHousehold();
       cloudUpdateUI();
       showToast('☁️ Signed in', 'var(--sage)');
@@ -11384,7 +11407,8 @@ async function cloudAuth() {
   } catch (e) {
     cloudSetError(e.message || 'Sign in failed.');
   } finally {
-    if (btn) { btn.textContent = isSignUp ? 'Create Account' : 'Sign In'; btn.disabled = false; }
+    // Always re-enable — this is the fix for the infinite loading bug
+    if (btn) { btn.textContent = origLabel; btn.disabled = false; }
   }
 }
 
