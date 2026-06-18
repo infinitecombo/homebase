@@ -10528,7 +10528,7 @@ function renderSettings() {
   // Theme swatches
   renderThemeSwatches();
   // Sync gist status
-  renderGistStatus();
+  updateGistLastSync();
   // Sync pause list
   renderPauseList();
   // Sync week start day
@@ -11256,6 +11256,8 @@ function wireGistSync() {
 const SUPABASE_URL = 'https://spkiusgoctaygjcxunqz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwa2l1c2dvY3RheWdqY3h1bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTY2MDEsImV4cCI6MjA5NzM3MjYwMX0.bI3iaHupgoHzmHArg02b5lA5AoInRlu1UekqEBc3RPo';
 let _supa = null;  // initialized lazily once CDN loads
+// Bust any stale cached client from previous key
+try { const k = localStorage.getItem('den_supa_key'); if (k !== SUPABASE_KEY) { localStorage.removeItem('den_auth'); localStorage.setItem('den_supa_key', SUPABASE_KEY); } } catch(e) {}
 
 function getSupa() {
   if (_supa) return _supa;
@@ -11402,6 +11404,23 @@ async function cloudAuth() {
   cloudSetError('');
 
   cloudSetMsg('Connecting…', 'var(--text-3)');
+
+  // Pre-flight: verify Supabase is reachable before attempting auth
+  try {
+    const ping = await Promise.race([
+      fetch(SUPABASE_URL + '/auth/v1/settings', {
+        headers: { apikey: SUPABASE_KEY }
+      }),
+      new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000))
+    ]);
+    if (ping instanceof Error) throw new Error('Cannot reach Supabase — check your internet connection.');
+    if (!ping.ok && ping.status !== 400) throw new Error('Supabase returned ' + ping.status + ' — project may be paused.');
+  } catch(pingErr) {
+    cloudSetMsg('');
+    cloudSetError(pingErr.message || 'Cannot reach Supabase.');
+    if (btn) { btn.textContent = origLabel; btn.disabled = false; }
+    return;
+  }
 
   // Add a timeout so it never hangs forever
   const authPromise = isSignUp
