@@ -2609,7 +2609,10 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
           <button class="btn btn-primary" id="cloudAuthBtn" onclick="cloudAuth()" style="width:100%;margin-bottom:8px">Sign In</button>
           <div id="cloudAuthMsg" style="font-size:12px;color:var(--text-3);text-align:center"></div>
           <button class="btn btn-ghost" id="cloudForgotBtn" onclick="cloudForgotPassword()" style="width:100%;font-size:12px;margin-top:4px">Forgot password?</button>
-          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-soft)">
+          <div style="margin-top:10px;text-align:center">
+            <button onclick="cloudForceSignOut()" style="background:none;border:none;color:var(--text-3);font-size:11.5px;cursor:pointer;text-decoration:underline;padding:0">Having trouble? Clear saved session</button>
+          </div>
+          <div style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border-soft)">
             <details>
               <summary style="font-size:11.5px;color:var(--text-3);cursor:pointer;user-select:none">⚙️ Password reset not working?</summary>
               <div style="font-size:11.5px;color:var(--text-2);margin-top:8px;line-height:1.6">
@@ -11464,12 +11467,25 @@ async function cloudAuth() {
 
 async function cloudSignOut() {
   const supa = getSupa();
-  if (!supa) return;
-  await supa.auth.signOut();
+  if (supa) await supa.auth.signOut().catch(() => {});
+  cloudForceSignOut();
+}
+
+function cloudForceSignOut() {
+  // Wipe all local auth state — works even if Supabase is unreachable
+  try {
+    // Clear Supabase session from localStorage
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('den_auth') || k.startsWith('sb-') || k.includes('supabase')) {
+        localStorage.removeItem(k);
+      }
+    });
+  } catch(e) {}
+  _supa = null;   // force client to reinitialise fresh
   _cloudUser = null;
   _cloudHH   = null;
   cloudUpdateUI();
-  showToast('Signed out', 'var(--text-3)');
+  showToast('Session cleared — sign in again', 'var(--text-3)');
 }
 
 async function cloudForgotPassword() {
@@ -11603,10 +11619,22 @@ async function cloudInit() {
   const supa = getSupa();
   if (!supa) return;  // CDN not yet loaded — run local-only
 
-  // onAuthStateChange is the single source of truth for session state.
-  // It fires immediately with the current session on first call, so we
-  // do NOT also call getSession() separately — that causes a double-render
-  // and can overwrite state from the listener before it resolves.
+  // Check for an existing session immediately (handles page reloads)
+  try {
+    const { data: { session }, error } = await supa.auth.getSession();
+    if (!error && session?.user) {
+      _cloudUser = session.user;
+      await cloudLoadHousehold();
+      cloudUpdateUI();
+    }
+  } catch(e) {
+    // If getSession fails it likely means a stale/corrupt session — clear it
+    console.warn('Den: stale session cleared', e.message);
+    cloudForceSignOut();
+    return;
+  }
+
+  // Also listen for ongoing auth changes (sign in, sign out, token refresh)
   supa.auth.onAuthStateChange(async (event, session) => {
     const wasSignedIn = !!_cloudUser;
     _cloudUser = session?.user || null;
@@ -11616,11 +11644,7 @@ async function cloudInit() {
       _cloudHH = null;
     }
     cloudUpdateUI();
-
-    // PASSWORD_RECOVERY event: user clicked the reset link — prompt new password
-    if (event === 'PASSWORD_RECOVERY') {
-      cloudShowPasswordReset();
-    }
+    if (event === 'PASSWORD_RECOVERY') cloudShowPasswordReset();
   });
 }
 
