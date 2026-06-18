@@ -11407,21 +11407,38 @@ async function cloudLoadHousehold() {
 async function cloudCreateHousehold() {
   const supa = getSupa();
   if (!supa || !_cloudUser) return;
-  const name = (await new Promise(res => {
-    askConfirm('Create a new household? You\'ll get a join code to share with family members.', () => res(true), 'Create Household');
-  })) ? 'My Household' : null;
-  if (!name) return;
+
+  const createBtn = g('cloudCreateHHBtn');
+  if (createBtn) { createBtn.disabled = true; createBtn.textContent = 'Creating…'; }
 
   try {
-    // Create household
+    // Use a Supabase Edge Function isn't available yet, so we work around RLS
+    // by bypassing is_household_member() — the households table allows insert
+    // when owner_id = auth.uid() (set in the hh_insert policy).
+    // We must insert the household first (policy: owner_id = auth.uid()),
+    // then insert the member row (policy: is_household_member — now satisfied
+    // because the household exists and we query it by owner_id in the helper).
+    // To make is_household_member work for the member insert, we temporarily
+    // pass owner_id check: the member select checks household_id membership,
+    // but since we just created the HH we aren't a member yet.
+    // Solution: use a service-level insert for member via RPC, OR adjust the
+    // member insert to also allow the household owner.
+    // Simplest working approach: insert HH, then insert member using
+    // a raw upsert that Supabase allows when the user is the owner.
+
+    // Step 1: create the household (hh_insert policy: owner_id = auth.uid())
     const { data: hh, error: e1 } = await supa
       .from('households')
-      .insert({ name, owner_id: _cloudUser.id })
+      .insert({ name: 'My Household', owner_id: _cloudUser.id })
       .select()
       .single();
     if (e1) throw e1;
 
-    // Join it as owner
+    // Step 2: join as owner — the hm_rw policy calls is_household_member(household_id),
+    // but we aren't a member yet. Workaround: update the hm_rw policy to ALSO allow
+    // the household owner. Until that's deployed, we use upsert with a bypass approach:
+    // insert using the anon key still hits RLS. We need the policy updated in Supabase.
+    // For now, try the insert and surface a clear message if it fails.
     const { error: e2 } = await supa
       .from('household_members')
       .insert({ household_id: hh.id, user_id: _cloudUser.id, role: 'owner' });
@@ -11431,8 +11448,43 @@ async function cloudCreateHousehold() {
     cloudUpdateHouseholdUI();
     showToast(`🏠 Household created! Code: ${hh.join_code}`, 'var(--sage)');
   } catch (e) {
-    showToast(`✗ ${e.message}`, 'var(--terra)');
+    if (e.message?.includes('row-level security') || e.code === '42501') {
+      // RLS on household_members blocks the self-insert — need policy fix
+      cloudShowHouseholdRLSFix();
+    } else {
+      showToast(`✗ ${e.message}`, 'var(--terra)');
+    }
+  } finally {
+    if (createBtn) { createBtn.disabled = false; createBtn.textContent = '🏠 Create Household'; }
   }
+}
+
+function cloudShowHouseholdRLSFix() {
+  const info = g('cloudHouseholdInfo');
+  if (!info) return;
+  info.innerHTML = `
+    <div style="color:var(--terra);font-size:12px;margin-bottom:8px">⚠ One more step needed in Supabase.</div>
+    <div style="font-size:12px;color:var(--text-2);line-height:1.5">Run this in your <strong>Supabase SQL Editor</strong> to allow household owners to join their own household:</div>
+    <pre style="background:var(--surface-3);border-radius:6px;padding:8px;font-size:11px;overflow-x:auto;margin:8px 0;color:var(--gold)">drop policy if exists hm_rw on household_members;
+create policy hm_rw on household_members
+  for all
+  using (
+    is_household_member(household_id)
+    or exists (
+      select 1 from households h
+      where h.id = household_id
+        and h.owner_id = auth.uid()
+    )
+  )
+  with check (
+    is_household_member(household_id)
+    or exists (
+      select 1 from households h
+      where h.id = household_id
+        and h.owner_id = auth.uid()
+    )
+  );</pre>
+    <div style="font-size:12px;color:var(--text-3)">After running it, click Create Household again.</div>`;
 }
 
 function cloudShowJoinCode() {
