@@ -20,7 +20,7 @@
 <script>
 (function() {
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
   s.onload = function() { window._supabaseLoaded = true; };
   s.onerror = function() { window._supabaseLoaded = false; console.warn('Den: Supabase CDN unavailable — running local-only'); };
   document.head.appendChild(s);
@@ -2581,6 +2581,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="settings-section">
       <div class="settings-section-title">☁️ Cloud Account</div>
       <div class="card" id="cloudAccountCard">
+        <div id="cloudLibStatus" style="font-size:11.5px;color:var(--text-3);margin-bottom:10px;display:none"></div>
         <!-- Signed-out state -->
         <div id="cloudSignedOut">
           <div class="setting-row" style="margin-bottom:12px">
@@ -11357,8 +11358,19 @@ function cloudUpdateHouseholdUI() {
 
 // ── Core auth actions ───────────────────────
 async function cloudAuth() {
+  // Diagnostic: check CDN and key format first
+  if (!window.supabase) {
+    cloudSetError('Supabase library not loaded — check your internet connection and reload.');
+    return;
+  }
+
+  // The sb_publishable_ key format requires supabase-js v2.39+
+  // Fall back to creating client with anon key format check
   const supa = getSupa();
-  if (!supa) { cloudSetError('Cloud not available — check your connection.'); return; }
+  if (!supa) {
+    cloudSetError('Could not initialise cloud client — try reloading.');
+    return;
+  }
 
   const email    = g('cloudEmail')?.value.trim();
   const pass     = g('cloudPassword')?.value;
@@ -11377,6 +11389,7 @@ async function cloudAuth() {
   const origLabel = isSignUp ? 'Create Account' : 'Sign In';
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   cloudSetError('');
+  cloudSetMsg('Connecting…', 'var(--text-3)');
 
   try {
     let result;
@@ -11386,16 +11399,15 @@ async function cloudAuth() {
       result = await supa.auth.signInWithPassword({ email, password: pass });
     }
 
+    cloudSetMsg('');
+
     if (result.error) throw result.error;
 
     if (isSignUp && !result.data?.session) {
-      // Email confirmation flow — tell user to check email
       cloudSetMsg('✓ Account created! Check your email to confirm, then sign in.', 'var(--sage)');
       if (g('cloudPassword')) g('cloudPassword').value = '';
       cloudShowTab('signin');
     } else {
-      // Signed in — onAuthStateChange will fire and update UI,
-      // but we also update immediately so it feels instant
       _cloudUser = result.data?.user || result.data?.session?.user;
       if (g('cloudEmail'))    g('cloudEmail').value    = '';
       if (g('cloudPassword')) g('cloudPassword').value = '';
@@ -11405,9 +11417,12 @@ async function cloudAuth() {
       showToast('☁️ Signed in', 'var(--sage)');
     }
   } catch (e) {
-    cloudSetError(e.message || 'Sign in failed.');
+    cloudSetMsg('');
+    // Surface the actual Supabase error clearly
+    const msg = e.message || String(e);
+    cloudSetError(msg || 'Sign in failed — check your email and password.');
+    console.error('Den cloud auth error:', e);
   } finally {
-    // Always re-enable — this is the fix for the infinite loading bug
     if (btn) { btn.textContent = origLabel; btn.disabled = false; }
   }
 }
@@ -11651,6 +11666,29 @@ function wireCloudAccount() {
   // Only reset to sign-in tab if not already signed in
   if (!_cloudUser) cloudShowTab('signin');
   cloudUpdateUI();
+  // Show library load status so user knows if cloud is available
+  const statusEl = g('cloudLibStatus');
+  if (statusEl) {
+    if (window.supabase) {
+      statusEl.style.display = 'none';
+    } else if (window._supabaseLoaded === false) {
+      statusEl.textContent = '⚠ Cloud library failed to load — check your internet connection.';
+      statusEl.style.color = 'var(--terra)';
+      statusEl.style.display = '';
+    } else {
+      statusEl.textContent = '⏳ Cloud library loading…';
+      statusEl.style.color = 'var(--text-3)';
+      statusEl.style.display = '';
+      // Recheck after a moment
+      setTimeout(() => {
+        if (window.supabase && statusEl) statusEl.style.display = 'none';
+        else if (statusEl) {
+          statusEl.textContent = '⚠ Cloud library did not load — sign-in unavailable.';
+          statusEl.style.color = 'var(--terra)';
+        }
+      }, 3000);
+    }
+  }
 }
 
 // ═══════════════════════════════════════════
