@@ -11259,7 +11259,7 @@ function getSupa() {
       storageKey: 'den_auth',
       storage: window.localStorage,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false,
     }
   });
   return _supa;
@@ -11558,13 +11558,8 @@ async function cloudJoinHousehold() {
 
 // ── Session restore on boot ─────────────────
 async function cloudInit() {
-  // Wait up to 3s for Supabase CDN to load
-  for (let i = 0; i < 30; i++) {
-    if (window.supabase) break;
-    await new Promise(r => setTimeout(r, 100));
-  }
   const supa = getSupa();
-  if (!supa) return;  // CDN unavailable — run local-only
+  if (!supa) return;  // CDN not yet loaded — run local-only
 
   // onAuthStateChange is the single source of truth for session state.
   // It fires immediately with the current session on first call, so we
@@ -12041,8 +12036,18 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
   // Show onboarding for first-time users, otherwise check daily reminder
   await maybeShowOnboarding();
   setTimeout(checkDailyReminder, 800);
-  // Init cloud auth (non-blocking — runs after app is ready)
-  cloudInit().catch(e => console.warn('Den: cloud init error', e));
+  // Init cloud auth once CDN is ready — checked via script onload, retried if needed
+  function tryCloudInit() {
+    if (window.supabase) {
+      cloudInit().catch(e => console.warn('Den: cloud init error', e));
+    } else if (window._supabaseLoaded === false) {
+      // CDN failed — stay local-only, no retry
+    } else {
+      // CDN still loading — retry in 500ms (max ~10s total via the onload handler)
+      setTimeout(tryCloudInit, 500);
+    }
+  }
+  setTimeout(tryCloudInit, 300);
 })().catch(console.error);
 </script>
 </body>
