@@ -2602,6 +2602,19 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
           <button class="btn btn-primary" id="cloudAuthBtn" onclick="cloudAuth()" style="width:100%;margin-bottom:8px">Sign In</button>
           <div id="cloudAuthMsg" style="font-size:12px;color:var(--text-3);text-align:center"></div>
           <button class="btn btn-ghost" id="cloudForgotBtn" onclick="cloudForgotPassword()" style="width:100%;font-size:12px;margin-top:4px">Forgot password?</button>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-soft)">
+            <details>
+              <summary style="font-size:11.5px;color:var(--text-3);cursor:pointer;user-select:none">⚙️ Password reset not working?</summary>
+              <div style="font-size:11.5px;color:var(--text-2);margin-top:8px;line-height:1.6">
+                Reset links go to <code style="background:var(--surface-3);padding:1px 4px;border-radius:3px">localhost:3000</code> by default.<br>
+                Fix it once in your Supabase dashboard:<br>
+                <strong>Project Settings → Authentication → URL Configuration</strong><br>
+                Set <strong>Site URL</strong> to the URL you open Den from (e.g. <code style="background:var(--surface-3);padding:1px 4px;border-radius:3px">file:///path/to/homebase.html</code> or your hosted URL).<br>
+                Add the same URL to <strong>Redirect URLs</strong>.<br>
+                After that, reset emails will link back to Den and the new-password form will appear automatically.
+              </div>
+            </details>
+          </div>
         </div>
 
         <!-- Signed-in state -->
@@ -11240,7 +11253,15 @@ let _supa = null;  // initialized lazily once CDN loads
 function getSupa() {
   if (_supa) return _supa;
   if (!window.supabase) return null;
-  _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      persistSession: true,
+      storageKey: 'den_auth',
+      storage: window.localStorage,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    }
+  });
   return _supa;
 }
 
@@ -11545,30 +11566,71 @@ async function cloudInit() {
   const supa = getSupa();
   if (!supa) return;  // CDN unavailable — run local-only
 
-  // Listen for auth state changes
+  // onAuthStateChange is the single source of truth for session state.
+  // It fires immediately with the current session on first call, so we
+  // do NOT also call getSession() separately — that causes a double-render
+  // and can overwrite state from the listener before it resolves.
   supa.auth.onAuthStateChange(async (event, session) => {
+    const wasSignedIn = !!_cloudUser;
     _cloudUser = session?.user || null;
     if (_cloudUser) {
-      await cloudLoadHousehold();
+      if (!wasSignedIn || !_cloudHH) await cloudLoadHousehold();
     } else {
       _cloudHH = null;
     }
     cloudUpdateUI();
-  });
 
-  // Check for existing session
-  const { data: { session } } = await supa.auth.getSession();
-  if (session) {
-    _cloudUser = session.user;
-    await cloudLoadHousehold();
-    cloudUpdateUI();
-  }
+    // PASSWORD_RECOVERY event: user clicked the reset link — prompt new password
+    if (event === 'PASSWORD_RECOVERY') {
+      cloudShowPasswordReset();
+    }
+  });
+}
+
+// ── Password reset flow (fired by PASSWORD_RECOVERY auth event) ────
+function cloudShowPasswordReset() {
+  // Show a new-password form inside the signed-in card
+  const ins = document.getElementById('cloudSignedIn');
+  if (!ins) return;
+  // Inject a temporary password-reset panel at the top
+  const existing = document.getElementById('cloudResetPanel');
+  if (existing) return; // already showing
+  const panel = document.createElement('div');
+  panel.id = 'cloudResetPanel';
+  panel.style.cssText = 'background:var(--surface-2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;border:1px solid var(--gold)';
+  panel.innerHTML = `
+    <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:8px">🔑 Set new password</div>
+    <input class="fi" type="password" id="cloudNewPass" placeholder="New password (min 6 chars)" style="margin-bottom:8px">
+    <input class="fi" type="password" id="cloudNewPassConfirm" placeholder="Confirm new password" style="margin-bottom:8px">
+    <div id="cloudResetMsg" style="font-size:12px;color:var(--terra);margin-bottom:8px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%;font-size:13px" onclick="cloudSubmitNewPassword()">Update Password</button>
+  `;
+  ins.insertBefore(panel, ins.firstChild);
+}
+
+async function cloudSubmitNewPassword() {
+  const supa = getSupa();
+  if (!supa) return;
+  const pass    = document.getElementById('cloudNewPass')?.value;
+  const confirm = document.getElementById('cloudNewPassConfirm')?.value;
+  const msgEl   = document.getElementById('cloudResetMsg');
+  const showMsg = (m, color='var(--terra)') => { if (msgEl) { msgEl.textContent = m; msgEl.style.color = color; msgEl.style.display = ''; } };
+
+  if (!pass || pass.length < 6) { showMsg('Password must be at least 6 characters.'); return; }
+  if (pass !== confirm)          { showMsg('Passwords don't match.'); return; }
+
+  const { error } = await supa.auth.updateUser({ password: pass });
+  if (error) { showMsg(error.message); return; }
+
+  // Success — remove the panel
+  document.getElementById('cloudResetPanel')?.remove();
+  showToast('✓ Password updated', 'var(--sage)');
 }
 
 // ── Wire Settings cloud UI on nav ──────────
 function wireCloudAccount() {
-  // Called each time Settings view renders (cloudInit handles session)
-  cloudShowTab('signin');
+  // Only reset to sign-in tab if not already signed in
+  if (!_cloudUser) cloudShowTab('signin');
   cloudUpdateUI();
 }
 
