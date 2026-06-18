@@ -11543,43 +11543,11 @@ async function cloudCreateHousehold() {
     cloudUpdateHouseholdUI();
     showToast(`🏠 Household created! Code: ${hh.join_code}`, 'var(--sage)');
   } catch (e) {
-    if (e.message?.includes('row-level security') || e.code === '42501') {
-      // RLS on household_members blocks the self-insert — need policy fix
-      cloudShowHouseholdRLSFix();
-    } else {
-      showToast(`✗ ${e.message}`, 'var(--terra)');
-    }
+    showToast(`✗ ${e.message}`, 'var(--terra)');
+    console.error('Den: create household error:', e);
   } finally {
     if (createBtn) { createBtn.disabled = false; createBtn.textContent = '🏠 Create Household'; }
   }
-}
-
-function cloudShowHouseholdRLSFix() {
-  const info = g('cloudHouseholdInfo');
-  if (!info) return;
-  info.innerHTML = `
-    <div style="color:var(--terra);font-size:12px;margin-bottom:8px">⚠ One more step needed in Supabase.</div>
-    <div style="font-size:12px;color:var(--text-2);line-height:1.5">Run this in your <strong>Supabase SQL Editor</strong> to allow household owners to join their own household:</div>
-    <pre style="background:var(--surface-3);border-radius:6px;padding:8px;font-size:11px;overflow-x:auto;margin:8px 0;color:var(--gold)">drop policy if exists hm_rw on household_members;
-create policy hm_rw on household_members
-  for all
-  using (
-    is_household_member(household_id)
-    or exists (
-      select 1 from households h
-      where h.id = household_id
-        and h.owner_id = auth.uid()
-    )
-  )
-  with check (
-    is_household_member(household_id)
-    or exists (
-      select 1 from households h
-      where h.id = household_id
-        and h.owner_id = auth.uid()
-    )
-  );</pre>
-    <div style="font-size:12px;color:var(--text-3)">After running it, click Create Household again.</div>`;
 }
 
 function cloudShowJoinCode() {
