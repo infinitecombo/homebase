@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>HomeBase — Tasks & Journal</title>
-<meta name="description" content="HomeBase — household task tracker, journal, and rewards">
+<title>Den — Family Organizer</title>
+<meta name="description" content="Den — household task tracker, journal, and rewards">
 <meta name="theme-color" content="#13111a" id="metaThemeColor">
 <!-- PWA / iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="HomeBase">
+<meta name="apple-mobile-web-app-title" content="Den">
 <meta name="mobile-web-app-capable" content="yes">
 <!-- Icons and manifest built at runtime -->
 <link rel="apple-touch-icon" id="appleTouchIcon">
@@ -989,6 +989,105 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .exp-stat-val.net-pos{color:var(--sage)}
 .exp-stat-val.net-neg{color:var(--terra)}
 .exp-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+/* Recipes */
+.rec-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.rec-tag-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.rec-tag-chip{padding:4px 11px;border-radius:100px;font-size:12px;font-weight:500;background:var(--surface-2);border:1px solid var(--border-soft);color:var(--text-2);cursor:pointer;transition:all var(--t)}
+.rec-tag-chip:hover{border-color:var(--gold-dim);color:var(--text)}
+.rec-tag-chip.active{background:var(--gold-glow);border-color:var(--gold-dim);color:var(--gold)}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.rec-card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform var(--t),box-shadow var(--t);display:flex;flex-direction:column}
+.rec-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,0.18)}
+.rec-card-photo{height:120px;background:var(--surface-2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--text-3)}
+.rec-card-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:7px}
+.rec-card-name{font-size:14.5px;font-weight:600;color:var(--text);line-height:1.3}
+.rec-card-meta{font-size:11px;color:var(--text-3);display:flex;gap:10px;flex-wrap:wrap}
+.rec-card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
+.rec-card-tag{font-size:10px;padding:2px 7px;border-radius:100px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border-soft)}
+.rec-tag-pick{display:flex;gap:6px;flex-wrap:wrap}
+.rec-tag-pick:empty:before{content:'No tags yet — add one below';color:var(--text-3);font-size:12px}
+.rec-ing-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.rec-ing-row .fi{padding:7px 9px;font-size:13px}
+.rec-ing-qty{width:62px;flex-shrink:0}
+.rec-ing-unit{width:96px;flex-shrink:0}
+.rec-fav-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(0,0,0,0.35);color:#ffd76a;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:transform var(--t),background var(--t)}
+.rec-fav-btn:hover{transform:scale(1.12);background:rgba(0,0,0,0.5)}
+.rec-fav-btn.on{color:#ffcf40}
+.rec-card-photo{position:relative}
+.rec-fav-btn-lg{width:36px;height:36px;border-radius:50%;border:1px solid var(--border-soft);background:var(--surface-2);color:#ffcf40;font-size:19px;line-height:1;cursor:pointer;flex-shrink:0;transition:transform var(--t),background var(--t)}
+.rec-fav-btn-lg:hover{transform:scale(1.1);background:var(--surface-3)}
+.rec-ing-name{flex:1;min-width:0}
+.rec-ing-del{flex-shrink:0;width:30px;height:30px;border:none;background:var(--surface-2);border-radius:6px;color:var(--terra);cursor:pointer;font-size:16px;line-height:1}
+.rec-ing-del:hover{background:var(--surface-3)}
+.rec-view-photo{width:100%;height:170px;background:var(--surface-2) center/cover no-repeat;border-radius:var(--radius);margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--text-3)}
+.rec-view-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-soft)}
+.rec-view-section-title{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:0.05em;margin:14px 0 8px}
+.rec-view-ings{list-style:none;padding:0;margin:0}
+.rec-view-ings li{padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:13.5px;color:var(--text-2);display:flex;gap:8px}
+.rec-view-ings li .q{color:var(--gold);font-weight:600;flex-shrink:0;min-width:70px}
+.rec-view-steps{padding-left:20px;margin:0}
+.rec-view-steps li{padding:4px 0;font-size:13.5px;color:var(--text-2);line-height:1.6}
+/* Meal plan grid */
+.meal-day{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.meal-day.is-today{border-color:var(--gold-dim);box-shadow:0 0 0 1px var(--gold-dim)}
+.meal-day-hdr{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface-2);font-weight:600;font-size:13.5px;color:var(--text)}
+.meal-day-hdr .md-dow{color:var(--text)}
+.meal-day-hdr .md-date{color:var(--text-3);font-size:12px;font-weight:400}
+.meal-day-hdr .md-today-badge{margin-left:auto;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--gold);background:var(--gold-glow);padding:2px 8px;border-radius:100px;font-weight:600}
+.meal-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border-soft)}
+.meal-slot{background:var(--surface);padding:10px 12px;min-height:74px;display:flex;flex-direction:column;gap:6px}
+.meal-slot-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);font-weight:600}
+.meal-entry{display:flex;align-items:flex-start;gap:6px;background:var(--surface-2);border:1px solid var(--border-soft);border-radius:8px;padding:6px 8px;font-size:12.5px;color:var(--text);cursor:pointer;transition:background var(--t)}
+.meal-entry:hover{background:var(--surface-3)}
+.meal-entry.is-recipe{border-left:3px solid var(--sage)}
+.meal-entry.is-free{border-left:3px solid var(--text-3)}
+.meal-entry-name{flex:1;line-height:1.35}
+.meal-entry-x{flex-shrink:0;color:var(--text-3);font-size:13px;line-height:1;padding:1px 3px;border-radius:4px}
+.meal-entry-x:hover{color:var(--terra);background:var(--surface)}
+.meal-add-btn{border:1px dashed var(--border);background:transparent;color:var(--text-3);border-radius:8px;padding:6px;font-size:16px;cursor:pointer;transition:all var(--t);margin-top:auto;line-height:1}
+.meal-add-btn:hover{border-color:var(--gold-dim);color:var(--gold);background:var(--gold-glow)}
+@media(max-width:600px){
+  .meal-slots{grid-template-columns:1fr;gap:1px}
+  .meal-slot{min-height:0;flex-direction:row;align-items:center;flex-wrap:wrap}
+  .meal-slot-label{width:70px;flex-shrink:0}
+  .meal-slot .meal-entry,.meal-slot .meal-add-btn{flex:1;margin-top:0}
+}
+/* Meal picker */
+.meal-recipe-list{max-height:200px;overflow-y:auto;margin-top:8px;border:1px solid var(--border-soft);border-radius:var(--radius-sm)}
+.meal-recipe-list:empty:before{content:'No recipes yet — use free text below';display:block;padding:14px;color:var(--text-3);font-size:12px;text-align:center}
+.meal-recipe-opt{padding:9px 12px;font-size:13px;color:var(--text-2);cursor:pointer;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:8px;transition:background var(--t)}
+.meal-recipe-opt:last-child{border-bottom:none}
+.meal-recipe-opt:hover{background:var(--surface-2)}
+.meal-recipe-opt.sel{background:var(--gold-glow);color:var(--text)}
+.meal-recipe-opt .mr-fav{color:#ffcf40;font-size:12px}
+.meal-or-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:0.08em}
+.meal-or-divider:before,.meal-or-divider:after{content:'';flex:1;height:1px;background:var(--border-soft)}
+/* Grocery list */
+.grocery-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.grocery-add-row{display:flex;gap:8px;margin-bottom:14px}
+.grocery-prog{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;color:var(--text-3)}
+.grocery-prog-bar{flex:1;height:7px;background:var(--surface-2);border-radius:100px;overflow:hidden}
+.grocery-prog-fill{height:100%;background:var(--sage);border-radius:100px;transition:width 0.3s ease}
+.grocery-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border-soft);margin-bottom:6px;transition:opacity var(--t)}
+.grocery-item.checked{opacity:0.5}
+.grocery-item.checked .gi-name{text-decoration:line-through;color:var(--text-3)}
+.gi-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;transition:all var(--t)}
+.gi-check.on{background:var(--sage);border-color:var(--sage)}
+.gi-body{flex:1;min-width:0}
+.gi-name{font-size:13.5px;color:var(--text);font-weight:500}
+.gi-qty{font-size:11.5px;color:var(--gold);font-weight:600;margin-right:6px}
+.gi-dupe-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;background:rgba(224,170,90,0.15);color:var(--gold);border:1px solid var(--gold-dim);padding:1px 6px;border-radius:100px;margin-left:6px;font-weight:600}
+.gi-src{font-size:10px;color:var(--text-3);flex-shrink:0}
+.gi-del{flex-shrink:0;width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
+.gi-del:hover{color:var(--terra);background:var(--surface-2)}
+.grocery-cat-hdr{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-3);font-weight:600;padding:12px 2px 6px;border-bottom:1px solid var(--border-soft);margin-bottom:8px}
+.gi-ban{flex-shrink:0;width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:6px;cursor:pointer;font-size:13px;line-height:1}
+.gi-ban:hover{color:var(--gold);background:var(--surface-2)}
+.bl-item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border-soft);margin-bottom:6px}
+.bl-item-name{flex:1;font-size:13.5px;color:var(--text);text-transform:capitalize}
+.bl-item-del{flex-shrink:0;width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
+.bl-item-del:hover{color:var(--terra);background:var(--surface)}
+.bl-empty{padding:14px;text-align:center;color:var(--text-3);font-size:12px}
 .exp-entry-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all var(--t)}
 .exp-entry-item:hover{border-color:var(--gold-dim);background:var(--surface-2)}
 .exp-entry-ico{font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -1587,6 +1686,14 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .cat-group.collapsed .cat-group-body{display:none}
 .cat-group-body{padding-left:4px}
 .chore-row-compact{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-sm);cursor:pointer;transition:background var(--t);margin-bottom:2px}
+/* Multi-complete stepper */
+.comp-stepper{display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid var(--border);border-radius:100px;overflow:hidden;background:var(--surface-2)}
+.comp-stepper button{width:26px;height:26px;border:none;background:transparent;color:var(--text-2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t);padding:0;font-family:'DM Sans',sans-serif;line-height:1}
+.comp-stepper button:hover{background:var(--surface-3);color:var(--text)}
+.comp-stepper button:disabled{opacity:0.3;cursor:default}
+.comp-stepper .comp-count{min-width:22px;text-align:center;font-size:13px;font-weight:700;color:var(--sage)}
+.comp-stepper .comp-count.zero{color:var(--text-3);font-weight:500}
+.comp-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:var(--sage);color:#13111a;font-size:11px;font-weight:700;padding:0 5px;margin-left:4px}
 .chore-row-compact:hover{background:var(--surface-2)}
 .chore-row-compact.done .chore-name{text-decoration:line-through;opacity:0.45}
 .chore-row-compact .check-btn{width:20px;height:20px;font-size:11px;flex-shrink:0}
@@ -1672,7 +1779,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <!-- Step 1: Welcome -->
     <div id="obStep1">
       <div class="ob-icon-row">🏠✨📋</div>
-      <div class="ob-title">Welcome to HomeBase</div>
+      <div class="ob-title">Welcome to Den</div>
       <div class="ob-sub">Your household's command centre — track chores, goals, events, and rewards all in one place.<br><br>This quick setup takes about a minute and gets your household ready to go.</div>
       <div class="ob-actions">
         <button class="ob-skip" id="obSkip1">Skip setup</button>
@@ -1750,7 +1857,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div id="obStep5" style="display:none">
       <div class="ob-icon-row">💰📊</div>
       <div class="ob-title">Track Your Expenses</div>
-      <div class="ob-sub">HomeBase has a built-in expense tracker. Log income and spending, set monthly budgets per category, and see where your money goes with charts and a month-to-month compare view.<br><br>10 expense categories are created automatically — you can customise them any time from the <strong>💰 Expenses</strong> section.</div>
+      <div class="ob-sub">Den has a built-in expense tracker. Log income and spending, set monthly budgets per category, and see where your money goes with charts and a month-to-month compare view.<br><br>10 expense categories are created automatically — you can customise them any time from the <strong>💰 Expenses</strong> section.</div>
       <div class="ob-actions">
         <button class="ob-skip" id="obBack5">← Back</button>
         <button class="btn btn-primary" id="obNext5" style="padding:10px 28px;font-size:14px">Next →</button>
@@ -1761,7 +1868,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div id="obStep6" style="display:none">
       <div class="ob-icon-row">☁️🔄</div>
       <div class="ob-title">Keep Devices in Sync</div>
-      <div class="ob-sub">HomeBase can sync all your data to a private <strong>GitHub Gist</strong> — a free file on your GitHub account. This lets you use HomeBase on your phone, tablet, and laptop with the same data.<br><br><strong>To set it up:</strong> go to <strong>👥 Settings → Cloud Sync</strong>, click "Generate token ↗", and paste the token. Push to cloud after big changes, pull on a new device to get the latest.<br><br>Photos are kept local only — everything else syncs.</div>
+      <div class="ob-sub">Den can sync all your data to a private <strong>GitHub Gist</strong> — a free file on your GitHub account. This lets you use Den on your phone, tablet, and laptop with the same data.<br><br><strong>To set it up:</strong> go to <strong>👥 Settings → Cloud Sync</strong>, click "Generate token ↗", and paste the token. Push to cloud after big changes, pull on a new device to get the latest.<br><br>Photos are kept local only — everything else syncs.</div>
       <div class="ob-actions">
         <button class="ob-skip" id="obBack6">← Back</button>
         <button class="btn btn-primary" id="obNext6" style="padding:10px 28px;font-size:14px">Next →</button>
@@ -1820,8 +1927,8 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 <div id="sidebar">
   <div class="sidebar-head">
     <div class="logo">
-      <h1>HomeBase</h1>
-      <p class="sidebar-version">v7.4.0</p>
+      <h1>Den</h1>
+      <p class="sidebar-version">v7.9.1</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -1836,6 +1943,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="nav-item" data-view="expenses"><span class="nav-icon">💰</span><span class="nav-label-text">Expenses</span></div>
     <div class="nav-item" data-view="diary"><span class="nav-icon">📖</span><span class="nav-label-text">Diary</span></div>
     <div class="nav-item" data-view="pinboard"><span class="nav-icon">📌</span><span class="nav-label-text">Pinboard</span></div>
+    <div class="nav-item" data-view="recipes"><span class="nav-icon">🍳</span><span class="nav-label-text">Recipes</span></div>
 
     <div class="nav-group-label">Review</div>
     <div class="nav-item" data-view="history"><span class="nav-icon">📈</span><span class="nav-label-text">History</span></div>
@@ -1951,6 +2059,14 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="card-head"><span class="card-title">Upcoming Events</span></div>
         <div id="dashEvents"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">🍳 Today's Meals</span><button class="btn-bonus" id="dashMealBtn" title="Open meal planner">Plan →</button></div>
+        <div id="dashMeals"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">🛒 Grocery List</span><button class="btn-bonus" id="dashGroceryBtn" title="Open grocery list">View →</button></div>
+        <div id="dashGrocery"></div>
       </div>
       <div class="card">
         <div class="card-head"><span class="card-title">🔥 Streaks</span></div>
@@ -2332,6 +2448,65 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     </div>
   </div>
 
+  <!-- RECIPES & MEALS -->
+  <div class="view" id="view-recipes">
+    <div class="view-tabs" id="recipeTabs">
+      <div class="vtab active" id="recTabAll">📖 Recipes</div>
+      <div class="vtab" id="recTabPlan">🗓 Meal Plan</div>
+      <div class="vtab" id="recTabGrocery">🛒 Grocery</div>
+    </div>
+
+    <!-- Recipes tab -->
+    <div id="subview-recAll">
+      <div class="rec-toolbar">
+        <input class="fi" type="text" id="recSearch" placeholder="Search recipes…" style="flex:1;min-width:140px">
+        <input class="fi" type="text" id="recIngSearch" placeholder="Has ingredient…" style="flex:1;min-width:140px">
+        <button class="btn btn-primary" id="addRecipeBtn" style="flex-shrink:0">+ Recipe</button>
+      </div>
+      <div class="rec-tag-filter" id="recTagFilter"></div>
+      <div class="rec-grid" id="recipeGrid"></div>
+    </div>
+
+    <!-- Meal Plan tab (Phase 2) -->
+    <div id="subview-recPlan" style="display:none">
+      <div class="exp-nav">
+        <button class="btn btn-ghost" id="mealPrev">←</button>
+        <span class="exp-month-label" id="mealWeekLabel"></span>
+        <button class="btn btn-ghost" id="mealNext">→</button>
+        <button class="btn btn-ghost" id="mealThisWeek" style="margin-left:auto;font-size:12px">This Week</button>
+      </div>
+      <div id="mealPlanGrid"></div>
+    </div>
+
+    <!-- Grocery tab (Phase 3) -->
+    <div id="subview-recGrocery" style="display:none">
+      <div class="grocery-toolbar">
+        <select class="fi" id="grocerySource" style="flex:1;min-width:130px">
+          <option value="next">Next week's plan</option>
+          <option value="this">This week's plan</option>
+          <option value="range">Custom date range…</option>
+        </select>
+        <button class="btn btn-primary" id="groceryGenBtn" style="flex-shrink:0">⚡ Generate</button>
+        <button class="btn btn-ghost" id="groceryBlacklistBtn" style="flex-shrink:0" title="Manage ignored ingredients">🚫 Blacklist</button>
+      </div>
+      <div id="groceryRangeRow" style="display:none;gap:8px;margin-bottom:12px">
+        <input type="date" class="fi" id="groceryRangeStart" style="flex:1">
+        <span style="color:var(--text-3);font-size:13px;align-self:center">to</span>
+        <input type="date" class="fi" id="groceryRangeEnd" style="flex:1">
+      </div>
+      <div class="grocery-add-row">
+        <input class="fi" id="groceryAddInput" placeholder="Add an item manually (e.g. paper towels)…" style="flex:1">
+        <button class="btn btn-ghost" id="groceryAddBtn" style="flex-shrink:0">+ Add</button>
+      </div>
+      <div id="groceryProgress"></div>
+      <div id="groceryList"></div>
+      <div id="groceryActions" style="display:none;gap:8px;margin-top:14px;justify-content:flex-end">
+        <button class="btn btn-ghost" id="groceryClearChecked" style="font-size:12px">Clear checked</button>
+        <button class="btn btn-ghost del" id="groceryClearAll" style="font-size:12px;color:var(--terra)">Clear all</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SETTINGS -->
   <div class="view" id="view-settings">
 
@@ -2375,7 +2550,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="settings-section-title">🎨 Appearance</div>
       <div class="card">
         <div class="setting-label" style="margin-bottom:4px">Theme</div>
-        <div class="setting-sub">Choose a colour scheme for HomeBase</div>
+        <div class="setting-sub">Choose a colour scheme for Den</div>
         <div class="theme-swatches" id="themeSwatches"></div>
       </div>
       <div class="card" style="margin-top:12px">
@@ -2399,7 +2574,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <div class="setting-row">
           <div style="flex:1;min-width:0">
             <div class="setting-label">GitHub Personal Access Token</div>
-            <div class="setting-sub">Token with <strong>gist</strong> scope — syncs to a private Gist. <a href="https://github.com/settings/tokens/new?description=HomeBase+Sync&scopes=gist" target="_blank" style="color:var(--gold)">Generate token ↗</a></div>
+            <div class="setting-sub">Token with <strong>gist</strong> scope — syncs to a private Gist. <a href="https://github.com/settings/tokens/new?description=Den+Sync&scopes=gist" target="_blank" style="color:var(--gold)">Generate token ↗</a></div>
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:12px">
@@ -2436,7 +2611,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <div class="setting-row">
           <div>
             <div class="setting-label">Install as app</div>
-            <div class="setting-sub">Add HomeBase to your home screen for quick access</div>
+            <div class="setting-sub">Add Den to your home screen for quick access</div>
           </div>
           <button class="btn btn-ghost" id="settingsPwaBtn">📲 Install</button>
         </div>
@@ -2448,8 +2623,8 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="settings-section-title">ℹ️ About</div>
       <div class="card">
         <div class="setting-row">
-          <div><div class="setting-label">HomeBase</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.4.0</span>
+          <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.9.1</span>
         </div>
       </div>
     </div>
@@ -2491,9 +2666,9 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="help-body" id="helpBody">
 
         <div class="help-section" id="help-overview">
-          <div class="help-section-title"><span class="ico">📋</span>How HomeBase Works</div>
+          <div class="help-section-title"><span class="ico">📋</span>How Den Works</div>
           <div class="help-card">
-            <p>HomeBase is a household task tracker, journal, and reward system. The core loop is simple: people complete tasks, earn points, hit their weekly goal, and claim rewards. Everyone tracks their own progress but you can view the whole household together at any time.</p>
+            <p>Den is a household task tracker, journal, and reward system. The core loop is simple: people complete tasks, earn points, hit their weekly goal, and claim rewards. Everyone tracks their own progress but you can view the whole household together at any time.</p>
             <ul style="margin-top:10px">
               <li><strong>Tasks</strong> — scheduled recurring chores or one-time tasks. Each has a point value and can be assigned to specific people.</li>
               <li><strong>Bonus Tasks</strong> — an optional pool of tasks (gym, haircut, helping out) that can be logged on any day.</li>
@@ -2512,7 +2687,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
           <div class="help-section-title"><span class="ico">🚀</span>Getting Started</div>
           <div class="help-card">
             <h3>First-time setup</h3>
-            <p>When you first open HomeBase, a setup wizard walks you through the essentials in about a minute:</p>
+            <p>When you first open Den, a setup wizard walks you through the essentials in about a minute:</p>
             <ol>
               <li><strong>Add people</strong> — everyone in your household, each with a unique color</li>
               <li><strong>Create a category</strong> — e.g. Cleaning, Kitchen (optional)</li>
@@ -2532,17 +2707,17 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
           <div class="help-section-title"><span class="ico">📲</span>Install as App</div>
           <div class="help-card">
             <h3>What installation does</h3>
-            <p>Installing HomeBase as an app removes the browser chrome (address bar, tabs) and adds it to your home screen or app drawer. It opens full-screen, works offline, and feels like a native app.</p>
+            <p>Installing Den as an app removes the browser chrome (address bar, tabs) and adds it to your home screen or app drawer. It opens full-screen, works offline, and feels like a native app.</p>
             <div class="help-tip">⚠️ <strong>Installation only works when served over HTTPS</strong> — opening a downloaded HTML file directly will not allow installation. You need to host it (e.g. GitHub Pages) or use <code>localhost</code>.</div>
           </div>
           <div class="help-card">
             <h3>Installing on Android (Chrome)</h3>
-            <p>Open HomeBase in Chrome from your GitHub Pages URL. Tap the <strong>📲 Install App</strong> button in the sidebar — Chrome will show a native install prompt. Tap <strong>Install</strong>.</p>
+            <p>Open Den in Chrome from your GitHub Pages URL. Tap the <strong>📲 Install App</strong> button in the sidebar — Chrome will show a native install prompt. Tap <strong>Install</strong>.</p>
             <p style="margin-top:8px">Alternatively: tap the <strong>⋮ menu</strong> → <strong>Add to Home Screen</strong>.</p>
           </div>
           <div class="help-card">
             <h3>Installing on iPhone / iPad (Safari)</h3>
-            <p>Open HomeBase in <strong>Safari</strong> (not Chrome — iOS only supports PWA install from Safari). Tap the <strong>📲 Install App</strong> button in the sidebar for step-by-step instructions, or:</p>
+            <p>Open Den in <strong>Safari</strong> (not Chrome — iOS only supports PWA install from Safari). Tap the <strong>📲 Install App</strong> button in the sidebar for step-by-step instructions, or:</p>
             <ol>
               <li>Tap the <strong>Share button</strong> (□↑) in Safari's toolbar</li>
               <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
@@ -2745,6 +2920,36 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
           </div>
         </div>
 
+        <!-- Recipes -->
+
+        <div class="help-section" id="help-recipes">
+          <div class="help-section-title"><span class="ico">🍳</span>Recipes &amp; Meals</div>
+          <div class="help-card">
+            <h3>Building your recipe library</h3>
+            <p>Tap <strong>+ Recipe</strong> to add a recipe with a name, servings, prep/cook time, ingredients, and steps. Add as many <strong>tags</strong> as you like (e.g. Dinner, Vegetarian, Quick) — a recipe can have several, and they power the tag filter at the top of the list.</p>
+            <p style="margin-top:8px">Each ingredient has its own quantity, unit, and name. Enter steps one per line — they're shown as a numbered list when you open the recipe.</p>
+          </div>
+          <div class="help-card">
+            <h3>Finding recipes</h3>
+            <p>Search by recipe name, filter by tag, or use the <strong>Has ingredient</strong> box to find every recipe that uses something specific — handy for "what can I make with chicken?" All three filters work together.</p>
+          </div>
+          <div class="help-card">
+            <h3>Source links</h3>
+            <p>If a recipe came from a website, paste the URL into the <strong>Source link</strong> field. The recipe opens with a link back to the original. (Automatic import from a link is planned for a future update.)</p>
+          </div>
+          <div class="help-card">
+            <h3>Meal planning</h3>
+            <p>The <strong>Meal Plan</strong> tab gives you a weekly grid with Breakfast, Lunch, and Dinner slots for each day. Tap <strong>+</strong> in any slot to plan a meal — either pick one of your saved recipes or type free text like "Leftovers" or "Eat out." Use the ← → arrows to move between weeks, and <strong>This Week</strong> to jump back. Tap a planned recipe to open it; tap the × to remove it.</p>
+          </div>
+          <div class="help-card">
+            <h3>Grocery lists</h3>
+            <p>The <strong>Grocery</strong> tab builds a shopping list from your planned meals. Choose <strong>Next week</strong> (the default — you're usually shopping ahead), <strong>This week</strong>, or a <strong>custom date range</strong>, then tap <strong>Generate</strong>. It pulls every ingredient from the recipes planned in that window and combines matching ones.</p>
+            <p style="margin-top:8px">When the same ingredient appears with the same unit, quantities are added together (e.g. 2 cups + 1 cup = 3 cups). When it appears with <em>different</em> units that can't be safely combined (e.g. cups vs grams), both entries are listed and flagged <strong>⚠ multi-unit</strong> so you can estimate the total yourself. Free-text meals like "Leftovers" are skipped since they have no ingredients.</p>
+            <p style="margin-top:8px">Check items off as you shop — a progress bar tracks how far along you are. You can also <strong>add items manually</strong> (paper towels, snacks) and those are kept when you regenerate, which only replaces the recipe-derived items. Use <strong>Clear checked</strong> or <strong>Clear all</strong> to reset.</p>
+            <p style="margin-top:8px"><strong>Ignored ingredients:</strong> tap <strong>🚫 Blacklist</strong> to manage a list of pantry staples (water, salt, pepper, ice come pre-set) that are skipped during generation. You can also tap the 🚫 on any generated item to ignore it from then on. Matching ignores capitalization. A quick view of the grocery list, with checkable items, also appears on the Dashboard.</p>
+          </div>
+        </div>
+
         <!-- People & Stats -->
 
         <div class="help-section" id="help-people">
@@ -2805,7 +3010,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
           <div class="help-section-title"><span class="ico">☁️</span>Cloud Sync</div>
           <div class="help-card">
             <h3>How it works</h3>
-            <p>HomeBase can sync your data to a <strong>private GitHub Gist</strong> — a file stored on your GitHub account. This lets you keep multiple devices in sync and serves as an automatic cloud backup.</p>
+            <p>Den can sync your data to a <strong>private GitHub Gist</strong> — a file stored on your GitHub account. This lets you keep multiple devices in sync and serves as an automatic cloud backup.</p>
           </div>
           <div class="help-card">
             <h3>First-time setup</h3>
@@ -2813,7 +3018,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
               <li>Go to <strong>Settings → Cloud Sync</strong></li>
               <li>Click <strong>Generate token ↗</strong> to open GitHub (you need a free GitHub account)</li>
               <li>Give the token a name, check only the <strong>gist</strong> scope, click Generate</li>
-              <li>Copy the token (starts with <code>ghp_</code>) and paste it into HomeBase</li>
+              <li>Copy the token (starts with <code>ghp_</code>) and paste it into Den</li>
               <li>Click <strong>Save</strong></li>
             </ol>
           </div>
@@ -3282,6 +3487,96 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   </div>
 </div></div>
 
+<!-- Recipe Modal -->
+<div class="overlay" id="recipeModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title" id="recipeModalTitle">Add Recipe</div>
+    <div class="fg"><label class="fl">Name</label><input class="fi" id="mRecName" placeholder="e.g. Weeknight Chicken Tacos"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Servings</label><input class="fi" type="number" id="mRecServings" min="1" placeholder="4"></div>
+      <div class="fg"><label class="fl">Prep (min)</label><input class="fi" type="number" id="mRecPrep" min="0" placeholder="15"></div>
+      <div class="fg"><label class="fl">Cook (min)</label><input class="fi" type="number" id="mRecCook" min="0" placeholder="30"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Tags <span style="opacity:.5">(click to toggle, or type a new one)</span></label>
+      <div class="rec-tag-pick" id="mRecTags"></div>
+      <div style="display:flex;gap:6px;margin-top:7px">
+        <input class="fi" id="mRecTagInput" placeholder="New tag + Enter (e.g. Dinner, Vegetarian)…" style="flex:1">
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Ingredients</label>
+      <div id="mRecIngredients"></div>
+      <button class="btn btn-ghost" id="mRecAddIng" style="font-size:12px;margin-top:6px">+ Add ingredient</button>
+    </div>
+    <div class="fg">
+      <label class="fl">Steps</label>
+      <textarea class="fi" id="mRecSteps" rows="5" style="resize:vertical;min-height:90px" placeholder="One step per line…"></textarea>
+    </div>
+    <div class="fg">
+      <label class="fl">Source link <span style="opacity:.5">(optional)</span></label>
+      <input class="fi" id="mRecSource" placeholder="https://… (paste a recipe URL to keep a reference)">
+    </div>
+    <div class="fg">
+      <label class="fl">Notes <span style="opacity:.5">(optional)</span></label>
+      <textarea class="fi" id="mRecNotes" rows="2" style="resize:vertical" placeholder="Tweaks, substitutions, who liked it…"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="recipeCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="recipeSaveBtn">Save Recipe</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recipe View Modal (read-only detail) -->
+<div class="overlay" id="recipeViewModal">
+  <div class="modal" style="max-width:560px">
+    <div id="recipeViewBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="recipeViewClose">Close</button>
+      <button class="btn btn-ghost" id="recipeViewEdit">✏️ Edit</button>
+      <button class="btn btn-ghost del" id="recipeViewDelete" style="color:var(--terra)">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meal Picker Modal -->
+<div class="overlay" id="mealModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title" id="mealModalTitle">Plan a Meal</div>
+    <div class="fg">
+      <label class="fl">Choose a recipe</label>
+      <input class="fi" id="mMealRecipeSearch" placeholder="Search your recipes…">
+      <div id="mMealRecipeList" class="meal-recipe-list"></div>
+    </div>
+    <div class="meal-or-divider"><span>or</span></div>
+    <div class="fg">
+      <label class="fl">Free text</label>
+      <input class="fi" id="mMealFreeText" placeholder="e.g. Leftovers, Eat out, Order pizza…">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="mealCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="mealSaveBtn">Add to Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grocery Blacklist Modal -->
+<div class="overlay" id="blacklistModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">🚫 Ignored Ingredients</div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">These ingredients are skipped when generating a grocery list — handy for things you always have on hand like water, salt, or pepper. Matching ignores capitalization.</p>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <input class="fi" id="blacklistInput" placeholder="Add an ingredient to ignore…" style="flex:1">
+      <button class="btn btn-ghost" id="blacklistAddBtn" style="flex-shrink:0">+ Add</button>
+    </div>
+    <div id="blacklistList"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="blacklistCloseBtn">Done</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Pause Modal -->
 <div class="overlay" id="pauseModal">
@@ -3494,7 +3789,7 @@ function loadSetting(key) { try { const v=localStorage.getItem('hb_'+key); retur
 let DB;
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('HomeBaseDB', 10);
+    const r = indexedDB.open('HomeBaseDB', 11);
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('chores'))
@@ -3539,6 +3834,21 @@ function openDB() {
         const s = d.createObjectStore('taskSkips', { keyPath: 'id', autoIncrement: true });
         s.createIndex('choreId', 'choreId'); s.createIndex('date', 'date');
       }
+      // v11: Recipes & meal planning
+      if (!d.objectStoreNames.contains('recipes'))
+        d.createObjectStore('recipes', { keyPath: 'id', autoIncrement: true });
+      if (!d.objectStoreNames.contains('recipeIngredients')) {
+        const s = d.createObjectStore('recipeIngredients', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('recipeId', 'recipeId'); s.createIndex('nameKey', 'nameKey');
+      }
+      if (!d.objectStoreNames.contains('mealPlan')) {
+        const s = d.createObjectStore('mealPlan', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('date', 'date');
+      }
+      if (!d.objectStoreNames.contains('groceryItems')) {
+        const s = d.createObjectStore('groceryItems', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('nameKey', 'nameKey');
+      }
     };
     r.onsuccess = e => { DB = e.target.result; res(); };
     r.onerror = () => rej(r.error);
@@ -3580,6 +3890,13 @@ const S = {
   recentlyCompletedPersonIds: [],
   // pinboard
   pinFilter: 'all', pinShowDone: false, pinSort: 'newest',
+  // recipes
+  recTab: 'all', recSearch: '', recIngSearch: '', recTagFilter: 'all',
+  editRecipeId: null, recModalTags: [], viewingRecipeId: null,
+  // meal planning
+  mealWeekOffset: 0, mealPickDate: null, mealPickSlot: null, mealPickRecipeId: null,
+  // grocery
+  grocerySource: 'next',
   // expense state
   expMonth: null, expTab: 'overview',
   expCatFilter: 'all', expPersonFilter: 'all',
@@ -3681,8 +3998,8 @@ function parseLocal(s) { const [y,m,d]=s.split('-').map(Number); return new Date
 // ═══════════════════════════════════════════
 // Navigation
 // ═══════════════════════════════════════════
-const VIEW_ICONS = {dashboard:'🏠',week:'📋',calendar:'🗓',history:'📈',stats:'🌟',tasks:'✅',events:'📅',rewards:'🏆',people:'👥','person-detail':'👤',diary:'📖',pinboard:'📌',expenses:'💰',settings:'⚙️',help:'❓'};
-const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', settings:'Settings', help:'Help & Guide' };
+const VIEW_ICONS = {dashboard:'🏠',week:'📋',calendar:'🗓',history:'📈',stats:'🌟',tasks:'✅',events:'📅',rewards:'🏆',people:'👥','person-detail':'👤',diary:'📖',pinboard:'📌',expenses:'💰',recipes:'🍳',settings:'⚙️',help:'❓'};
+const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', recipes:'Recipes & Meals', settings:'Settings', help:'Help & Guide' };
 async function nav(view) {
   S.view = view;
   // Close more sheet on any navigation
@@ -3769,6 +4086,7 @@ async function render(view) {
   else if (view==='diary') await renderDiary();
   else if (view==='pinboard') await renderPinboard();
   else if (view==='expenses') await renderExpenses();
+  else if (view==='recipes') await renderRecipes();
   else if (view==='settings')  renderSettings();
   else if (view==='help') { /* static content, nothing to render */ }
 }
@@ -4048,14 +4366,24 @@ async function renderDash() {
 
       const body=document.createElement('div'); body.className='cat-group-body';
       tasks.forEach(c=>{
-        const done=S.person!=='all'
-          ? todayComps.some(cp=>cp.choreId===c.id&&cp.personId===S.person)
-          : todayComps.some(cp=>cp.choreId===c.id);
+        const count = S.person!=='all'
+          ? countCompletions(todayComps, c.id, todayStr, S.person)
+          : countCompletions(todayComps, c.id, todayStr, null);
+        const done = count > 0;
         const skipped = isTaskSkipped(c.id, todayStr);
         const row=document.createElement('div'); row.className='chore-row-compact'+(done?' done':'')+(skipped?' skipped':'');
-        row.innerHTML=`<div class="cdot" style="background:${color}"></div><span class="chore-name" style="flex:1">${c.name}${c.description?` <span style="font-size:10.5px;color:var(--text-3)">— ${c.description}</span>`:''}</span><span class="pts-badge">${pts(c.points)}</span>${skipped?'<span class="skip-ico" title="Skipped">⊘</span>':''}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
-        row.querySelector('.check-btn').onclick=(e)=>{ e.stopPropagation(); animCheckBurst(e.currentTarget); openCompleteModal(c.id,todayStr); };
-        row.onclick=()=>openCompleteModal(c.id,todayStr);
+        const nameHtml = `<span class="chore-name" style="flex:1">${c.name}${count>1?`<span class="comp-count-badge">×${count}</span>`:''}${c.description?` <span style="font-size:10.5px;color:var(--text-3)">— ${c.description}</span>`:''}</span><span class="pts-badge">${pts(c.points)}</span>${skipped?'<span class="skip-ico" title="Skipped">⊘</span>':''}`;
+        if(S.person!=='all' && !skipped) {
+          // Single-person view: +/- stepper
+          row.innerHTML=`<div class="cdot" style="background:${color}"></div>${nameHtml}<div class="comp-stepper" data-chore="${c.id}"><button class="comp-minus" ${count===0?'disabled':''}>−</button><span class="comp-count ${count===0?'zero':''}">${count}</span><button class="comp-plus">+</button></div>`;
+          row.querySelector('.comp-plus').onclick=(e)=>{ e.stopPropagation(); stepCompletion(c.id,todayStr,+1); };
+          row.querySelector('.comp-minus').onclick=(e)=>{ e.stopPropagation(); stepCompletion(c.id,todayStr,-1); };
+        } else {
+          // Everyone view: tap opens modal (count badge shown inline)
+          row.innerHTML=`<div class="cdot" style="background:${color}"></div>${nameHtml}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          row.querySelector('.check-btn').onclick=(e)=>{ e.stopPropagation(); animCheckBurst(e.currentTarget); openCompleteModal(c.id,todayStr); };
+          row.onclick=()=>openCompleteModal(c.id,todayStr);
+        }
         body.appendChild(row);
       });
       group.appendChild(body);
@@ -4433,6 +4761,56 @@ async function renderDash() {
     }).join('');
   }
 
+  // ── Today's Meals card ──────────────────────────
+  const dm = g('dashMeals');
+  if(dm){
+    const [todayMeals, mealRecipes] = await Promise.all([byIdx('mealPlan','date',todayStr), all('recipes')]);
+    const mrById={}; mealRecipes.forEach(r=>mrById[r.id]=r);
+    const slotOrder={breakfast:0,lunch:1,dinner:2};
+    const slotLabel={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner'};
+    const sorted=todayMeals.slice().sort((a,b)=>(slotOrder[a.slot]??9)-(slotOrder[b.slot]??9));
+    if(!sorted.length){
+      dm.innerHTML='<div class="empty"><div class="ico">🍳</div><p>No meals planned for today.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Plan meals in <strong>🍳 Recipes → Meal Plan</strong>.</p></div>';
+    } else {
+      dm.innerHTML = sorted.map(m=>{
+        const recipe = m.recipeId!=null ? mrById[m.recipeId] : null;
+        const name = recipe ? recipe.name : (m.recipeId!=null ? '(deleted recipe)' : (m.text||'(meal)'));
+        const clickable = recipe ? `onclick="openRecipeView(${recipe.id})" style="cursor:pointer"` : '';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-soft)" ${clickable}>
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-3);font-weight:600;width:64px;flex-shrink:0">${slotLabel[m.slot]||m.slot}</span>
+          <div style="flex:1;min-width:0;font-size:13.5px;font-weight:500;border-left:3px solid ${recipe?'var(--sage)':'var(--text-3)'};padding-left:8px">${name}${recipe&&recipe.favorite?' <span style="color:#ffcf40">★</span>':''}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Today's Grocery card ──────────────────────────
+  const dg = g('dashGrocery');
+  if(dg){
+    const gItems=(await all('groceryItems')).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+    if(!gItems.length){
+      dg.innerHTML='<div class="empty"><div class="ico">🛒</div><p>No grocery list yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Generate one in <strong>🍳 Recipes → Grocery</strong>.</p></div>';
+    } else {
+      const checked=gItems.filter(i=>i.checked).length;
+      const pct=Math.round(checked/gItems.length*100);
+      const unchecked=gItems.filter(i=>!i.checked);
+      let html=`<div class="grocery-prog" style="margin-bottom:10px"><span>${checked}/${gItems.length}</span><div class="grocery-prog-bar"><div class="grocery-prog-fill" style="width:${pct}%"></div></div><span>${pct}%</span></div>`;
+      if(!unchecked.length){
+        html+='<div style="text-align:center;padding:8px;color:var(--sage);font-size:13px;font-weight:500">✓ All items checked off!</div>';
+      } else {
+        html+=unchecked.slice(0,8).map(it=>`<div class="dash-grocery-row" data-id="${it.id}" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-soft);cursor:pointer">
+          <div class="gi-check" style="width:20px;height:20px;border-radius:5px;border:2px solid var(--border);flex-shrink:0"></div>
+          <span style="flex:1;font-size:13px">${it.qty?`<span style="color:var(--gold);font-weight:600;margin-right:5px">${it.qty}</span>`:''}${it.name}</span>
+        </div>`).join('');
+        if(unchecked.length>8) html+=`<div style="font-size:11px;color:var(--text-3);text-align:center;padding-top:8px">+${unchecked.length-8} more</div>`;
+      }
+      dg.innerHTML=html;
+      dg.querySelectorAll('.dash-grocery-row').forEach(row=>{
+        row.onclick=()=>dashToggleGrocery(parseInt(row.dataset.id));
+      });
+    }
+  }
+
   // ── Streaks card ──────────────────────────────
   const ds = g('dashStreaks'); ds.innerHTML='';
   const streakPpl = S.person==='all' ? people : people.filter(p=>p.id===S.person);
@@ -4577,6 +4955,7 @@ async function renderWeek() {
             :assignees.length===0?allComps.some(cp=>cp.choreId===c.id&&cp.date===ds)
             :assignees.every(p=>allComps.some(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id));
           const skpd=isTaskSkipped(c.id,ds);
+          const cnt=S.person!=='all'?countCompletions(allComps,c.id,ds,S.person):countCompletions(allComps,c.id,ds,null);
           const item=document.createElement('div'); item.className='w-chore'+(done?' done':'')+(skpd?' skipped':'');
           if(c.description) item.title=c.description;
           const showDots=S.person==='all'&&assignees.length>0;
@@ -4584,7 +4963,7 @@ async function renderWeek() {
             const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
             return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${p.name}${comp?' ✓':''}"></div>`;
           }).join('')}</div>`:(done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}${cnt>1?`<span class="comp-count-badge">×${cnt}</span>`:''}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
           item.onclick=(e)=>{ animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
           detail.appendChild(item);
           // Show completion notes
@@ -6882,6 +7261,70 @@ function renderMoodTrendChart(container, diaryEntries, buckets) {
 // ═══════════════════════════════════════════
 // Complete Modal
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// Multi-complete: add / remove a single completion for a person
+// ═══════════════════════════════════════════
+
+// Count how many times a chore was completed on a date by a person (or anyone if personId null & matchAny)
+function countCompletions(allComps, choreId, date, personId) {
+  return allComps.filter(c =>
+    c.choreId === choreId &&
+    c.date === date &&
+    !c.isBonus &&
+    (personId == null ? true : c.personId === personId)
+  ).length;
+}
+
+// Add one completion for a person on a date. Returns true if a goal was newly met.
+async function addCompletion(choreId, date, personId) {
+  const [chore, allComps] = await Promise.all([get('chores', choreId), all('completions')]);
+  const ws = weekStart(0);
+  const wkDates = Array.from({length:7},(_,i)=>{const d=new Date(ws);d.setDate(d.getDate()+i);return fmtDate(d);});
+  const beforePts = personId != null
+    ? {[personId]: allComps.filter(c=>c.personId===personId && wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0)}
+    : {};
+  await put('completions', {choreId, date, personId: personId ?? null, points: chore?.points||0});
+  playSound('complete');
+  if(personId != null) {
+    S.recentlyCompletedPersonIds = [personId];
+    checkGoalMet([personId], beforePts);
+  }
+}
+
+// Remove the most recent completion for a person on a date.
+async function removeCompletion(choreId, date, personId) {
+  const allComps = await all('completions');
+  const matches = allComps.filter(c =>
+    c.choreId === choreId && c.date === date && !c.isBonus &&
+    (personId == null ? !c.personId : c.personId === personId)
+  );
+  if(!matches.length) return;
+  // Remove the most recently added (highest id)
+  const target = matches.sort((a,b)=>(b.id||0)-(a.id||0))[0];
+  await del('completions', target.id);
+  playSound('uncheck');
+}
+
+// Stepper-driven change from a task row. delta is +1 or -1.
+async function stepCompletion(choreId, date, delta) {
+  const personId = S.person !== 'all' ? S.person : null;
+  const chore = await get('chores', choreId);
+  if(delta > 0) await addCompletion(choreId, date, personId);
+  else await removeCompletion(choreId, date, personId);
+  await render(S.view);
+  // Fire the +points float on the freshly-rendered stepper (the old element was destroyed by render)
+  if(delta > 0 && chore?.points && !REDUCED_MOTION) {
+    requestAnimationFrame(()=>{
+      const stepper = document.querySelector(`.comp-stepper[data-chore="${choreId}"]`);
+      if(stepper){
+        const countEl = stepper.querySelector('.comp-count');
+        if(countEl) animPop(countEl);
+        animFloatPts(chore.points, countEl || stepper);
+      }
+    });
+  }
+}
+
 async function openCompleteModal(choreId, date) {
   const [chore,people,allComps]=await Promise.all([get('chores',choreId),all('people'),all('completions')]);
 
@@ -6930,11 +7373,21 @@ async function openCompleteModal(choreId, date) {
     render(S.view); return;
   }
   people.forEach(p=>{
-    const done=allComps.some(c=>c.choreId===choreId&&c.date===date&&c.personId===p.id);
-    const row=document.createElement('div'); row.className='person-sel-row'+(done?' on':'');
-    row.innerHTML=`${avatarHtml(p,28)}<span style="flex:1">${p.name}</span>${done?'<span style="color:var(--sage);font-size:12px">✓ Done</span>':''}`;
-    row.dataset.pid=p.id; row.dataset.was=done;
-    row.onclick=()=>row.classList.toggle('on');
+    const count = countCompletions(allComps, choreId, date, p.id);
+    const row=document.createElement('div'); row.className='person-sel-row'+(count>0?' on':'');
+    row.dataset.pid=p.id; row.dataset.was=count; row.dataset.count=count;
+    row.innerHTML=`${avatarHtml(p,28)}<span style="flex:1">${p.name}</span><div class="comp-stepper"><button class="comp-minus" ${count===0?'disabled':''}>−</button><span class="comp-count ${count===0?'zero':''}">${count}</span><button class="comp-plus">+</button></div>`;
+    const countEl=row.querySelector('.comp-count');
+    const minusBtn=row.querySelector('.comp-minus');
+    const updateRow=()=>{
+      const n=parseInt(row.dataset.count);
+      countEl.textContent=n;
+      countEl.classList.toggle('zero', n===0);
+      minusBtn.disabled = n===0;
+      row.classList.toggle('on', n>0);
+    };
+    row.querySelector('.comp-plus').onclick=(e)=>{ e.stopPropagation(); row.dataset.count=parseInt(row.dataset.count)+1; updateRow(); };
+    minusBtn.onclick=(e)=>{ e.stopPropagation(); const n=parseInt(row.dataset.count); if(n>0){ row.dataset.count=n-1; updateRow(); } };
     grid.appendChild(row);
   });
   _openModal('completeModal');
@@ -6957,10 +7410,21 @@ async function saveComplete() {
   });
 
   for(const row of rows){
-    const pid=parseInt(row.dataset.pid), was=row.dataset.was==='true', now=row.classList.contains('on');
-    if(!was&&now){ await put('completions',{choreId:cid,date,personId:pid,points:chore?.points||0,note}); addedPersonIds.push(pid); }
-    else if(was&&!now){ const ex=allComps.find(c=>c.choreId===cid&&c.date===date&&c.personId===pid); if(ex) await del('completions',ex.id); }
-    else if(was&&now&&note){ const ex=allComps.find(c=>c.choreId===cid&&c.date===date&&c.personId===pid); if(ex){ ex.note=note; await put('completions',ex); } }
+    const pid=parseInt(row.dataset.pid);
+    const wasCount=parseInt(row.dataset.was);
+    const newCount=parseInt(row.dataset.count);
+    const existing=allComps.filter(c=>c.choreId===cid&&c.date===date&&c.personId===pid&&!c.isBonus).sort((a,b)=>(a.id||0)-(b.id||0));
+    if(newCount > wasCount){
+      for(let i=0;i<newCount-wasCount;i++){
+        await put('completions',{choreId:cid,date,personId:pid,points:chore?.points||0,note: i===0?note:null});
+      }
+      addedPersonIds.push(pid);
+    } else if(newCount < wasCount){
+      const toRemove=existing.slice(newCount);
+      for(const ex of toRemove) await del('completions',ex.id);
+    } else if(newCount>0 && note){
+      if(existing[0]){ existing[0].note=note; await put('completions',existing[0]); }
+    }
   }
 
   S.recentlyCompletedPersonIds = addedPersonIds;
@@ -7344,6 +7808,663 @@ async function clearCheckedPinItems(pinId) {
   await put('pins',pin); await renderPinboard();
 }
 
+// ═══════════════════════════════════════════
+// RECIPES (Phase 1)
+// ═══════════════════════════════════════════
+
+// Normalize an ingredient/recipe name for searching & matching
+function recKey(s){ return (s||'').trim().toLowerCase().replace(/\s+/g,' '); }
+
+// Ingredient blacklist — stored as normalized keys; defaults cover pantry staples
+const GROCERY_BLACKLIST_DEFAULTS = ['water','salt','pepper','ice','tap water'];
+function getGroceryBlacklist(){
+  const saved=loadSetting('groceryBlacklist');
+  return Array.isArray(saved) ? saved : GROCERY_BLACKLIST_DEFAULTS.slice();
+}
+function setGroceryBlacklist(arr){
+  // store normalized + de-duplicated
+  const norm=[...new Set(arr.map(recKey).filter(Boolean))];
+  saveSetting('groceryBlacklist', norm);
+}
+function isBlacklisted(name){
+  return getGroceryBlacklist().includes(recKey(name));
+}
+function addToBlacklist(name){
+  const list=getGroceryBlacklist();
+  const k=recKey(name);
+  if(k && !list.includes(k)){ list.push(k); setGroceryBlacklist(list); }
+}
+function removeFromBlacklist(key){
+  setGroceryBlacklist(getGroceryBlacklist().filter(x=>x!==key));
+}
+
+function switchRecipeTab(tab){
+  S.recTab = tab;
+  const map = {all:'recAll', plan:'recPlan', grocery:'recGrocery'};
+  Object.entries(map).forEach(([t,sv])=>{
+    const el=g('subview-'+sv); if(el) el.style.display = (t===tab)?'':'none';
+  });
+  ['recTabAll','recTabPlan','recTabGrocery'].forEach(id=>{
+    const el=g(id); if(el) el.classList.remove('active');
+  });
+  const active={all:'recTabAll',plan:'recTabPlan',grocery:'recTabGrocery'}[tab];
+  if(g(active)) g(active).classList.add('active');
+}
+
+async function renderRecipes(){
+  if(!S.recTab) S.recTab='all';
+  switchRecipeTab(S.recTab);
+
+  // Wire tabs
+  g('recTabAll').onclick=()=>{ switchRecipeTab('all'); };
+  g('recTabPlan').onclick=()=>{ switchRecipeTab('plan'); renderMealPlan(); };
+  g('recTabGrocery').onclick=()=>{ switchRecipeTab('grocery'); renderGrocery(); };
+
+  // Wire toolbar
+  const searchEl=g('recSearch'), ingEl=g('recIngSearch');
+  if(searchEl){ searchEl.value=S.recSearch||''; searchEl.oninput=()=>{ S.recSearch=searchEl.value; renderRecipeGrid(); }; }
+  if(ingEl){ ingEl.value=S.recIngSearch||''; ingEl.oninput=()=>{ S.recIngSearch=ingEl.value; renderRecipeGrid(); }; }
+  g('addRecipeBtn').onclick=()=>openRecipeModal();
+
+  await renderRecipeGrid();
+  if(S.recTab==='plan') await renderMealPlan();
+  if(S.recTab==='grocery') await renderGrocery();
+}
+
+async function renderRecipeGrid(){
+  const [recipes, allIngs] = await Promise.all([all('recipes'), all('recipeIngredients')]);
+
+  // Build tag filter from all tags in use
+  const allTags=[...new Set(recipes.flatMap(r=>r.tags||[]))].sort((a,b)=>a.localeCompare(b));
+  const hasFavs=recipes.some(r=>r.favorite);
+  const tagWrap=g('recTagFilter');
+  if(tagWrap){
+    tagWrap.innerHTML='';
+    const mkChip=(label,val)=>{
+      const c=document.createElement('div');
+      c.className='rec-tag-chip'+((S.recTagFilter||'all')===val?' active':'');
+      c.innerHTML=label;
+      c.onclick=()=>{ S.recTagFilter=val; renderRecipeGrid(); };
+      return c;
+    };
+    if(allTags.length || hasFavs){
+      tagWrap.appendChild(mkChip('All','all'));
+      if(hasFavs) tagWrap.appendChild(mkChip('★ Favorites','__fav'));
+      allTags.forEach(t=>tagWrap.appendChild(mkChip(t,t)));
+    }
+  }
+
+  // Filter
+  const q=recKey(S.recSearch);
+  const iq=recKey(S.recIngSearch);
+  const tagF=S.recTagFilter||'all';
+  let list=recipes.slice();
+  if(q) list=list.filter(r=>recKey(r.name).includes(q));
+  if(tagF==='__fav') list=list.filter(r=>r.favorite);
+  else if(tagF!=='all') list=list.filter(r=>(r.tags||[]).includes(tagF));
+  if(iq){
+    const matchingRecipeIds=new Set(allIngs.filter(i=>(i.nameKey||'').includes(iq)).map(i=>i.recipeId));
+    list=list.filter(r=>matchingRecipeIds.has(r.id));
+  }
+  // Favorites first, then alphabetical
+  list.sort((a,b)=>{
+    if(!!b.favorite !== !!a.favorite) return (b.favorite?1:0)-(a.favorite?1:0);
+    return recKey(a.name).localeCompare(recKey(b.name));
+  });
+
+  const grid=g('recipeGrid');
+  grid.innerHTML='';
+  if(!list.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ico">🍳</div><p>${recipes.length?'No recipes match your filters':'No recipes yet'}</p><p style="font-size:12px;color:var(--text-3);margin-top:4px">${recipes.length?'Try clearing the search or tag filter.':'Tap + Recipe to add your first one.'}</p></div>`;
+    return;
+  }
+  list.forEach(r=>{
+    const card=document.createElement('div'); card.className='rec-card';
+    const totalTime=(r.prepMin||0)+(r.cookMin||0);
+    const photoStyle=r.photo?`style="background-image:url('${r.photo}')"`:'';
+    card.innerHTML=`<div class="rec-card-photo" ${photoStyle}>${r.photo?'':'🍳'}<button class="rec-fav-btn${r.favorite?' on':''}" title="${r.favorite?'Unfavorite':'Favorite'}">${r.favorite?'★':'☆'}</button></div>
+      <div class="rec-card-body">
+        <div class="rec-card-name">${r.name}</div>
+        <div class="rec-card-meta">${r.servings?`<span>🍽 ${r.servings}</span>`:''}${totalTime?`<span>⏱ ${totalTime} min</span>`:''}</div>
+        <div class="rec-card-tags">${(r.tags||[]).map(t=>`<span class="rec-card-tag">${t}</span>`).join('')}</div>
+      </div>`;
+    card.querySelector('.rec-fav-btn').onclick=(e)=>{ e.stopPropagation(); toggleRecipeFavorite(r.id); };
+    card.onclick=()=>openRecipeView(r.id);
+    grid.appendChild(card);
+  });
+}
+
+async function toggleRecipeFavorite(recipeId){
+  const r=await get('recipes',recipeId); if(!r) return;
+  r.favorite=!r.favorite;
+  await put('recipes',r);
+  if(r.favorite) playSound('tick');
+  await renderRecipeGrid();
+  // If the detail modal is open for this recipe, refresh its star
+  if(S.viewingRecipeId===recipeId && g('recipeViewModal').classList.contains('open')) openRecipeView(recipeId);
+}
+
+// ── Recipe modal (add/edit) ──────────────────────────────────────────
+const RECIPE_UNITS = [
+  {group:'', items:['', 'to taste']},
+  {group:'Volume', items:['tsp','tbsp','cup','mL','L','fl oz','pint','quart','gallon']},
+  {group:'Weight', items:['g','kg','oz','lb']},
+  {group:'Count', items:['clove','slice','pinch','can','package','bunch','stick','sprig']},
+];
+function recUnitOptions(selected){
+  let html='';
+  RECIPE_UNITS.forEach(({group,items})=>{
+    const opts=items.map(u=>{
+      const label = u==='' ? '—' : u;
+      return `<option value="${u}"${u===(selected||'')?' selected':''}>${label}</option>`;
+    }).join('');
+    html += group ? `<optgroup label="${group}">${opts}</optgroup>` : opts;
+  });
+  return html;
+}
+function addIngredientRow(qty='', unit='', name=''){
+  const wrap=g('mRecIngredients');
+  const row=document.createElement('div'); row.className='rec-ing-row';
+  row.innerHTML=`<input class="fi rec-ing-qty" placeholder="Qty" value="${qty!=null?String(qty).replace(/"/g,'&quot;'):''}">
+    <select class="fi rec-ing-unit">${recUnitOptions(unit)}</select>
+    <input class="fi rec-ing-name" placeholder="Ingredient" value="${name?name.replace(/"/g,'&quot;'):''}">
+    <button class="rec-ing-del" title="Remove">×</button>`;
+  row.querySelector('.rec-ing-del').onclick=()=>row.remove();
+  wrap.appendChild(row);
+}
+
+function renderRecTagPicker(){
+  const wrap=g('mRecTags'); wrap.innerHTML='';
+  (S.recModalTags||[]).forEach(t=>{
+    const c=document.createElement('div');
+    c.className='rec-tag-chip active';
+    c.innerHTML=`${t} <span style="opacity:0.6;margin-left:3px">×</span>`;
+    c.onclick=()=>{ S.recModalTags=S.recModalTags.filter(x=>x!==t); renderRecTagPicker(); };
+    wrap.appendChild(c);
+  });
+}
+
+async function openRecipeModal(recipeId=null){
+  S.editRecipeId=recipeId;
+  S.recModalTags=[];
+  g('recipeModalTitle').textContent=recipeId?'Edit Recipe':'Add Recipe';
+  g('mRecName').value=''; g('mRecServings').value=''; g('mRecPrep').value=''; g('mRecCook').value='';
+  g('mRecSteps').value=''; g('mRecSource').value=''; g('mRecNotes').value='';
+  g('mRecIngredients').innerHTML='';
+  g('mRecTagInput').value='';
+
+  if(recipeId){
+    const [r, ings]=await Promise.all([get('recipes',recipeId), byIdx('recipeIngredients','recipeId',recipeId)]);
+    if(r){
+      g('mRecName').value=r.name||'';
+      g('mRecServings').value=r.servings||'';
+      g('mRecPrep').value=r.prepMin||'';
+      g('mRecCook').value=r.cookMin||'';
+      g('mRecSteps').value=(r.steps||[]).join('\n');
+      g('mRecSource').value=r.source||'';
+      g('mRecNotes').value=r.notes||'';
+      S.recModalTags=[...(r.tags||[])];
+      ings.sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id)).forEach(i=>addIngredientRow(i.qty,i.unit,i.name));
+    }
+  }
+  if(!g('mRecIngredients').children.length){ addIngredientRow(); addIngredientRow(); }
+  renderRecTagPicker();
+  _openModal('recipeModal');
+}
+
+async function saveRecipe(){
+  const name=g('mRecName').value.trim();
+  if(!name){ showToast('Give the recipe a name','var(--terra)'); return; }
+  const steps=g('mRecSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  // Preserve existing favorite (and photo) when editing
+  let existingRec=null;
+  if(S.editRecipeId) existingRec=await get('recipes',S.editRecipeId);
+  const recipe={
+    name,
+    servings: parseInt(g('mRecServings').value)||null,
+    prepMin: parseInt(g('mRecPrep').value)||null,
+    cookMin: parseInt(g('mRecCook').value)||null,
+    tags: [...(S.recModalTags||[])],
+    steps,
+    source: g('mRecSource').value.trim()||null,
+    notes: g('mRecNotes').value.trim()||null,
+    favorite: existingRec?!!existingRec.favorite:false,
+    photo: existingRec?(existingRec.photo||null):null,
+  };
+  if(S.editRecipeId) recipe.id=S.editRecipeId;
+  const recipeId=await put('recipes',recipe);
+  const rid = S.editRecipeId || recipeId;
+
+  // Rebuild ingredient rows for this recipe
+  const existing=await byIdx('recipeIngredients','recipeId',rid);
+  for(const ex of existing) await del('recipeIngredients',ex.id);
+  const rows=g('mRecIngredients').querySelectorAll('.rec-ing-row');
+  let order=0;
+  for(const row of rows){
+    const qty=row.querySelector('.rec-ing-qty').value.trim();
+    const unit=row.querySelector('.rec-ing-unit').value.trim();
+    const nm=row.querySelector('.rec-ing-name').value.trim();
+    if(!nm) continue;
+    await put('recipeIngredients',{recipeId:rid, qty:qty||null, unit:unit||null, name:nm, nameKey:recKey(nm), sortOrder:order++});
+  }
+  playSound('tick');
+  closeModal('recipeModal');
+  await renderRecipeGrid();
+}
+
+async function openRecipeView(recipeId){
+  const [r, ings]=await Promise.all([get('recipes',recipeId), byIdx('recipeIngredients','recipeId',recipeId)]);
+  if(!r) return;
+  S.viewingRecipeId=recipeId;
+  ings.sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id));
+  const totalTime=(r.prepMin||0)+(r.cookMin||0);
+  const body=g('recipeViewBody');
+  body.innerHTML=`
+    <div class="modal-title" style="margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="flex:1">${r.name}</span><button class="rec-fav-btn-lg${r.favorite?' on':''}" id="recViewFavBtn" title="${r.favorite?'Unfavorite':'Favorite'}">${r.favorite?'★':'☆'}</button></div>
+    ${r.photo?`<div class="rec-view-photo" style="background-image:url('${r.photo}')"></div>`:''}
+    ${(r.tags||[]).length?`<div class="rec-card-tags" style="margin-bottom:12px">${r.tags.map(t=>`<span class="rec-card-tag">${t}</span>`).join('')}</div>`:''}
+    <div class="rec-view-meta">
+      ${r.servings?`<span>🍽 ${r.servings} servings</span>`:''}
+      ${r.prepMin?`<span>🔪 ${r.prepMin} min prep</span>`:''}
+      ${r.cookMin?`<span>🔥 ${r.cookMin} min cook</span>`:''}
+      ${totalTime?`<span>⏱ ${totalTime} min total</span>`:''}
+    </div>
+    ${ings.length?`<div class="rec-view-section-title">Ingredients</div>
+      <ul class="rec-view-ings">${ings.map(i=>`<li><span class="q">${[i.qty,i.unit].filter(Boolean).join(' ')||'—'}</span><span>${i.name}</span></li>`).join('')}</ul>`:''}
+    ${(r.steps||[]).length?`<div class="rec-view-section-title">Steps</div>
+      <ol class="rec-view-steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`:''}
+    ${r.notes?`<div class="rec-view-section-title">Notes</div><p style="font-size:13px;color:var(--text-2);line-height:1.6">${r.notes}</p>`:''}
+    ${r.source?`<div style="margin-top:14px"><a href="${r.source}" target="_blank" rel="noopener" style="color:var(--gold);font-size:13px">🔗 Original recipe ↗</a></div>`:''}
+  `;
+  _openModal('recipeViewModal');
+  const favBtn=g('recViewFavBtn');
+  if(favBtn) favBtn.onclick=()=>toggleRecipeFavorite(recipeId);
+}
+
+async function deleteRecipe(recipeId){
+  askConfirm('Delete this recipe? This cannot be undone.', async()=>{
+    const ings=await byIdx('recipeIngredients','recipeId',recipeId);
+    for(const i of ings) await del('recipeIngredients',i.id);
+    await del('recipes',recipeId);
+    closeModal('recipeViewModal');
+    await renderRecipeGrid();
+  });
+}
+
+// ═══════════════════════════════════════════
+// MEAL PLANNING (Phase 2)
+// ═══════════════════════════════════════════
+const MEAL_SLOTS = [
+  {key:'breakfast', label:'Breakfast'},
+  {key:'lunch',     label:'Lunch'},
+  {key:'dinner',    label:'Dinner'},
+];
+
+async function renderMealPlan(){
+  if(S.mealWeekOffset==null) S.mealWeekOffset=0;
+  // Wire nav (idempotent)
+  g('mealPrev').onclick=()=>{ S.mealWeekOffset--; renderMealPlanGrid(); };
+  g('mealNext').onclick=()=>{ S.mealWeekOffset++; renderMealPlanGrid(); };
+  g('mealThisWeek').onclick=()=>{ S.mealWeekOffset=0; renderMealPlanGrid(); };
+  await renderMealPlanGrid();
+}
+
+async function renderMealPlanGrid(){
+  const ws=weekStart(S.mealWeekOffset||0);
+  const wkDates=Array.from({length:7},(_,i)=>{ const d=new Date(ws); d.setDate(d.getDate()+i); return d; });
+  const startStr=fmtDate(wkDates[0]), endStr=fmtDate(wkDates[6]);
+  const todayStr=today();
+
+  // Label
+  const lbl=g('mealWeekLabel');
+  if(lbl){
+    const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    lbl.textContent=`${fmt(wkDates[0])} – ${fmt(wkDates[6])}`;
+  }
+
+  const [plan, recipes]=await Promise.all([all('mealPlan'), all('recipes')]);
+  const recById={}; recipes.forEach(r=>recById[r.id]=r);
+  const grid=g('mealPlanGrid'); grid.innerHTML='';
+
+  wkDates.forEach(d=>{
+    const ds=fmtDate(d);
+    const isToday=ds===todayStr;
+    const dayEl=document.createElement('div'); dayEl.className='meal-day'+(isToday?' is-today':'');
+    dayEl.innerHTML=`<div class="meal-day-hdr"><span class="md-dow">${DAYS[d.getDay()]}</span><span class="md-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>${isToday?'<span class="md-today-badge">Today</span>':''}</div>`;
+    const slots=document.createElement('div'); slots.className='meal-slots';
+    MEAL_SLOTS.forEach(slot=>{
+      const cell=document.createElement('div'); cell.className='meal-slot';
+      cell.innerHTML=`<div class="meal-slot-label">${slot.label}</div>`;
+      const entries=plan.filter(m=>m.date===ds && m.slot===slot.key);
+      entries.forEach(m=>{
+        const recipe=m.recipeId!=null?recById[m.recipeId]:null;
+        const name=recipe?recipe.name:(m.recipeId!=null?'(deleted recipe)':(m.text||'(meal)'));
+        const entry=document.createElement('div');
+        entry.className='meal-entry '+(recipe?'is-recipe':'is-free');
+        entry.innerHTML=`<span class="meal-entry-name">${name}${recipe&&recipe.favorite?' <span style="color:#ffcf40">★</span>':''}</span><span class="meal-entry-x" title="Remove">×</span>`;
+        entry.querySelector('.meal-entry-name').onclick=()=>{ if(recipe) openRecipeView(recipe.id); };
+        entry.querySelector('.meal-entry-x').onclick=(e)=>{ e.stopPropagation(); removeMeal(m.id); };
+        cell.appendChild(entry);
+      });
+      const addBtn=document.createElement('button'); addBtn.className='meal-add-btn'; addBtn.textContent='+';
+      addBtn.title='Add a meal';
+      addBtn.onclick=()=>openMealModal(ds, slot.key, slot.label);
+      cell.appendChild(addBtn);
+      slots.appendChild(cell);
+    });
+    dayEl.appendChild(slots);
+    grid.appendChild(dayEl);
+  });
+}
+
+async function openMealModal(date, slot, slotLabel){
+  S.mealPickDate=date; S.mealPickSlot=slot; S.mealPickRecipeId=null;
+  const d=parseLocal(date);
+  g('mealModalTitle').textContent=`${slotLabel} — ${d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}`;
+  g('mMealFreeText').value='';
+  const searchEl=g('mMealRecipeSearch'); searchEl.value='';
+  await renderMealRecipeList('');
+  searchEl.oninput=()=>renderMealRecipeList(searchEl.value);
+  _openModal('mealModal');
+}
+
+async function renderMealRecipeList(query){
+  const recipes=await all('recipes');
+  const q=recKey(query);
+  let list=recipes.slice();
+  if(q) list=list.filter(r=>recKey(r.name).includes(q));
+  list.sort((a,b)=>{
+    if(!!b.favorite !== !!a.favorite) return (b.favorite?1:0)-(a.favorite?1:0);
+    return recKey(a.name).localeCompare(recKey(b.name));
+  });
+  const wrap=g('mMealRecipeList'); wrap.innerHTML='';
+  list.forEach(r=>{
+    const opt=document.createElement('div');
+    opt.className='meal-recipe-opt'+(S.mealPickRecipeId===r.id?' sel':'');
+    opt.innerHTML=`${r.favorite?'<span class="mr-fav">★</span>':''}<span style="flex:1">${r.name}</span>`;
+    opt.onclick=()=>{
+      S.mealPickRecipeId = (S.mealPickRecipeId===r.id) ? null : r.id;
+      g('mMealFreeText').value=''; // recipe choice clears free text
+      renderMealRecipeList(query);
+    };
+    wrap.appendChild(opt);
+  });
+}
+
+async function saveMeal(){
+  const freeText=g('mMealFreeText').value.trim();
+  if(S.mealPickRecipeId==null && !freeText){ showToast('Pick a recipe or enter some text','var(--terra)'); return; }
+  const entry={ date:S.mealPickDate, slot:S.mealPickSlot };
+  if(S.mealPickRecipeId!=null){ entry.recipeId=S.mealPickRecipeId; entry.text=null; }
+  else { entry.recipeId=null; entry.text=freeText; }
+  await put('mealPlan', entry);
+  playSound('tick');
+  closeModal('mealModal');
+  await renderMealPlanGrid();
+}
+
+async function removeMeal(id){
+  await del('mealPlan', id);
+  playSound('uncheck');
+  await renderMealPlanGrid();
+}
+
+// ═══════════════════════════════════════════
+// GROCERY LIST (Phase 3)
+// ═══════════════════════════════════════════
+
+async function renderGrocery(){
+  // Wire source selector
+  const srcSel=g('grocerySource');
+  srcSel.value=S.grocerySource||'next';
+  srcSel.onchange=()=>{
+    S.grocerySource=srcSel.value;
+    g('groceryRangeRow').style.display = srcSel.value==='range' ? 'flex' : 'none';
+  };
+  g('groceryRangeRow').style.display = srcSel.value==='range' ? 'flex' : 'none';
+
+  g('groceryGenBtn').onclick=generateGroceryList;
+  g('groceryBlacklistBtn').onclick=openBlacklistModal;
+  g('groceryAddBtn').onclick=addGroceryItemFromInput;
+  const addInput=g('groceryAddInput');
+  addInput.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); addGroceryItemFromInput(); } };
+  g('groceryClearChecked').onclick=()=>{
+    askConfirm('Remove all checked items?', async()=>{
+      const items=await all('groceryItems');
+      for(const it of items.filter(i=>i.checked)) await del('groceryItems',it.id);
+      await renderGroceryList();
+    });
+  };
+  g('groceryClearAll').onclick=()=>{
+    askConfirm('Clear the entire grocery list?', async()=>{
+      const items=await all('groceryItems');
+      for(const it of items) await del('groceryItems',it.id);
+      await renderGroceryList();
+    });
+  };
+  await renderGroceryList();
+}
+
+async function generateGroceryList(){
+  const src=g('grocerySource').value;
+  let startStr, endStr;
+  if(src==='range'){
+    startStr=g('groceryRangeStart').value;
+    endStr=g('groceryRangeEnd').value;
+    if(!startStr||!endStr){ showToast('Pick a start and end date','var(--terra)'); return; }
+    if(endStr<startStr){ showToast('End date must be after start','var(--terra)'); return; }
+  } else {
+    const offset = src==='next' ? 1 : 0;
+    const ws=weekStart(offset);
+    startStr=fmtDate(ws);
+    const we=new Date(ws); we.setDate(we.getDate()+6);
+    endStr=fmtDate(we);
+  }
+
+  const [plan, recipes, allIngs, existing] = await Promise.all([
+    all('mealPlan'), all('recipes'), all('recipeIngredients'), all('groceryItems')
+  ]);
+
+  // Meals in range that reference a recipe
+  const recipeIdsInRange = plan
+    .filter(m => m.date>=startStr && m.date<=endStr && m.recipeId!=null)
+    .map(m => m.recipeId);
+
+  if(!recipeIdsInRange.length){
+    showToast('No recipes planned in that range','var(--terra)');
+    return;
+  }
+
+  // Gather all ingredients from those recipes (count recipe occurrences — a recipe planned twice = 2x)
+  const occurrences={};
+  recipeIdsInRange.forEach(rid=>{ occurrences[rid]=(occurrences[rid]||0)+1; });
+
+  // Merge map: key = nameKey + '|' + unit. Track combinable numeric qty + the set of name variants.
+  const merged={}; // key -> {name, unit, qty (number|null), nameKey, hadNonNumeric}
+  const byNameKey={}; // nameKey -> Set of keys (to detect dupes across units)
+
+  for(const [ridStr, times] of Object.entries(occurrences)){
+    const rid=parseInt(ridStr);
+    const ings=allIngs.filter(i=>i.recipeId===rid);
+    for(const ing of ings){
+      const nameKey=ing.nameKey||recKey(ing.name);
+      if(isBlacklisted(ing.name)) continue; // skip pantry staples like water, salt
+      const unit=(ing.unit||'').trim();
+      const key=nameKey+'|'+unit;
+      if(!merged[key]) merged[key]={name:ing.name, unit, qty:0, nameKey, hadNonNumeric:false, anyQty:false};
+      const m=merged[key];
+      // qty may be "2", "1.5", "1/2", or non-numeric ("a pinch")
+      const parsed=parseQtyValue(ing.qty);
+      if(parsed!=null){ m.qty += parsed*times; m.anyQty=true; }
+      else if(ing.qty){ m.hadNonNumeric=true; }
+      (byNameKey[nameKey]=byNameKey[nameKey]||new Set()).add(key);
+    }
+  }
+
+  // Remove old generated items (keep manual ones)
+  for(const it of existing.filter(i=>i.source==='gen')) await del('groceryItems',it.id);
+
+  // Write merged items
+  let order=0;
+  for(const [key, m] of Object.entries(merged)){
+    const isDupe = byNameKey[m.nameKey] && byNameKey[m.nameKey].size>1;
+    let qtyDisplay='';
+    if(m.anyQty && m.qty>0){
+      const qstr=formatQty(m.qty);
+      qtyDisplay = m.unit ? `${qstr} ${m.unit}` : qstr;
+      if(m.hadNonNumeric) qtyDisplay+=' +';
+    } else if(m.unit){
+      qtyDisplay = m.unit;
+    }
+    await put('groceryItems',{
+      name:m.name, nameKey:m.nameKey, qty:qtyDisplay||null, unit:m.unit||null,
+      checked:false, source:'gen', dupe:!!isDupe, sortOrder:order++
+    });
+  }
+
+  playSound('goal');
+  showToast(`Grocery list generated from ${Object.keys(occurrences).length} recipe${Object.keys(occurrences).length>1?'s':''}`, 'var(--sage)');
+  await renderGroceryList();
+}
+
+// Parse a quantity value into a number, handling fractions like "1/2" and mixed "1 1/2"
+function parseQtyValue(q){
+  if(q==null||q==='') return null;
+  const s=String(q).trim();
+  if(/^\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+  // mixed number "1 1/2"
+  let mm=s.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if(mm) return parseInt(mm[1]) + parseInt(mm[2])/parseInt(mm[3]);
+  // simple fraction "1/2"
+  mm=s.match(/^(\d+)\/(\d+)$/);
+  if(mm) return parseInt(mm[1])/parseInt(mm[2]);
+  return null;
+}
+// Format a number back to a clean string (trim trailing zeros)
+function formatQty(n){
+  return (Math.round(n*100)/100).toString();
+}
+
+async function addGroceryItemFromInput(){
+  const input=g('groceryAddInput');
+  const v=input.value.trim();
+  if(!v) return;
+  const items=await all('groceryItems');
+  const maxOrder=items.reduce((mx,i)=>Math.max(mx,i.sortOrder||0),0);
+  await put('groceryItems',{name:v, nameKey:recKey(v), qty:null, unit:null, checked:false, source:'manual', dupe:false, sortOrder:maxOrder+1});
+  input.value='';
+  playSound('tick');
+  await renderGroceryList();
+}
+
+async function toggleGroceryItem(id){
+  const it=await get('groceryItems',id); if(!it) return;
+  it.checked=!it.checked;
+  await put('groceryItems',it);
+  playSound(it.checked?'complete':'uncheck');
+  await renderGroceryList();
+}
+
+// Toggle from the dashboard card (re-renders dashboard, not the grocery tab)
+async function dashToggleGrocery(id){
+  const it=await get('groceryItems',id); if(!it) return;
+  it.checked=!it.checked;
+  await put('groceryItems',it);
+  playSound(it.checked?'complete':'uncheck');
+  await renderDash();
+}
+
+async function removeGroceryItem(id){
+  await del('groceryItems',id);
+  await renderGroceryList();
+}
+
+async function renderGroceryList(){
+  const items=(await all('groceryItems')).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  const list=g('groceryList'); const prog=g('groceryProgress'); const actions=g('groceryActions');
+
+  if(!items.length){
+    prog.innerHTML='';
+    actions.style.display='none';
+    list.innerHTML='<div class="empty"><div class="ico">🛒</div><p>Your grocery list is empty</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Generate from your meal plan above, or add items manually.</p></div>';
+    return;
+  }
+
+  const checked=items.filter(i=>i.checked).length;
+  const pct=Math.round(checked/items.length*100);
+  prog.innerHTML=`<div class="grocery-prog"><span>${checked}/${items.length}</span><div class="grocery-prog-bar"><div class="grocery-prog-fill" style="width:${pct}%"></div></div><span>${pct}%</span></div>`;
+
+  // Split generated vs manual for light grouping
+  const gen=items.filter(i=>i.source==='gen');
+  const manual=items.filter(i=>i.source==='manual');
+  list.innerHTML='';
+
+  const renderItem=(it)=>{
+    const row=document.createElement('div'); row.className='grocery-item'+(it.checked?' checked':'');
+    const banBtn = it.source==='gen' ? `<button class="gi-ban" title="Never add this ingredient again">🚫</button>` : '';
+    row.innerHTML=`<div class="gi-check${it.checked?' on':''}">${it.checked?'✓':''}</div>
+      <div class="gi-body"><span class="gi-name">${it.qty?`<span class="gi-qty">${it.qty}</span>`:''}${it.name}${it.dupe?'<span class="gi-dupe-badge" title="This ingredient appears with more than one unit — check both entries to estimate the total">⚠ multi-unit</span>':''}</span></div>
+      ${banBtn}
+      <button class="gi-del" title="Remove">×</button>`;
+    row.querySelector('.gi-check').onclick=()=>toggleGroceryItem(it.id);
+    row.querySelector('.gi-del').onclick=()=>removeGroceryItem(it.id);
+    const ban=row.querySelector('.gi-ban');
+    if(ban) ban.onclick=async()=>{
+      addToBlacklist(it.name);
+      await del('groceryItems', it.id);
+      showToast(`"${it.name}" won't be added in future`, 'var(--gold)');
+      await renderGroceryList();
+    };
+    list.appendChild(row);
+  };
+
+  if(gen.length){
+    const hdr=document.createElement('div'); hdr.className='grocery-cat-hdr'; hdr.textContent='From meal plan';
+    list.appendChild(hdr);
+    gen.forEach(renderItem);
+  }
+  if(manual.length){
+    const hdr=document.createElement('div'); hdr.className='grocery-cat-hdr'; hdr.textContent='Added manually';
+    list.appendChild(hdr);
+    manual.forEach(renderItem);
+  }
+
+  actions.style.display='flex';
+}
+
+// ── Blacklist modal ──────────────────────────────────────────────────
+function openBlacklistModal(){
+  renderBlacklistList();
+  const input=g('blacklistInput'); input.value='';
+  input.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); blacklistAdd(); } };
+  g('blacklistAddBtn').onclick=blacklistAdd;
+  g('blacklistCloseBtn').onclick=()=>closeModal('blacklistModal');
+  _openModal('blacklistModal');
+}
+function blacklistAdd(){
+  const input=g('blacklistInput');
+  const v=input.value.trim();
+  if(!v) return;
+  addToBlacklist(v);
+  input.value='';
+  playSound('tick');
+  renderBlacklistList();
+}
+function renderBlacklistList(){
+  const list=getGroceryBlacklist().slice().sort((a,b)=>a.localeCompare(b));
+  const wrap=g('blacklistList'); wrap.innerHTML='';
+  if(!list.length){ wrap.innerHTML='<div class="bl-empty">Nothing ignored yet.</div>'; return; }
+  list.forEach(key=>{
+    const row=document.createElement('div'); row.className='bl-item';
+    row.innerHTML=`<span class="bl-item-name">${key}</span><button class="bl-item-del" title="Remove">×</button>`;
+    row.querySelector('.bl-item-del').onclick=()=>{ removeFromBlacklist(key); renderBlacklistList(); };
+    wrap.appendChild(row);
+  });
+}
+
+
+
+
 async function resetPinList(pinId) {
   const pin=await get('pins',pinId); if(!pin) return;
   (pin.items||[]).forEach(i=>{ i.done=false; });
@@ -7538,11 +8659,11 @@ async function checkGoalMet(addedPersonIds, beforePtsSnapshot) {
     const before = beforePtsSnapshot[p.id] || 0;
     const after = afterComps.filter(c=>c.personId===p.id&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0);
     const crossed = before < p.weekGoal && after >= p.weekGoal;
-    console.log(`[HomeBase] ${p.name}: before=${before} after=${after} goal=${p.weekGoal} crossed=${crossed}`);
+    console.log(`[Den] ${p.name}: before=${before} after=${after} goal=${p.weekGoal} crossed=${crossed}`);
     return crossed;
   });
   if(justMet.length) {
-    console.log('[HomeBase] 🎉 Goal met by:', justMet.map(p=>p.name));
+    console.log('[Den] 🎉 Goal met by:', justMet.map(p=>p.name));
     playSound('goal');
     setTimeout(()=>showGoalMetOverlay(justMet), 400);
   }
@@ -7729,7 +8850,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.4.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.9.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -7739,7 +8860,7 @@ async function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `homebase-backup-${today()}.json`;
+    a.download = `den-backup-${today()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -7769,14 +8890,14 @@ function handleImportFile(e) {
     try {
       const data = JSON.parse(evt.target.result);
       if (!data.chores || !data.people || !data.completions || !data.diary) {
-        alert('This file doesn\'t look like a HomeBase backup. Missing required data sections.');
+        alert('This file doesn\'t look like a Den backup. Missing required data sections.');
         return;
       }
       _importPayload = data;
       _importMode = 'merge';
       openImportModal(data);
     } catch {
-      alert('Could not read this file. Make sure it\'s a valid HomeBase backup (.json).');
+      alert('Could not read this file. Make sure it\'s a valid Den backup (.json).');
     }
   };
   reader.readAsText(file);
@@ -7950,6 +9071,23 @@ function wire() {
   g('addPinReminderBtn').onclick=()=>openPinModal(null,'reminder');
   g('pinCancelBtn').onclick=()=>closeModal('pinModal');
   g('pinSaveBtn').onclick=savePin;
+  // Recipe modal wiring
+  g('recipeCancelBtn').onclick=()=>closeModal('recipeModal');
+  g('recipeSaveBtn').onclick=saveRecipe;
+  g('mRecAddIng').onclick=()=>addIngredientRow();
+  g('mRecTagInput').onkeydown=(e)=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const v=e.target.value.trim();
+      if(v){ if(!S.recModalTags) S.recModalTags=[]; if(!S.recModalTags.includes(v)) S.recModalTags.push(v); renderRecTagPicker(); e.target.value=''; }
+    }
+  };
+  g('recipeViewClose').onclick=()=>closeModal('recipeViewModal');
+  g('recipeViewEdit').onclick=()=>{ const id=S.viewingRecipeId; closeModal('recipeViewModal'); openRecipeModal(id); };
+  g('recipeViewDelete').onclick=()=>deleteRecipe(S.viewingRecipeId);
+  // Meal picker modal
+  g('mealCancelBtn').onclick=()=>closeModal('mealModal');
+  g('mealSaveBtn').onclick=saveMeal;
   g('pinToggleDone').onclick=()=>{ S.pinShowDone=!S.pinShowDone; renderPinboard(); };
   document.querySelectorAll('#pinFilterTabs .sort-btn').forEach(btn=>{
     btn.onclick=()=>{ S.pinFilter=btn.dataset.pf; renderPinboard(); };
@@ -7957,6 +9095,8 @@ function wire() {
   // Bonus Task Modal
   g('dashMarkAllBtn').onclick = markAllDone;
   g('dashBonusBtn').onclick=()=>openBonusModal(today());
+  g('dashMealBtn').onclick=()=>{ S.recTab='plan'; nav('recipes'); };
+  g('dashGroceryBtn').onclick=()=>{ S.recTab='grocery'; nav('recipes'); };
   g('wkBonusBtn').onclick=()=>openBonusModal(today());
   g('bonusCancelBtn').onclick=()=>closeModal('bonusModal');
   g('bonusLogBtn').onclick=logBonusTask;
@@ -8277,6 +9417,8 @@ window.deletePerson=deletePerson;
 window.fabAction=fabAction;
 window.toggleFab=toggleFab;
 window.openCompleteModal=openCompleteModal;
+window.stepCompletion=stepCompletion;
+window.openRecipeView=openRecipeView;
 
 // ═══════════════════════════════════════════
 // Theme Engine
@@ -9079,7 +10221,7 @@ async function exportExpensesCsv() {
   const blob = new Blob([lines.join('\n')], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `homebase-expenses-${ym}.csv`;
+  a.href = url; a.download = `den-expenses-${ym}.csv`;
   a.click(); URL.revokeObjectURL(url);
   showToast(`✓ Exported ${rows.length} entries`, 'var(--sage)');
 }
@@ -9345,6 +10487,7 @@ const MORE_SHEET_NAV = [
   {view:'tasks',    ico:'✅', lbl:'Tasks'},
   {view:'diary',    ico:'📖', lbl:'Diary'},
   {view:'pinboard', ico:'📌', lbl:'Pinboard'},
+  {view:'recipes',  ico:'🍳', lbl:'Recipes'},
   {view:'history',  ico:'📈', lbl:'History'},
   {view:'events',   ico:'📅', lbl:'Events'},
   {view:'rewards',  ico:'🏆', lbl:'Rewards'},
@@ -9760,8 +10903,8 @@ function showGoalMetOverlay(metPeople) {
   const overlay = g('goalMetOverlay');
   const canvas = g('confettiCanvas');
   const msg = g('goalMetMsg');
-  if(!overlay || !msg) { console.warn('[HomeBase] goalMetOverlay element not found'); return; }
-  console.log('[HomeBase] Showing goal overlay for:', metPeople.map(p=>p.name));
+  if(!overlay || !msg) { console.warn('[Den] goalMetOverlay element not found'); return; }
+  console.log('[Den] Showing goal overlay for:', metPeople.map(p=>p.name));
 
   const names = metPeople.map(p=>'<span style="color:'+p.color+';font-weight:700">'+p.name+'</span>').join(' & ');
   g('goalMetTitle').innerHTML = metPeople.length>1 ? 'Goals Reached!' : 'Goal Reached!';
@@ -9842,7 +10985,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.4.0', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.9.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -9884,7 +11027,7 @@ async function gistPush() {
         method: 'POST',
         headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          description: 'HomeBase App Data',
+          description: 'Den App Data',
           public: false,
           files: { [GIST_FILENAME]: { content } }
         })
@@ -9910,8 +11053,8 @@ async function gistPull() {
 
   const id = gistId();
   if(!id) {
-    // Try to find an existing HomeBase gist
-    setGistStatus('🔍 Looking for existing HomeBase data…', 'var(--gold)');
+    // Try to find an existing Den gist
+    setGistStatus('🔍 Looking for existing Den data…', 'var(--gold)');
     try {
       const res = await fetch('https://api.github.com/gists', {
         headers: { Authorization: `token ${token}` }
@@ -9919,7 +11062,7 @@ async function gistPull() {
       const gists = await res.json();
       if(!res.ok) throw new Error(gists.message || `HTTP ${res.status}`);
       const found = gists.find(g => g.files?.[GIST_FILENAME]);
-      if(!found) { setGistStatus('No HomeBase data found in your Gists. Push first to create it.', 'var(--text-3)'); return; }
+      if(!found) { setGistStatus('No Den data found in your Gists. Push first to create it.', 'var(--text-3)'); return; }
       saveSetting('gistId', found.id);
     } catch(e) {
       setGistStatus(`✗ Could not search gists: ${e.message}`, 'var(--terra)');
@@ -9940,7 +11083,7 @@ async function gistPull() {
     if(!fileContent) throw new Error(`File "${GIST_FILENAME}" not found in Gist`);
 
     const data = JSON.parse(fileContent);
-    if(data._meta?.app !== 'HomeBase') throw new Error('This Gist does not contain HomeBase data');
+    if(data._meta?.app !== 'HomeBase' && data._meta?.app !== 'Den') throw new Error('This Gist does not contain Den data');
 
     // Confirm before overwriting
     const syncedAt = data._meta?.syncedAt ? new Date(data._meta.syncedAt).toLocaleString() : 'unknown';
@@ -10063,8 +11206,8 @@ function initPwa(isLight) {
 
   // Build and inject manifest
   const manifest = {
-    name: 'HomeBase',
-    short_name: 'HomeBase',
+    name: 'Den',
+    short_name: 'Den',
     description: 'Household task tracker, journal, and rewards',
     start_url: './',
     display: 'standalone',
@@ -10086,7 +11229,7 @@ function initPwa(isLight) {
   // Register service worker via blob (works on HTTPS + localhost)
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'homebase-7.4.0';
+const CACHE = 'homebase-7.9.1';
 const APP_URL = self.registration.scope;
 
 self.addEventListener('install', e => {
@@ -10128,7 +11271,7 @@ self.addEventListener('message', e => {
     const swUrl = URL.createObjectURL(swBlob);
     navigator.serviceWorker.register(swUrl, {scope: './'})
       .then(reg => {
-        console.log('HomeBase: SW registered');
+        console.log('Den: SW registered');
         // Check for updates when app becomes visible again
         document.addEventListener('visibilitychange', () => {
           if(document.visibilityState==='visible') reg.update();
@@ -10151,7 +11294,7 @@ self.addEventListener('message', e => {
           if(!refreshing){ refreshing=true; window.location.reload(); }
         });
       })
-      .catch(e => console.log('HomeBase: SW skipped —', e.message));
+      .catch(e => console.log('Den: SW skipped —', e.message));
   }
 }
 
@@ -10179,10 +11322,10 @@ function getInstallPlatform() {
 function showInstallInstructions() {
   const platform = getInstallPlatform();
   const instructions = {
-    'ios':           { ico:'📱', title:'Install on iPhone / iPad', steps:['1. Tap the <strong>Share button</strong> (□↑) in Safari\'s toolbar', '2. Scroll down and tap <strong>Add to Home Screen</strong>', '3. Tap <strong>Add</strong> — HomeBase appears on your home screen'] },
+    'ios':           { ico:'📱', title:'Install on iPhone / iPad', steps:['1. Tap the <strong>Share button</strong> (□↑) in Safari\'s toolbar', '2. Scroll down and tap <strong>Add to Home Screen</strong>', '3. Tap <strong>Add</strong> — Den appears on your home screen'] },
     'android-manual':{ ico:'📱', title:'Install on Android', steps:['1. Tap the <strong>⋮ menu</strong> in Chrome', '2. Tap <strong>Add to Home Screen</strong> or <strong>Install App</strong>', '3. Tap <strong>Install</strong> to confirm'] },
-    'desktop-manual':{ ico:'💻', title:'Install on Desktop', steps:['1. Look for the <strong>install icon ⊕</strong> in the address bar', '2. Or open the browser menu → <strong>Install HomeBase</strong>', '3. Click <strong>Install</strong> to confirm', '<em>Note: requires serving over HTTPS or localhost</em>'] },
-    'installed':     { ico:'✓', title:'Already Installed', steps:['HomeBase is already installed on this device.'] },
+    'desktop-manual':{ ico:'💻', title:'Install on Desktop', steps:['1. Look for the <strong>install icon ⊕</strong> in the address bar', '2. Or open the browser menu → <strong>Install Den</strong>', '3. Click <strong>Install</strong> to confirm', '<em>Note: requires serving over HTTPS or localhost</em>'] },
+    'installed':     { ico:'✓', title:'Already Installed', steps:['Den is already installed on this device.'] },
   };
   const info = instructions[platform] || instructions['desktop-manual'];
 
