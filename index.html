@@ -16,6 +16,16 @@
 <link rel="icon" type="image/svg+xml" id="faviconSvg">
 <link rel="manifest" id="pwaManifest">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<!-- Supabase JS client — loads cloud sync & auth; app runs fully offline if this fails -->
+<script>
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload = function() { window._supabaseLoaded = true; };
+  s.onerror = function() { window._supabaseLoaded = false; console.warn('Den: Supabase CDN unavailable — running local-only'); };
+  document.head.appendChild(s);
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1928,7 +1938,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.9.1</p>
+      <p class="sidebar-version">v7.10.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2567,26 +2577,87 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       </div>
     </div>
 
-    <!-- Cloud Sync -->
+    <!-- Cloud Account -->
     <div class="settings-section">
-      <div class="settings-section-title">☁️ Cloud Sync</div>
-      <div class="card">
-        <div class="setting-row">
-          <div style="flex:1;min-width:0">
-            <div class="setting-label">GitHub Personal Access Token</div>
-            <div class="setting-sub">Token with <strong>gist</strong> scope — syncs to a private Gist. <a href="https://github.com/settings/tokens/new?description=Den+Sync&scopes=gist" target="_blank" style="color:var(--gold)">Generate token ↗</a></div>
+      <div class="settings-section-title">☁️ Cloud Account</div>
+      <div class="card" id="cloudAccountCard">
+        <!-- Signed-out state -->
+        <div id="cloudSignedOut">
+          <div class="setting-row" style="margin-bottom:12px">
+            <div style="flex:1;min-width:0">
+              <div class="setting-label">Sign in to sync Den across devices</div>
+              <div class="setting-sub">Your data stays private — only you can access it.</div>
+            </div>
+          </div>
+          <div id="cloudAuthError" style="font-size:12px;color:var(--terra);margin-bottom:10px;display:none"></div>
+          <div id="cloudAuthMode" style="display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+            <button class="btn" id="cloudTabSignIn" style="flex:1;border-radius:0;border:none;background:var(--gold);color:var(--bg);font-size:13px;padding:7px 0" onclick="cloudShowTab('signin')">Sign In</button>
+            <button class="btn" id="cloudTabSignUp" style="flex:1;border-radius:0;border:none;background:transparent;color:var(--text-2);font-size:13px;padding:7px 0" onclick="cloudShowTab('signup')">Create Account</button>
+          </div>
+          <input class="fi" type="email" id="cloudEmail" placeholder="your@email.com" style="margin-bottom:8px">
+          <input class="fi" type="password" id="cloudPassword" placeholder="Password" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')cloudAuth()">
+          <div id="cloudPasswordConfirmWrap" style="display:none;margin-bottom:8px">
+            <input class="fi" type="password" id="cloudPasswordConfirm" placeholder="Confirm password" onkeydown="if(event.key==='Enter')cloudAuth()">
+          </div>
+          <button class="btn btn-primary" id="cloudAuthBtn" onclick="cloudAuth()" style="width:100%;margin-bottom:8px">Sign In</button>
+          <div id="cloudAuthMsg" style="font-size:12px;color:var(--text-3);text-align:center"></div>
+          <button class="btn btn-ghost" id="cloudForgotBtn" onclick="cloudForgotPassword()" style="width:100%;font-size:12px;margin-top:4px">Forgot password?</button>
+        </div>
+
+        <!-- Signed-in state -->
+        <div id="cloudSignedIn" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--gold-glow);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">☁️</div>
+            <div style="flex:1;min-width:0">
+              <div class="setting-label" style="margin-bottom:0" id="cloudUserEmail" style="word-break:break-all"></div>
+              <div class="setting-sub" id="cloudUserStatus">Signed in</div>
+            </div>
+          </div>
+          <div id="cloudHouseholdSection">
+            <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:13px" id="cloudHouseholdInfo">
+              <span style="color:var(--text-3)">No household linked yet</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="cloudCreateHousehold()" id="cloudCreateHHBtn" style="flex:1;font-size:13px">🏠 Create Household</button>
+              <button class="btn btn-ghost" onclick="cloudShowJoinCode()" id="cloudJoinHHBtn" style="flex:1;font-size:13px">🔑 Join with Code</button>
+            </div>
+            <div id="cloudJoinWrap" style="display:none;margin-top:10px">
+              <div style="display:flex;gap:8px">
+                <input class="fi" id="cloudJoinCodeInput" placeholder="Enter 6-char code" style="flex:1;text-transform:uppercase;letter-spacing:2px;font-family:monospace" maxlength="6">
+                <button class="btn btn-primary" onclick="cloudJoinHousehold()" style="flex-shrink:0">Join</button>
+              </div>
+              <div id="cloudJoinMsg" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft)">
+            <button class="btn btn-ghost" onclick="cloudSignOut()" style="width:100%;font-size:13px;color:var(--terra)">Sign Out</button>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:8px;margin-bottom:12px">
-          <input class="fi" type="password" id="gistTokenInput" placeholder="ghp_xxxxxxxxxxxx" style="flex:1;font-family:monospace;font-size:13px">
-          <button class="btn btn-ghost" id="gistSaveTokenBtn" style="flex-shrink:0">Save</button>
-        </div>
-        <div id="gistStatus" style="font-size:12px;color:var(--text-3);margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="gistPushBtn" style="font-size:13px;flex:1">☁️ Push to Cloud</button>
-          <button class="btn btn-ghost" id="gistPullBtn" style="font-size:13px;flex:1">⬇️ Pull from Cloud</button>
-        </div>
-        <div style="font-size:11.5px;color:var(--text-3);margin-top:10px">Last synced: <span id="gistLastSync">Never</span></div>
+      </div>
+
+      <!-- Legacy Gist Sync (fallback, kept until cloud sync proven) -->
+      <div class="card" style="margin-top:10px;opacity:0.7">
+        <details>
+          <summary style="font-size:13px;color:var(--text-2);cursor:pointer;user-select:none;padding:2px 0">🔧 Legacy GitHub Gist Sync (backup)</summary>
+          <div style="margin-top:12px">
+            <div class="setting-row" style="margin-bottom:8px">
+              <div style="flex:1;min-width:0">
+                <div class="setting-label" style="font-size:13px">GitHub Personal Access Token</div>
+                <div class="setting-sub">Token with <strong>gist</strong> scope. <a href="https://github.com/settings/tokens/new?description=Den+Sync&scopes=gist" target="_blank" style="color:var(--gold)">Generate ↗</a></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <input class="fi" type="password" id="gistTokenInput" placeholder="ghp_xxxxxxxxxxxx" style="flex:1;font-family:monospace;font-size:13px">
+              <button class="btn btn-ghost" id="gistSaveTokenBtn" style="flex-shrink:0">Save</button>
+            </div>
+            <div id="gistStatus" style="font-size:12px;color:var(--text-3);margin-bottom:10px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="gistPushBtn" style="font-size:13px;flex:1">☁️ Push</button>
+              <button class="btn btn-ghost" id="gistPullBtn" style="font-size:13px;flex:1">⬇️ Pull</button>
+            </div>
+            <div style="font-size:11.5px;color:var(--text-3);margin-top:8px">Last synced: <span id="gistLastSync">Never</span></div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -2624,7 +2695,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.9.1</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.0</span>
         </div>
       </div>
     </div>
@@ -8850,7 +8921,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.9.1', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -9211,6 +9282,8 @@ function wire() {
 
   // Gist sync
   wireGistSync();
+  // Cloud account UI
+  wireCloudAccount();
   // Global search
   wireSearch();
   // Diary word count
@@ -10985,7 +11058,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.9.1', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.0', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11154,6 +11227,298 @@ function wireGistSync() {
   updateGistLastSync();
 }
 
+
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// SUPABASE — Cloud Auth & Household
+// ═══════════════════════════════════════════
+
+const SUPABASE_URL = 'https://spkiusgoctaygjcxunqz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0l-rZlvU-0K957qX5w26YQ_y8sNJS3-';
+let _supa = null;  // initialized lazily once CDN loads
+
+function getSupa() {
+  if (_supa) return _supa;
+  if (!window.supabase) return null;
+  _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return _supa;
+}
+
+// ── Auth state & UI helpers ─────────────────
+let _cloudUser = null;   // current auth user
+let _cloudHH   = null;   // current household row
+
+function cloudSetError(msg) {
+  const el = g('cloudAuthError');
+  if (!el) return;
+  if (msg) { el.textContent = msg; el.style.display = ''; }
+  else       { el.textContent = ''; el.style.display = 'none'; }
+}
+
+function cloudSetMsg(msg, color='var(--text-3)') {
+  const el = g('cloudAuthMsg');
+  if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+function cloudShowTab(tab) {
+  const signIn = tab === 'signin';
+  const tabSI = g('cloudTabSignIn'), tabSU = g('cloudTabSignUp');
+  const btn    = g('cloudAuthBtn');
+  const confirmWrap = g('cloudPasswordConfirmWrap');
+  const forgot = g('cloudForgotBtn');
+
+  if (tabSI) {
+    tabSI.style.background = signIn ? 'var(--gold)' : 'transparent';
+    tabSI.style.color      = signIn ? 'var(--bg)'   : 'var(--text-2)';
+  }
+  if (tabSU) {
+    tabSU.style.background = !signIn ? 'var(--gold)' : 'transparent';
+    tabSU.style.color      = !signIn ? 'var(--bg)'   : 'var(--text-2)';
+  }
+  if (btn)         btn.textContent = signIn ? 'Sign In' : 'Create Account';
+  if (confirmWrap) confirmWrap.style.display = signIn ? 'none' : '';
+  if (forgot)      forgot.style.display = signIn ? '' : 'none';
+  cloudSetError('');
+  cloudSetMsg('');
+  g('cloudEmail')?.focus();
+}
+
+function cloudUpdateUI() {
+  const out  = g('cloudSignedOut');
+  const ins  = g('cloudSignedIn');
+  if (!out || !ins) return;
+
+  if (_cloudUser) {
+    out.style.display = 'none';
+    ins.style.display = '';
+    const emailEl = g('cloudUserEmail');
+    if (emailEl) emailEl.textContent = _cloudUser.email || '';
+    cloudUpdateHouseholdUI();
+  } else {
+    out.style.display = '';
+    ins.style.display = 'none';
+  }
+}
+
+function cloudUpdateHouseholdUI() {
+  const info = g('cloudHouseholdInfo');
+  const createBtn = g('cloudCreateHHBtn');
+  const joinBtn   = g('cloudJoinHHBtn');
+  if (!info) return;
+
+  if (_cloudHH) {
+    info.innerHTML = `<span style="color:var(--text-2)">🏠 <strong>${_cloudHH.name||'My Household'}</strong></span><br>
+      <span style="color:var(--text-3);font-size:12px">Join code: <span style="font-family:monospace;letter-spacing:2px;color:var(--gold)">${_cloudHH.join_code||'------'}</span></span>`;
+    if (createBtn) createBtn.style.display = 'none';
+    if (joinBtn)   joinBtn.style.display   = 'none';
+  } else {
+    info.innerHTML = `<span style="color:var(--text-3)">No household linked yet — create one or join with a code.</span>`;
+    if (createBtn) createBtn.style.display = '';
+    if (joinBtn)   joinBtn.style.display   = '';
+  }
+}
+
+// ── Core auth actions ───────────────────────
+async function cloudAuth() {
+  const supa = getSupa();
+  if (!supa) { cloudSetError('Cloud not available — check your connection.'); return; }
+
+  const email = g('cloudEmail')?.value.trim();
+  const pass  = g('cloudPassword')?.value;
+  const isSignUp = g('cloudTabSignUp')?.style.background?.includes('gold');
+
+  if (!email || !pass) { cloudSetError('Enter your email and password.'); return; }
+
+  const btn = g('cloudAuthBtn');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  cloudSetError('');
+
+  try {
+    let result;
+    if (isSignUp) {
+      const confirm = g('cloudPasswordConfirm')?.value;
+      if (pass !== confirm) { cloudSetError('Passwords don\'t match.'); return; }
+      if (pass.length < 6)  { cloudSetError('Password must be at least 6 characters.'); return; }
+      result = await supa.auth.signUp({ email, password: pass });
+    } else {
+      result = await supa.auth.signInWithPassword({ email, password: pass });
+    }
+
+    if (result.error) throw result.error;
+
+    if (isSignUp && !result.data?.session) {
+      // Email confirmation required
+      cloudSetMsg('✓ Account created! Check your email to confirm before signing in.', 'var(--sage)');
+      if (g('cloudPassword')) g('cloudPassword').value = '';
+      cloudShowTab('signin');
+    } else {
+      _cloudUser = result.data.user || result.data.session?.user;
+      cloudSetMsg('');
+      if (g('cloudEmail'))    g('cloudEmail').value    = '';
+      if (g('cloudPassword')) g('cloudPassword').value = '';
+      await cloudLoadHousehold();
+      cloudUpdateUI();
+      showToast('☁️ Signed in', 'var(--sage)');
+    }
+  } catch (e) {
+    cloudSetError(e.message || 'Sign in failed.');
+  } finally {
+    if (btn) { btn.textContent = isSignUp ? 'Create Account' : 'Sign In'; btn.disabled = false; }
+  }
+}
+
+async function cloudSignOut() {
+  const supa = getSupa();
+  if (!supa) return;
+  await supa.auth.signOut();
+  _cloudUser = null;
+  _cloudHH   = null;
+  cloudUpdateUI();
+  showToast('Signed out', 'var(--text-3)');
+}
+
+async function cloudForgotPassword() {
+  const supa = getSupa();
+  if (!supa) { cloudSetError('Cloud not available.'); return; }
+  const email = g('cloudEmail')?.value.trim();
+  if (!email) { cloudSetError('Enter your email address first.'); return; }
+  const { error } = await supa.auth.resetPasswordForEmail(email);
+  if (error) cloudSetError(error.message);
+  else cloudSetMsg('✓ Reset link sent — check your email.', 'var(--sage)');
+}
+
+// ── Household actions ───────────────────────
+async function cloudLoadHousehold() {
+  const supa = getSupa();
+  if (!supa || !_cloudUser) return;
+  try {
+    const { data, error } = await supa
+      .from('household_members')
+      .select('household_id, households(id, name, join_code)')
+      .eq('user_id', _cloudUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    _cloudHH = data?.households || null;
+  } catch (e) {
+    console.warn('Den: could not load household', e.message);
+  }
+}
+
+async function cloudCreateHousehold() {
+  const supa = getSupa();
+  if (!supa || !_cloudUser) return;
+  const name = (await new Promise(res => {
+    askConfirm('Create a new household? You\'ll get a join code to share with family members.', () => res(true), 'Create Household');
+  })) ? 'My Household' : null;
+  if (!name) return;
+
+  try {
+    // Create household
+    const { data: hh, error: e1 } = await supa
+      .from('households')
+      .insert({ name, owner_id: _cloudUser.id })
+      .select()
+      .single();
+    if (e1) throw e1;
+
+    // Join it as owner
+    const { error: e2 } = await supa
+      .from('household_members')
+      .insert({ household_id: hh.id, user_id: _cloudUser.id, role: 'owner' });
+    if (e2) throw e2;
+
+    _cloudHH = hh;
+    cloudUpdateHouseholdUI();
+    showToast(`🏠 Household created! Code: ${hh.join_code}`, 'var(--sage)');
+  } catch (e) {
+    showToast(`✗ ${e.message}`, 'var(--terra)');
+  }
+}
+
+function cloudShowJoinCode() {
+  const wrap = g('cloudJoinWrap');
+  if (wrap) { wrap.style.display = wrap.style.display === 'none' ? '' : 'none'; }
+  g('cloudJoinCodeInput')?.focus();
+}
+
+async function cloudJoinHousehold() {
+  const supa = getSupa();
+  if (!supa || !_cloudUser) return;
+  const code = g('cloudJoinCodeInput')?.value.trim().toUpperCase();
+  const msgEl = g('cloudJoinMsg');
+  if (!code || code.length !== 6) {
+    if (msgEl) { msgEl.textContent = 'Enter the 6-character join code.'; msgEl.style.color = 'var(--terra)'; }
+    return;
+  }
+  if (msgEl) { msgEl.textContent = 'Looking up code…'; msgEl.style.color = 'var(--text-3)'; }
+
+  try {
+    const { data: hh, error: e1 } = await supa
+      .from('households')
+      .select('id, name, join_code')
+      .eq('join_code', code)
+      .maybeSingle();
+    if (e1) throw e1;
+    if (!hh) throw new Error('Code not found — check with your household owner.');
+
+    // Check already a member
+    const { data: existing } = await supa
+      .from('household_members')
+      .select('id')
+      .eq('user_id', _cloudUser.id)
+      .maybeSingle();
+    if (existing) throw new Error('You\'re already in a household. Sign out to switch.');
+
+    const { error: e2 } = await supa
+      .from('household_members')
+      .insert({ household_id: hh.id, user_id: _cloudUser.id, role: 'member' });
+    if (e2) throw e2;
+
+    _cloudHH = hh;
+    if (g('cloudJoinWrap')) g('cloudJoinWrap').style.display = 'none';
+    cloudUpdateHouseholdUI();
+    showToast(`🏠 Joined "${hh.name}"`, 'var(--sage)');
+  } catch (e) {
+    if (msgEl) { msgEl.textContent = `✗ ${e.message}`; msgEl.style.color = 'var(--terra)'; }
+  }
+}
+
+// ── Session restore on boot ─────────────────
+async function cloudInit() {
+  // Wait up to 3s for Supabase CDN to load
+  for (let i = 0; i < 30; i++) {
+    if (window.supabase) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  const supa = getSupa();
+  if (!supa) return;  // CDN unavailable — run local-only
+
+  // Listen for auth state changes
+  supa.auth.onAuthStateChange(async (event, session) => {
+    _cloudUser = session?.user || null;
+    if (_cloudUser) {
+      await cloudLoadHousehold();
+    } else {
+      _cloudHH = null;
+    }
+    cloudUpdateUI();
+  });
+
+  // Check for existing session
+  const { data: { session } } = await supa.auth.getSession();
+  if (session) {
+    _cloudUser = session.user;
+    await cloudLoadHousehold();
+    cloudUpdateUI();
+  }
+}
+
+// ── Wire Settings cloud UI on nav ──────────
+function wireCloudAccount() {
+  // Called each time Settings view renders (cloudInit handles session)
+  cloudShowTab('signin');
+  cloudUpdateUI();
+}
 
 // ═══════════════════════════════════════════
 
@@ -11562,6 +11927,8 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
   // Show onboarding for first-time users, otherwise check daily reminder
   await maybeShowOnboarding();
   setTimeout(checkDailyReminder, 800);
+  // Init cloud auth (non-blocking — runs after app is ready)
+  cloudInit().catch(e => console.warn('Den: cloud init error', e));
 })().catch(console.error);
 </script>
 </body>
