@@ -11254,21 +11254,32 @@ function wireGistSync() {
 // ═══════════════════════════════════════════
 
 const SUPABASE_URL = 'https://spkiusgoctaygjcxunqz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_0l-rZlvU-0K957qX5w26YQ_y8sNJS3-';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwa2l1c2dvY3RheWdqY3h1bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3OTY2MDEsImV4cCI6MjA5NzM3MjYwMX0.bI3iaHupgoHzmHArg02b5lA5AoInRlu1UekqEBc3RPo';
 let _supa = null;  // initialized lazily once CDN loads
 
 function getSupa() {
   if (_supa) return _supa;
   if (!window.supabase) return null;
-  _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-      persistSession: true,
-      storageKey: 'den_auth',
-      storage: window.localStorage,
-      autoRefreshToken: true,
-      detectSessionInUrl: false,
-    }
-  });
+  // supabase-js v2 createClient expects a JWT anon key (eyJ...).
+  // The sb_publishable_ format is only supported in very recent builds.
+  // If the key doesn't start with eyJ, log a clear warning.
+  if (!SUPABASE_KEY.startsWith('eyJ')) {
+    console.warn('Den: SUPABASE_KEY does not look like a JWT anon key. Get the anon/public key from Project Settings → API (starts with eyJ).');
+  }
+  try {
+    _supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        storageKey: 'den_auth',
+        storage: window.localStorage,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      }
+    });
+  } catch(e) {
+    console.error('Den: failed to create Supabase client:', e);
+    return null;
+  }
   return _supa;
 }
 
@@ -11389,15 +11400,20 @@ async function cloudAuth() {
   const origLabel = isSignUp ? 'Create Account' : 'Sign In';
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   cloudSetError('');
+
   cloudSetMsg('Connecting…', 'var(--text-3)');
 
+  // Add a timeout so it never hangs forever
+  const authPromise = isSignUp
+    ? supa.auth.signUp({ email, password: pass })
+    : supa.auth.signInWithPassword({ email, password: pass });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Request timed out — check your connection.')), 15000)
+  );
+
   try {
-    let result;
-    if (isSignUp) {
-      result = await supa.auth.signUp({ email, password: pass });
-    } else {
-      result = await supa.auth.signInWithPassword({ email, password: pass });
-    }
+    const result = await Promise.race([authPromise, timeoutPromise]);
 
     cloudSetMsg('');
 
@@ -11659,6 +11675,20 @@ async function cloudSubmitNewPassword() {
   // Success — remove the panel
   document.getElementById('cloudResetPanel')?.remove();
   showToast('✓ Password updated', 'var(--sage)');
+}
+
+// ── file:// warning ────────────────────────
+function cloudShowFileWarning() {
+  const el = g('cloudAuthError');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="margin-bottom:6px">⚠ <strong>Cloud sync requires a web server.</strong></div>
+    <div style="margin-bottom:8px">Your browser blocks network requests from <code style="background:var(--surface-3);padding:1px 4px;border-radius:3px">file://</code> URLs. You need to serve Den over HTTP — it takes one command:</div>
+    <div style="background:var(--surface-3);border-radius:6px;padding:8px 10px;font-family:monospace;font-size:12px;margin-bottom:8px;color:var(--gold)">python3 -m http.server 8000</div>
+    <div style="margin-bottom:6px">Run that in the folder where <strong>homebase.html</strong> lives, then open:</div>
+    <div style="background:var(--surface-3);border-radius:6px;padding:8px 10px;font-family:monospace;font-size:12px;color:var(--gold)">http://localhost:8000/homebase.html</div>
+    <div style="margin-top:8px;font-size:11.5px;color:var(--text-3)">Everything else (tasks, diary, expenses) keeps working from file:// — only cloud sign-in needs the server.</div>`;
+  el.style.display = '';
 }
 
 // ── Wire Settings cloud UI on nav ──────────
