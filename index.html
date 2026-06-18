@@ -11612,7 +11612,7 @@ async function cloudSubmitNewPassword() {
   const showMsg = (m, color='var(--terra)') => { if (msgEl) { msgEl.textContent = m; msgEl.style.color = color; msgEl.style.display = ''; } };
 
   if (!pass || pass.length < 6) { showMsg('Password must be at least 6 characters.'); return; }
-  if (pass !== confirm)          { showMsg('Passwords don't match.'); return; }
+  if (pass !== confirm)          { showMsg('Passwords do not match.'); return; }
 
   const { error } = await supa.auth.updateUser({ password: pass });
   if (error) { showMsg(error.message); return; }
