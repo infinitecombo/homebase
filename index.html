@@ -1981,7 +1981,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.11.6</p>
+      <p class="sidebar-version">v7.11.7</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2764,7 +2764,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.6</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.7</span>
         </div>
       </div>
     </div>
@@ -8688,12 +8688,11 @@ async function uploadRecipePhoto(blobOrFile, recipeId) {
     console.error('Den: upload error details', JSON.stringify(upErr));
     throw new Error(`Upload failed: ${upErr.message} (bucket: "${PHOTO_BUCKET}", path: "${path}")`);
   }
-  // Signed URL with 1 year expiry
-  const { data, error: urlErr } = await supa.storage
+  // Use public URL — bucket is public so no signed URL needed
+  const { data } = supa.storage
     .from(PHOTO_BUCKET)
-    .createSignedUrl(path, 60 * 60 * 24 * 365);
-  if (urlErr) throw new Error(urlErr.message);
-  return data.signedUrl;
+    .getPublicUrl(path);
+  return data.publicUrl;
 }
 
 async function deleteRecipePhoto(recipeId) {
@@ -9633,7 +9632,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.11.6', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.11.7', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11847,7 +11846,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.11.6', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.11.7', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
