@@ -3883,7 +3883,7 @@ function loadSetting(key) { try { const v=localStorage.getItem('hb_'+key); retur
 let DB;
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('HomeBaseDB', 11);
+    const r = indexedDB.open('HomeBaseDB', 12);
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('chores'))
@@ -3943,6 +3943,20 @@ function openDB() {
         const s = d.createObjectStore('groceryItems', { keyPath: 'id', autoIncrement: true });
         s.createIndex('nameKey', 'nameKey');
       }
+      // v12: Migrate existing integer IDs to UUIDs for all stores
+      // New records will get UUIDs via the put() helper going forward.
+      // Existing records get a UUID assigned now so cross-references stay valid.
+      if (e.oldVersion < 12) {
+        const STORES_TO_MIGRATE = [
+          'chores','people','completions','diary','categories','events',
+          'rewards','earnedRewards','pins','pauses','expenseCategories',
+          'expenses','expenseTemplates','taskSkips','recipes',
+          'recipeIngredients','mealPlan','groceryItems'
+        ];
+        // Build an id map: old integer id -> new UUID, per store
+        // We do this in a separate pass after the upgrade so IDs are consistent
+        // The actual migration runs after DB opens (see migrateToUUIDs())
+      }
     };
     r.onsuccess = e => { DB = e.target.result; res(); };
     r.onerror = () => rej(r.error);
@@ -3951,7 +3965,18 @@ function openDB() {
 const tx  = (stores, mode='readonly') => DB.transaction(stores, mode);
 const all = store => new Promise((r,j) => { const q=tx(store).objectStore(store).getAll(); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
 const get = (store,id) => new Promise((r,j) => { const q=tx(store).objectStore(store).get(id); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
-const put = (store,obj) => new Promise((r,j) => { const q=tx(store,'readwrite').objectStore(store).put(obj); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
+const put = (store,obj) => {
+  // Auto-assign UUID for new records (no id set, or id is falsy)
+  // Existing records (edits) keep their id unchanged
+  if (obj.id === undefined || obj.id === null) {
+    obj = {...obj, id: crypto.randomUUID()};
+  }
+  return new Promise((r,j) => {
+    const q=tx(store,'readwrite').objectStore(store).put(obj);
+    q.onsuccess=()=>r(obj.id);  // return the id (UUID or existing)
+    q.onerror=()=>j(q.error);
+  });
+};
 const del = (store,id) => new Promise((r,j) => { const q=tx(store,'readwrite').objectStore(store).delete(id); q.onsuccess=()=>r(); q.onerror=()=>j(q.error); });
 const byIdx = (store,idx,val) => new Promise((r,j) => { const q=tx(store).objectStore(store).index(idx).getAll(val); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
 
@@ -4018,6 +4043,100 @@ const S = {
   diarySearch: '',
   diaryTagFilter: null,
 };
+
+// ═══════════════════════════════════════════
+// UUID Migration (v12)
+// ═══════════════════════════════════════════
+// Runs once after DB opens if old integer IDs are found.
+// Builds an id map per store, rewrites all records with UUID ids,
+// then updates cross-references (choreId, personId, categoryId, etc.)
+
+async function migrateToUUIDs() {
+  const MIGRATION_KEY = 'hb_uuid_migration_v12';
+  if (localStorage.getItem(MIGRATION_KEY)) return; // already done
+
+  console.log('Den: starting UUID migration...');
+
+  // Stores and their cross-reference fields pointing to other stores
+  const CROSS_REFS = {
+    completions:       { choreId: 'chores', personId: 'people' },
+    diary:             { personId: 'people' },
+    events:            { personId: 'people' },
+    chores:            { categoryId: 'categories' },
+    expenses:          { categoryId: 'expenseCategories', personId: 'people' },
+    expenseTemplates:  {},
+    earnedRewards:     { rewardId: 'rewards', personId: 'people' },
+    pins:              { personId: 'people' },
+    pauses:            { choreId: 'chores' },
+    taskSkips:         { choreId: 'chores' },
+    recipeIngredients: { recipeId: 'recipes' },
+    mealPlan:          { recipeId: 'recipes' },
+  };
+
+  const ALL_STORES = [
+    'chores','people','completions','diary','categories','events',
+    'rewards','earnedRewards','pins','pauses','expenseCategories',
+    'expenses','expenseTemplates','taskSkips','recipes',
+    'recipeIngredients','mealPlan','groceryItems'
+  ];
+
+  // Step 1: Build id maps for every store (old int id -> new UUID)
+  const idMaps = {};
+  for (const store of ALL_STORES) {
+    const records = await all(store);
+    idMaps[store] = {};
+    for (const rec of records) {
+      if (rec.id && typeof rec.id !== 'string') {
+        // Integer id — assign a UUID
+        idMaps[store][rec.id] = crypto.randomUUID();
+      } else if (rec.id) {
+        // Already a UUID — map to itself
+        idMaps[store][rec.id] = rec.id;
+      }
+    }
+  }
+
+  // Step 2: Rewrite each store's records with new UUIDs + fix cross-refs
+  for (const store of ALL_STORES) {
+    const records = await all(store);
+    if (records.length === 0) continue;
+
+    const needsMigration = records.some(r => r.id && typeof r.id !== 'string');
+    if (!needsMigration) continue;
+
+    console.log(`Den: migrating ${store} (${records.length} records)`);
+
+    // Clear the store and rewrite with new IDs
+    await new Promise((res, rej) => {
+      const req = DB.transaction(store, 'readwrite').objectStore(store).clear();
+      req.onsuccess = res; req.onerror = rej;
+    });
+
+    const crossRefs = CROSS_REFS[store] || {};
+    for (const rec of records) {
+      const newRec = {...rec};
+      // Update own id
+      if (newRec.id && typeof newRec.id !== 'string') {
+        newRec.id = idMaps[store][rec.id] || crypto.randomUUID();
+      }
+      // Update cross-reference fields
+      for (const [field, targetStore] of Object.entries(crossRefs)) {
+        const oldRef = rec[field];
+        if (oldRef != null && typeof oldRef !== 'string' && idMaps[targetStore]) {
+          newRec[field] = idMaps[targetStore][oldRef] ?? oldRef;
+        }
+      }
+      // Write directly (bypass put() UUID logic since we already have the UUID)
+      await new Promise((res, rej) => {
+        const req = DB.transaction(store, 'readwrite').objectStore(store).put(newRec);
+        req.onsuccess = res; req.onerror = rej;
+      });
+    }
+  }
+
+  localStorage.setItem(MIGRATION_KEY, '1');
+  console.log('Den: UUID migration complete');
+}
 
 const ICON_SETS = [
   { label:'🎄 Winter Holidays',  icons:['🎄','🎅','🤶','⛄','❄️','🦌','🎁','🕎','🕯️','⭐','🌟','🎿','🛷','🎶','🔔','🍪','🥛','🧣'] },
@@ -12101,6 +12220,7 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
 
 (async()=>{
   await openDB();
+  await migrateToUUIDs();  // one-time UUID migration for existing data
   // Load persisted settings
   const savedWsd2=loadSetting('weekStartDay');
   if(savedWsd2!==null){ S.weekStartDay=parseInt(savedWsd2); }
