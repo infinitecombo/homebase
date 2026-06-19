@@ -1981,7 +1981,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.11.9</p>
+      <p class="sidebar-version">v7.12.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2764,7 +2764,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.9</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.12.0</span>
         </div>
       </div>
     </div>
@@ -7598,16 +7598,21 @@ async function saveDiaryEntry() {
   if(!existing) delete entry.id;
   await put('diary',entry);
   // Upload diary photo to cloud if it's a pending blob and we're signed in
-  if (_cloudUser && S._diaryPhotoPendingBlob) {
+  if (_cloudUser && _diaryPhotoPendingBlob) {
     try {
       const entryId = entry.id || (await all('diary')).find(e=>e.date===date&&e.personId===personId)?.id;
       if (entryId) {
-        const url = await uploadPhoto(S._diaryPhotoPendingBlob, `diary-${entryId}.jpg`);
+        const url = await uploadPhoto(_diaryPhotoPendingBlob, `diary-${entryId}.jpg`);
+        _diaryPhotoPendingBlob = null;
         const updated = await get('diary', entryId);
         if (updated) { updated.photo = url; await put('diary', updated); }
       }
-    } catch(e) { console.warn('Den: diary photo upload failed', e.message); }
-    S._diaryPhotoPendingBlob = null;
+    } catch(e) {
+      console.warn('Den: diary photo upload failed', e.message);
+      showToast('⚠ Diary photo upload failed — saved locally only', 'var(--gold)');
+    }
+  } else {
+    _diaryPhotoPendingBlob = null;
   }
   // Return to landing after saving
   diaryShowLanding();
@@ -8436,6 +8441,7 @@ function renderRecTagPicker(){
 let _recPhotoUrl = null;      // existing Supabase URL (when editing)
 let _recPhotoPending = null;  // newly selected File object awaiting upload
 let _personPhotoPendingBlob = null; // avatar crop blob pending upload
+let _diaryPhotoPendingBlob  = null; // diary photo crop blob pending upload
 
 function triggerRecipePhotoInput() {
   g('mRecPhotoInput')?.click();
@@ -9675,18 +9681,22 @@ async function savePerson() {
     photo:_avatarMode==='photo'?(S.personPhoto||null):null, avatarEmoji};
   if(S.editPersonId) p.id=S.editPersonId;
   await put('people',p);
-  // Upload avatar to cloud if it's a local blob (data URL) and we're signed in
-  if (_cloudUser && p.photo && p.photo.startsWith('data:') && _avatarMode==='photo') {
+  // Upload avatar to cloud if there's a pending crop blob
+  if (_cloudUser && _personPhotoPendingBlob && _avatarMode==='photo') {
     try {
-      const personId = S.editPersonId || (await all('people')).find(x=>x.name===name)?.id;
+      const personId = p.id || (await all('people')).find(x=>x.name===name)?.id;
       if (personId) {
-        const resp = await fetch(p.photo);
-        const blob = await resp.blob();
-        const url = await uploadPhoto(blob, `avatar-${personId}.jpg`);
+        const url = await uploadPhoto(_personPhotoPendingBlob, `avatar-${personId}.jpg`);
+        _personPhotoPendingBlob = null;
         const updated = await get('people', personId);
         if (updated) { updated.photo = url; await put('people', updated); }
       }
-    } catch(e) { console.warn('Den: avatar upload failed', e.message); }
+    } catch(e) {
+      console.warn('Den: avatar upload failed', e.message);
+      showToast('⚠ Avatar upload failed — saved locally only', 'var(--gold)');
+    }
+  } else {
+    _personPhotoPendingBlob = null;
   }
   closeModal('personModal'); await renderSidebarPeople(); await renderPeople();
   if(S.view==='person-detail'&&S.detailPersonId===p.id) await renderPersonDetail();
@@ -9734,7 +9744,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.11.9', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.12.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10027,9 +10037,10 @@ function wire() {
     const reader=new FileReader();
     reader.onload=ev=>{
       // For avatars, open a 1:1 crop
-      openPhotoCropCustom(ev.target.result, file, 1, (blob,dataUrl)=>{
-        S.personPhoto=dataUrl;
-        _personPhotoPendingBlob=blob;
+      openPhotoCropCustom(ev.target.result, file, 1, (blob, previewUrl)=>{
+        // Store blob for upload; use previewUrl only for local preview (it's a blob: URL)
+        _personPhotoPendingBlob = blob;
+        S.personPhoto = previewUrl;  // shown in preview only — replaced by Storage URL on save
         switchAvatarTab('photo');
         syncPersonAvatarPreview();
       });
@@ -10190,9 +10201,9 @@ function wire() {
     e.target.value='';
     const reader=new FileReader();
     reader.onload=ev=>{
-      openPhotoCropCustom(ev.target.result, file, 4/3, (blob, dataUrl)=>{
-        S.diaryPhoto=dataUrl;
-        S._diaryPhotoPendingBlob=blob;
+      openPhotoCropCustom(ev.target.result, file, 4/3, (blob, previewUrl)=>{
+        _diaryPhotoPendingBlob = blob;
+        S.diaryPhoto = previewUrl;  // blob: URL for preview only — replaced by Storage URL on save
         syncPhotoPreview();
       });
     };
@@ -11968,7 +11979,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.11.9', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.12.0', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
