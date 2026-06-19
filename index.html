@@ -1981,7 +1981,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.11.5</p>
+      <p class="sidebar-version">v7.11.6</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2764,7 +2764,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.5</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.6</span>
         </div>
       </div>
     </div>
@@ -3689,11 +3689,16 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <!-- Fixed crop frame: 4:3 ratio -->
     <div id="cropFrame" style="position:relative;width:100%;aspect-ratio:4/3;background:#000;overflow:hidden;touch-action:none;cursor:grab">
       <img id="cropImg" style="position:absolute;transform-origin:0 0;user-select:none;-webkit-user-select:none;pointer-events:none">
-      <!-- Crop grid overlay -->
-      <div style="position:absolute;inset:0;pointer-events:none;border:2px solid rgba(255,255,255,0.6);box-sizing:border-box">
-        <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr">
-          ${Array(9).fill('<div style="border:0.5px solid rgba(255,255,255,0.25)"></div>').join('')}
-        </div>
+      <!-- Crop grid overlay (rule of thirds) -->
+      <div style="position:absolute;inset:0;pointer-events:none;box-sizing:border-box">
+        <!-- Border -->
+        <div style="position:absolute;inset:0;border:2px solid rgba(255,255,255,0.6)"></div>
+        <!-- Vertical third lines -->
+        <div style="position:absolute;top:0;bottom:0;left:33.33%;width:1px;background:rgba(255,255,255,0.25)"></div>
+        <div style="position:absolute;top:0;bottom:0;left:66.66%;width:1px;background:rgba(255,255,255,0.25)"></div>
+        <!-- Horizontal third lines -->
+        <div style="position:absolute;left:0;right:0;top:33.33%;height:1px;background:rgba(255,255,255,0.25)"></div>
+        <div style="position:absolute;left:0;right:0;top:66.66%;height:1px;background:rgba(255,255,255,0.25)"></div>
       </div>
     </div>
     <div style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border-soft)">
@@ -9600,7 +9605,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.11.5', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.11.6', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11814,7 +11819,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.11.5', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.11.6', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
