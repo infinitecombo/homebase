@@ -1967,7 +1967,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.7</p>
+      <p class="sidebar-version">v7.10.8</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2750,7 +2750,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.7</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.8</span>
         </div>
       </div>
     </div>
@@ -5063,7 +5063,7 @@ async function renderDash() {
       }
       dg.innerHTML=html;
       dg.querySelectorAll('.dash-grocery-row').forEach(row=>{
-        row.onclick=()=>dashToggleGrocery(parseInt(row.dataset.id));
+        row.onclick=()=>dashToggleGrocery(row.dataset.id);
       });
     }
   }
@@ -6409,7 +6409,7 @@ async function renderHistory() {
     catChart.innerHTML='<p style="font-size:12px;color:var(--text-3);padding:8px 0">Complete categorized tasks to see this chart.</p>';
   } else {
     const catDatasets=topCats.map(([catId])=>{
-      const cat=categories.find(c=>c.id===parseInt(catId));
+      const cat=categories.find(c=>c.id===catId);
       return {
         label:cat?.name||'Unknown', color:cat?.color||'#5e5878', unit:'pts',
         values:buckets.map(b=>{
@@ -6417,7 +6417,7 @@ async function renderHistory() {
             if(!allDates.includes(c.date)||!b.dates.includes(c.date)) return false;
             if(S.histPerson!=='all'&&c.personId!==S.histPerson) return false;
             const task=chores.find(t=>t.id===c.choreId);
-            return task?.categoryId===parseInt(catId);
+            return task?.categoryId===catId;
           }).reduce((s,c)=>s+(c.points||0),0);
         })
       };
@@ -7667,10 +7667,10 @@ async function saveComplete() {
   });
 
   for(const row of rows){
-    const pid=parseInt(row.dataset.pid);
+    const pid=row.dataset.pid;           // UUID string — do NOT parseInt
     const wasCount=parseInt(row.dataset.was);
     const newCount=parseInt(row.dataset.count);
-    const existing=allComps.filter(c=>c.choreId===cid&&c.date===date&&c.personId===pid&&!c.isBonus).sort((a,b)=>(a.id||0)-(b.id||0));
+    const existing=allComps.filter(c=>c.choreId===cid&&c.date===date&&c.personId===pid&&!c.isBonus).sort((a,b)=>String(a.id).localeCompare(String(b.id)));
     if(newCount > wasCount){
       for(let i=0;i<newCount-wasCount;i++){
         await put('completions',{choreId:cid,date,personId:pid,points:chore?.points||0,note: i===0?note:null});
@@ -7776,7 +7776,7 @@ async function openTaskModal(taskId=null, presetDate=null) {
   } else {
     const refreshPicker = () => {
       picker.querySelectorAll('.cat-pick-chip').forEach(el => {
-        const cid = el.dataset.cid === 'null' ? null : parseInt(el.dataset.cid);
+        const cid = el.dataset.cid === 'null' ? null : el.dataset.cid;  // UUID string
         const cat = cid===null ? null : categories.find(c=>c.id===cid);
         const active = S.taskCategoryId === cid;
         const color = cat ? cat.color : 'var(--text-3)';
@@ -9107,7 +9107,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.7', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.8', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11321,7 +11321,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.7', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.8', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
