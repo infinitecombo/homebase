@@ -1945,7 +1945,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.0</p>
+      <p class="sidebar-version">v7.10.1</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2725,7 +2725,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.1</span>
         </div>
       </div>
     </div>
@@ -3975,17 +3975,26 @@ const all = store => new Promise((r,j) => { const q=tx(store).objectStore(store)
 const get = (store,id) => new Promise((r,j) => { const q=tx(store).objectStore(store).get(id); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
 const put = (store,obj) => {
   // Auto-assign UUID for new records (no id set, or id is falsy)
-  // Existing records (edits) keep their id unchanged
   if (obj.id === undefined || obj.id === null) {
     obj = {...obj, id: crypto.randomUUID()};
   }
   return new Promise((r,j) => {
     const q=tx(store,'readwrite').objectStore(store).put(obj);
-    q.onsuccess=()=>r(obj.id);  // return the id (UUID or existing)
+    q.onsuccess=()=>{
+      cloudPush(store, obj).catch(e=>console.warn('Den sync push failed:',store,e.message));
+      r(obj.id);
+    };
     q.onerror=()=>j(q.error);
   });
 };
-const del = (store,id) => new Promise((r,j) => { const q=tx(store,'readwrite').objectStore(store).delete(id); q.onsuccess=()=>r(); q.onerror=()=>j(q.error); });
+const del = (store,id) => new Promise((r,j) => {
+  const q=tx(store,'readwrite').objectStore(store).delete(id);
+  q.onsuccess=()=>{
+    cloudDelete(store, id).catch(e=>console.warn('Den sync delete failed:',store,e.message));
+    r();
+  };
+  q.onerror=()=>j(q.error);
+});
 const byIdx = (store,idx,val) => new Promise((r,j) => { const q=tx(store).objectStore(store).index(idx).getAll(val); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
 
 // ═══════════════════════════════════════════
@@ -9071,7 +9080,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11220,7 +11229,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.0', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11392,6 +11401,102 @@ function wireGistSync() {
   updateGistLastSync();
 }
 
+
+// ═══════════════════════════════════════════
+// SUPABASE — Stage 3: Sync Engine
+// ═══════════════════════════════════════════
+
+// Tier 1 stores to sync and their camelCase→snake_case field maps.
+// Any field not listed passes through as-is (id, deleted, etc. are same in both).
+// Fields set to null are excluded from the Supabase payload (local-only).
+const SYNC_STORES = {
+  people:           { table: 'people',            fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
+  categories:       { table: 'categories',         fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
+  chores:           { table: 'chores',             fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id' } },
+  completions:      { table: 'completions',        fields: { choreId:'chore_id', personId:'person_id' } },
+  diary:            { table: 'diary',              fields: { personId:'person_id', photo: null } },  // photo excluded (local blob)
+  events:           { table: 'events',             fields: { personId:'person_id', endDate:'end_date', endTime:'end_time', recurEnd:'recur_end' } },
+  pins:             { table: 'pins',               fields: { personId:'person_id', createdAt: null } },  // createdAt local-only for now
+  expenses:         { table: 'expenses',           fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
+  expenseCategories:{ table: 'expense_categories', fields: { isIncome:'is_income', sortOrder:'sort_order' } },
+  groceryItems:     { table: 'grocery_items',      fields: { nameKey:'name_key', sortOrder:'sort_order' } },
+};
+
+// camelCase→snake_case using the field map for a given store.
+// Returns a Supabase-ready row with household_id injected.
+function toSupabaseRow(store, obj) {
+  const cfg = SYNC_STORES[store];
+  if (!cfg || !_cloudHH) return null;
+  const row = { household_id: _cloudHH.id };
+  for (const [localKey, val] of Object.entries(obj)) {
+    const mapped = cfg.fields[localKey];
+    if (mapped === null) continue;           // explicitly excluded
+    if (mapped === undefined) {
+      row[localKey] = val;                   // pass through unchanged
+    } else {
+      row[mapped] = val;                     // renamed field
+    }
+  }
+  // Ensure updated_at is always fresh on upsert
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
+// Push a single record to Supabase (upsert by id).
+// No-op if not signed in, no household, or store not in Tier 1.
+async function cloudPush(store, obj) {
+  if (!_cloudHH || !getSupa()) return;
+  if (!SYNC_STORES[store]) return;
+  const row = toSupabaseRow(store, obj);
+  if (!row) return;
+  const { error } = await getSupa()
+    .from(SYNC_STORES[store].table)
+    .upsert(row, { onConflict: 'id' });
+  if (error) throw new Error(error.message);
+}
+
+// Soft-delete a record in Supabase (set deleted=true, updated_at=now).
+// No-op if not signed in, no household, or store not in Tier 1.
+async function cloudDelete(store, id) {
+  if (!_cloudHH || !getSupa()) return;
+  if (!SYNC_STORES[store]) return;
+  const { error } = await getSupa()
+    .from(SYNC_STORES[store].table)
+    .update({ deleted: true, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('household_id', _cloudHH.id);
+  if (error) throw new Error(error.message);
+}
+
+// ── Initial bulk push ───────────────────────
+// Called once after sign-in + household link to push all existing local data.
+// Uses upsert so it's safe to run multiple times (idempotent).
+async function cloudPushAll() {
+  if (!_cloudHH || !getSupa()) return;
+  const stores = Object.keys(SYNC_STORES);
+  let pushed = 0, errors = 0;
+  for (const store of stores) {
+    try {
+      const records = await all(store);
+      if (!records.length) continue;
+      const rows = records.map(r => toSupabaseRow(store, r)).filter(Boolean);
+      // Batch upsert in chunks of 200 to avoid payload limits
+      for (let i = 0; i < rows.length; i += 200) {
+        const chunk = rows.slice(i, i + 200);
+        const { error } = await getSupa()
+          .from(SYNC_STORES[store].table)
+          .upsert(chunk, { onConflict: 'id' });
+        if (error) throw new Error(error.message);
+        pushed += chunk.length;
+      }
+    } catch(e) {
+      console.warn(`Den: bulk push failed for ${store}:`, e.message);
+      errors++;
+    }
+  }
+  console.log(`Den: bulk push complete — ${pushed} records, ${errors} store errors`);
+  return { pushed, errors };
+}
 
 // ═══════════════════════════════════════════
 // ═══════════════════════════════════════════
@@ -11652,6 +11757,11 @@ async function cloudLoadHousehold() {
       .maybeSingle();
     if (error) throw error;
     _cloudHH = data?.households || null;
+    // If household is already linked, do a quiet initial push to catch
+    // any records created while offline or on another device
+    if (_cloudHH) {
+      cloudPushAll().catch(e => console.warn('Den: background push failed', e));
+    }
   } catch (e) {
     console.warn('Den: could not load household', e.message);
   }
@@ -11677,6 +11787,10 @@ async function cloudCreateHousehold() {
     _cloudHH = hh;
     cloudUpdateHouseholdUI();
     showToast(`🏠 Household created! Code: ${hh.join_code}`, 'var(--sage)');
+    // Bulk push all existing local data to the new household
+    cloudPushAll().then(r => {
+      if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)');
+    }).catch(e => console.warn('Den: initial push failed', e));
   } catch (e) {
     showToast(`✗ ${e.message}`, 'var(--terra)');
     console.error('Den: create household error:', e);
@@ -11728,6 +11842,10 @@ async function cloudJoinHousehold() {
     if (g('cloudJoinWrap')) g('cloudJoinWrap').style.display = 'none';
     cloudUpdateHouseholdUI();
     showToast(`🏠 Joined "${hh.name}"`, 'var(--sage)');
+    // Bulk push all existing local data to the joined household
+    cloudPushAll().then(r => {
+      if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)');
+    }).catch(e => console.warn('Den: initial push failed', e));
   } catch (e) {
     if (msgEl) { msgEl.textContent = `✗ ${e.message}`; msgEl.style.color = 'var(--terra)'; }
   }
