@@ -1981,7 +1981,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.12.0</p>
+      <p class="sidebar-version">v7.12.1</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2764,7 +2764,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.12.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.12.1</span>
         </div>
       </div>
     </div>
@@ -8531,39 +8531,47 @@ function cancelPhotoCrop() {
 }
 
 async function confirmPhotoCrop() {
-  // Render the visible area of the crop frame to a canvas
+  // Unified crop confirm — handles recipe, avatar, and diary crops
+  const aspect = _cropCustomCallback ? _cropAspect : 4/3;
   const OUTPUT_W = 900;
-  const OUTPUT_H = 675; // 4:3
+  const OUTPUT_H = Math.round(OUTPUT_W / aspect);
   const canvas = document.createElement('canvas');
-  canvas.width = OUTPUT_W;
-  canvas.height = OUTPUT_H;
+  canvas.width = OUTPUT_W; canvas.height = OUTPUT_H;
   const ctx = canvas.getContext('2d');
-  // Map frame coords back to image coords
   const srcX = (-_crop.x) / _crop.scale;
   const srcY = (-_crop.y) / _crop.scale;
   const srcW = _crop.frameW / _crop.scale;
   const srcH = _crop.frameH / _crop.scale;
-  // Draw the cropped region scaled to output size
   const imgEl = new Image();
   imgEl.src = _crop.dataUrl;
   await new Promise(res => { if (imgEl.complete) res(); else imgEl.onload = res; });
   ctx.drawImage(imgEl, srcX, srcY, srcW, srcH, 0, 0, OUTPUT_W, OUTPUT_H);
   canvas.toBlob(blob => {
     if (!blob) { showToast('Crop failed', 'var(--terra)'); return; }
-    _recPhotoPending = blob;
-    // Show preview in upload area
     const previewUrl = URL.createObjectURL(blob);
-    const upload = g('mRecPhotoUpload');
-    if (upload) {
-      upload.querySelector('img.rec-photo-preview')?.remove();
-      const prev = document.createElement('img');
-      prev.className = 'rec-photo-preview';
-      prev.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
-      prev.src = previewUrl;
-      upload.prepend(prev);
-      upload.classList.add('has-photo');
+    if (_cropCustomCallback) {
+      // Avatar or diary crop — call the callback with blob + preview URL
+      const cb = _cropCustomCallback;
+      _cropCustomCallback = null;
+      const frame = g('cropFrame');
+      if (frame) frame.style.aspectRatio = '4/3';
+      closeModal('photoCropModal');
+      cb(blob, previewUrl);
+    } else {
+      // Recipe crop — set pending blob and show preview in upload area
+      _recPhotoPending = blob;
+      const upload = g('mRecPhotoUpload');
+      if (upload) {
+        upload.querySelector('img.rec-photo-preview')?.remove();
+        const prev = document.createElement('img');
+        prev.className = 'rec-photo-preview';
+        prev.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+        prev.src = previewUrl;
+        upload.prepend(prev);
+        upload.classList.add('has-photo');
+      }
+      closeModal('photoCropModal');
     }
-    closeModal('photoCropModal');
   }, 'image/jpeg', 0.85);
 }
 
@@ -8581,37 +8589,7 @@ function openPhotoCropCustom(dataUrl, file, aspect, callback) {
   openPhotoCrop(dataUrl, file);
 }
 
-// Override confirmPhotoCrop to handle custom callbacks
-const _origConfirmPhotoCrop = confirmPhotoCrop;
-async function confirmPhotoCrop() {
-  if (!_cropCustomCallback) { await _origConfirmPhotoCrop(); return; }
-  // Render the visible crop area
-  const aspect = _cropAspect;
-  const OUTPUT_W = 900;
-  const OUTPUT_H = Math.round(OUTPUT_W / aspect);
-  const canvas = document.createElement('canvas');
-  canvas.width = OUTPUT_W; canvas.height = OUTPUT_H;
-  const ctx = canvas.getContext('2d');
-  const srcX = (-_crop.x) / _crop.scale;
-  const srcY = (-_crop.y) / _crop.scale;
-  const srcW = _crop.frameW / _crop.scale;
-  const srcH = _crop.frameH / _crop.scale;
-  const imgEl = new Image();
-  imgEl.src = _crop.dataUrl;
-  await new Promise(res => { if (imgEl.complete) res(); else imgEl.onload = res; });
-  ctx.drawImage(imgEl, srcX, srcY, srcW, srcH, 0, 0, OUTPUT_W, OUTPUT_H);
-  canvas.toBlob(blob => {
-    if (!blob) { showToast('Crop failed', 'var(--terra)'); return; }
-    const previewUrl = URL.createObjectURL(blob);
-    const cb = _cropCustomCallback;
-    _cropCustomCallback = null;
-    // Reset frame aspect ratio
-    const frame = g('cropFrame');
-    if (frame) frame.style.aspectRatio = '4/3';
-    closeModal('photoCropModal');
-    cb(blob, previewUrl);
-  }, 'image/jpeg', 0.85);
-}
+// confirmPhotoCrop is unified below — handles both recipe and custom (avatar/diary) crops
 
 function wireCropGestures() {
   const frame = g('cropFrame');
@@ -9623,6 +9601,7 @@ async function openPersonModal(personId=null) {
   g('mPersonDay').value=person?.dayGoal||'';
   S.personColor=person?.color||PALETTE[4];
   S.personPhoto=person?.photo||null;
+  _personPhotoPendingBlob = null;  // clear any pending blob from previous open
   _selectedEmoji=person?.avatarEmoji||null;
   _avatarMode=S.personPhoto?'photo':(_selectedEmoji?'emoji':'none');
   switchAvatarTab(_avatarMode);
@@ -9744,7 +9723,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.12.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.12.1', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11979,7 +11958,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.12.0', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.12.1', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
