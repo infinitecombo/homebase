@@ -1945,7 +1945,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.5</p>
+      <p class="sidebar-version">v7.10.6</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2725,7 +2725,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.5</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.6</span>
         </div>
       </div>
     </div>
@@ -9082,7 +9082,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.5', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.6', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11236,7 +11236,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.5', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.6', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11431,15 +11431,19 @@ const SYNC_STORES = {
 
 // camelCase→snake_case using the field map for a given store.
 // Returns a Supabase-ready row with household_id injected.
+// Local-only fields that must never be sent to Supabase
+const LOCAL_ONLY_FIELDS = new Set(['updatedAt','createdAt','_photoStripped']);
+
 function toSupabaseRow(store, obj) {
   const cfg = SYNC_STORES[store];
   if (!cfg || !_cloudHH) return null;
   const row = { household_id: _cloudHH.id };
   for (const [localKey, val] of Object.entries(obj)) {
+    if (LOCAL_ONLY_FIELDS.has(localKey)) continue;  // never send local-only fields
     const mapped = cfg.fields[localKey];
-    if (mapped === null) continue;           // explicitly excluded
+    if (mapped === null) continue;           // explicitly excluded by store config
     if (mapped === undefined) {
-      row[localKey] = val;                   // pass through unchanged
+      row[localKey] = val;                   // pass through unchanged (same name in both)
     } else {
       row[mapped] = val;                     // renamed field
     }
@@ -11459,7 +11463,11 @@ async function cloudPush(store, obj) {
   const { error } = await getSupa()
     .from(SYNC_STORES[store].table)
     .upsert(row, { onConflict: 'id' });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error(`Den: push failed [${store}]`, error.message, row);
+    throw new Error(error.message);
+  }
+  console.log(`Den: pushed [${store}] id=${obj.id}`);
 }
 
 // Soft-delete a record in Supabase (set deleted=true, updated_at=now).
@@ -11604,8 +11612,11 @@ let _realtimeChannel = null;
 
 // View names that should re-render when a store changes
 const STORE_VIEW_MAP = {
-  completions:  ['dashboard', 'tasks'],
+  completions:  ['dashboard', 'tasks', 'week'],
   groceryItems: ['recipes'],
+  chores:       ['dashboard', 'tasks', 'week'],
+  categories:   ['tasks'],
+  people:       ['dashboard', 'people'],
 };
 
 async function handleRealtimeEvent(store, payload) {
@@ -11641,6 +11652,9 @@ function cloudStartRealtime() {
   const REALTIME_STORES = {
     completions:  'completions',
     groceryItems: 'grocery_items',
+    chores:       'chores',
+    categories:   'categories',
+    people:       'people',
   };
   _realtimeChannel = supa.channel(`den_hh_${_cloudHH.id}`);
   for (const [store, table] of Object.entries(REALTIME_STORES)) {
