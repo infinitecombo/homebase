@@ -8667,11 +8667,25 @@ async function uploadRecipePhoto(blobOrFile, recipeId) {
     blobSize: blob.size,
     blobType: blob.type,
   });
-  const { error: upErr } = await supa.storage
+  // Try upload first; if file exists, update instead
+  let upErr;
+  const uploadResult = await supa.storage
     .from(PHOTO_BUCKET)
-    .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    .upload(path, blob, { contentType: 'image/jpeg' });
+  upErr = uploadResult.error;
+
+  if (upErr && upErr.message?.includes('already exists')) {
+    // File exists — update it
+    const updateResult = await supa.storage
+      .from(PHOTO_BUCKET)
+      .update(path, blob, { contentType: 'image/jpeg' });
+    upErr = updateResult.error;
+  }
+
   if (upErr) {
     console.error('Den: photo upload error', upErr);
+    // Log full error details
+    console.error('Den: upload error details', JSON.stringify(upErr));
     throw new Error(`Upload failed: ${upErr.message} (bucket: "${PHOTO_BUCKET}", path: "${path}")`);
   }
   // Signed URL with 1 year expiry
