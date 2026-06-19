@@ -1945,7 +1945,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.1</p>
+      <p class="sidebar-version">v7.10.2</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2725,7 +2725,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.1</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.2</span>
         </div>
       </div>
     </div>
@@ -3978,6 +3978,8 @@ const put = (store,obj) => {
   if (obj.id === undefined || obj.id === null) {
     obj = {...obj, id: crypto.randomUUID()};
   }
+  // Stamp updatedAt so last-write-wins merge works correctly
+  obj = {...obj, updatedAt: new Date().toISOString()};
   return new Promise((r,j) => {
     const q=tx(store,'readwrite').objectStore(store).put(obj);
     q.onsuccess=()=>{
@@ -9080,7 +9082,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.1', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.2', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11229,7 +11231,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.1', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.2', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11403,7 +11405,7 @@ function wireGistSync() {
 
 
 // ═══════════════════════════════════════════
-// SUPABASE — Stage 3: Sync Engine
+// SUPABASE — Stage 3 & 4: Sync Engine
 // ═══════════════════════════════════════════
 
 // Tier 1 stores to sync and their camelCase→snake_case field maps.
@@ -11466,6 +11468,199 @@ async function cloudDelete(store, id) {
     .eq('id', id)
     .eq('household_id', _cloudHH.id);
   if (error) throw new Error(error.message);
+}
+
+// ── Offline status ─────────────────────────
+let _syncOffline = false;
+
+function setSyncOffline(offline) {
+  if (_syncOffline === offline) return;
+  _syncOffline = offline;
+  if (offline) {
+    showToast('⚠ Cloud sync offline — changes saved locally', 'var(--gold)');
+  } else {
+    showToast('☁️ Cloud sync reconnected', 'var(--sage)');
+  }
+}
+
+// ── snake_case → camelCase field reverse map ────
+// Built from SYNC_STORES so we never maintain it separately
+function buildReverseMap(store) {
+  const cfg = SYNC_STORES[store];
+  if (!cfg) return {};
+  const rev = {};
+  for (const [local, remote] of Object.entries(cfg.fields)) {
+    if (remote) rev[remote] = local;
+  }
+  return rev;
+}
+
+// Convert a Supabase row back to a local IndexedDB object
+function fromSupabaseRow(store, row) {
+  const rev = buildReverseMap(store);
+  const obj = {};
+  for (const [key, val] of Object.entries(row)) {
+    if (key === 'household_id' || key === 'updated_at') continue; // local doesn't need these
+    const localKey = rev[key] || key;
+    obj[localKey] = val;
+  }
+  return obj;
+}
+
+// ── Single-record merge (last-write-wins) ───
+// Writes cloud record to IndexedDB if it is newer than local,
+// or if local doesn't exist. Handles soft-deletes.
+// Returns true if local state changed.
+async function mergeRecord(store, cloudRow) {
+  const obj = fromSupabaseRow(store, cloudRow);
+  const localRec = await get(store, obj.id);
+
+  if (cloudRow.deleted) {
+    // Cloud says deleted — remove locally if it exists
+    if (localRec) {
+      await new Promise((res, rej) => {
+        const q = tx(store, 'readwrite').objectStore(store).delete(obj.id);
+        q.onsuccess = res; q.onerror = rej;
+      });
+      return true;
+    }
+    return false;
+  }
+
+  if (!localRec) {
+    // New record from cloud — write directly (bypass put() to avoid re-pushing)
+    await new Promise((res, rej) => {
+      const q = tx(store, 'readwrite').objectStore(store).put(obj);
+      q.onsuccess = res; q.onerror = rej;
+    });
+    return true;
+  }
+
+  // Both exist — compare updated_at
+  const cloudTs = new Date(cloudRow.updated_at).getTime();
+  const localTs  = localRec.updatedAt ? new Date(localRec.updatedAt).getTime() : 0;
+  if (cloudTs > localTs) {
+    await new Promise((res, rej) => {
+      const q = tx(store, 'readwrite').objectStore(store).put(obj);
+      q.onsuccess = res; q.onerror = rej;
+    });
+    return true;
+  }
+  return false;
+}
+
+// ── Initial pull (background, all Tier 1 stores) ─
+async function cloudPullAll() {
+  const supa = getSupa();
+  if (!supa || !_cloudHH) return;
+  let changed = false;
+  try {
+    for (const [store, cfg] of Object.entries(SYNC_STORES)) {
+      const { data, error } = await supa
+        .from(cfg.table)
+        .select('*')
+        .eq('household_id', _cloudHH.id);
+      if (error) throw new Error(`${store}: ${error.message}`);
+      for (const row of (data || [])) {
+        const didChange = await mergeRecord(store, row);
+        if (didChange) changed = true;
+      }
+    }
+    setSyncOffline(false);
+    if (changed) {
+      // Re-render current view to show pulled data
+      await renderSidebarPeople();
+      const cur = document.querySelector('.view.active')?.id?.replace('view-','');
+      if (cur) await nav(cur);
+    }
+  } catch(e) {
+    setSyncOffline(true);
+    console.warn('Den: cloudPullAll failed:', e.message);
+  }
+}
+
+// ── Realtime subscriptions ──────────────────
+let _realtimeChannel = null;
+
+// View names that should re-render when a store changes
+const STORE_VIEW_MAP = {
+  completions:  ['dashboard', 'tasks'],
+  groceryItems: ['recipes'],
+};
+
+async function handleRealtimeEvent(store, payload) {
+  const row = payload.new || payload.old;
+  if (!row) return;
+  // Ignore events from our own session (we already have the local write)
+  // We can't perfectly detect "own" events, so just merge — idempotent
+  const changed = await mergeRecord(store, row);
+  if (!changed) return;
+  // Re-render affected views
+  const views = STORE_VIEW_MAP[store] || [];
+  const activeView = document.querySelector('.view.active')?.id?.replace('view-','');
+  if (activeView && views.includes(activeView)) {
+    if (activeView === 'dashboard') {
+      const mod = document.querySelector('.view.active');
+      if (mod) await nav('dashboard');
+    } else {
+      await nav(activeView);
+    }
+  }
+  // Always refresh sidebar people counts
+  await renderSidebarPeople();
+}
+
+function cloudStartRealtime() {
+  const supa = getSupa();
+  if (!supa || !_cloudHH) return;
+  // Clean up any existing channel
+  if (_realtimeChannel) {
+    supa.removeChannel(_realtimeChannel);
+    _realtimeChannel = null;
+  }
+  const REALTIME_STORES = {
+    completions:  'completions',
+    groceryItems: 'grocery_items',
+  };
+  _realtimeChannel = supa.channel(`den_hh_${_cloudHH.id}`);
+  for (const [store, table] of Object.entries(REALTIME_STORES)) {
+    _realtimeChannel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table,
+        filter: `household_id=eq.${_cloudHH.id}`,
+      },
+      (payload) => {
+        handleRealtimeEvent(store, payload).catch(e =>
+          console.warn('Den realtime handler error:', e.message)
+        );
+      }
+    );
+  }
+  _realtimeChannel
+    .on('system', {}, (status) => {
+      if (status.extension === 'postgres_changes') {
+        setSyncOffline(status.status !== 'ok');
+      }
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('Den: realtime subscribed for household', _cloudHH.id);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setSyncOffline(true);
+        console.warn('Den: realtime channel error:', status);
+      }
+    });
+}
+
+function cloudStopRealtime() {
+  const supa = getSupa();
+  if (supa && _realtimeChannel) {
+    supa.removeChannel(_realtimeChannel);
+    _realtimeChannel = null;
+  }
 }
 
 // ── Initial bulk push ───────────────────────
@@ -11719,6 +11914,7 @@ async function cloudSignOut() {
 }
 
 function cloudForceSignOut() {
+  cloudStopRealtime();
   // Wipe all local auth state — works even if Supabase is unreachable
   try {
     // Clear Supabase session from localStorage
@@ -11757,10 +11953,12 @@ async function cloudLoadHousehold() {
       .maybeSingle();
     if (error) throw error;
     _cloudHH = data?.households || null;
-    // If household is already linked, do a quiet initial push to catch
-    // any records created while offline or on another device
     if (_cloudHH) {
-      cloudPushAll().catch(e => console.warn('Den: background push failed', e));
+      // Pull first (get latest cloud state), then push (flush any local-only changes)
+      cloudPullAll()
+        .then(() => cloudPushAll())
+        .then(() => cloudStartRealtime())
+        .catch(e => console.warn('Den: sync startup failed', e));
     }
   } catch (e) {
     console.warn('Den: could not load household', e.message);
@@ -11787,10 +11985,10 @@ async function cloudCreateHousehold() {
     _cloudHH = hh;
     cloudUpdateHouseholdUI();
     showToast(`🏠 Household created! Code: ${hh.join_code}`, 'var(--sage)');
-    // Bulk push all existing local data to the new household
-    cloudPushAll().then(r => {
-      if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)');
-    }).catch(e => console.warn('Den: initial push failed', e));
+    cloudPushAll()
+      .then(r => { if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)'); })
+      .then(() => cloudStartRealtime())
+      .catch(e => console.warn('Den: initial push failed', e));
   } catch (e) {
     showToast(`✗ ${e.message}`, 'var(--terra)');
     console.error('Den: create household error:', e);
@@ -11842,10 +12040,11 @@ async function cloudJoinHousehold() {
     if (g('cloudJoinWrap')) g('cloudJoinWrap').style.display = 'none';
     cloudUpdateHouseholdUI();
     showToast(`🏠 Joined "${hh.name}"`, 'var(--sage)');
-    // Bulk push all existing local data to the joined household
-    cloudPushAll().then(r => {
-      if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)');
-    }).catch(e => console.warn('Den: initial push failed', e));
+    cloudPullAll()
+      .then(() => cloudPushAll())
+      .then(r => { if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)'); })
+      .then(() => cloudStartRealtime())
+      .catch(e => console.warn('Den: initial sync failed', e));
   } catch (e) {
     if (msgEl) { msgEl.textContent = `✗ ${e.message}`; msgEl.style.color = 'var(--terra)'; }
   }
