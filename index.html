@@ -1981,7 +1981,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.11.4</p>
+      <p class="sidebar-version">v7.11.5</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2764,7 +2764,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.4</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.5</span>
         </div>
       </div>
     </div>
@@ -3675,6 +3675,30 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="modal-foot">
       <button class="btn btn-ghost" id="recipeCancelBtn">Cancel</button>
       <button class="btn btn-primary" id="recipeSaveBtn">Save Recipe</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recipe Photo Crop Modal -->
+<div class="overlay" id="photoCropModal" style="z-index:310">
+  <div class="modal" style="max-width:440px;padding:0;overflow:hidden">
+    <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Crop Photo</div>
+      <div style="font-size:12px;color:var(--text-3)">Drag · Pinch/scroll to zoom</div>
+    </div>
+    <!-- Fixed crop frame: 4:3 ratio -->
+    <div id="cropFrame" style="position:relative;width:100%;aspect-ratio:4/3;background:#000;overflow:hidden;touch-action:none;cursor:grab">
+      <img id="cropImg" style="position:absolute;transform-origin:0 0;user-select:none;-webkit-user-select:none;pointer-events:none">
+      <!-- Crop grid overlay -->
+      <div style="position:absolute;inset:0;pointer-events:none;border:2px solid rgba(255,255,255,0.6);box-sizing:border-box">
+        <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr">
+          ${Array(9).fill('<div style="border:0.5px solid rgba(255,255,255,0.25)"></div>').join('')}
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border-soft)">
+      <button class="btn btn-ghost" onclick="cancelPhotoCrop()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPhotoCrop()">Use Photo</button>
     </div>
   </div>
 </div>
@@ -8402,86 +8426,247 @@ function triggerRecipePhotoInput() {
 function handleRecipePhotoSelect(input) {
   const file = input.files?.[0];
   if (!file) return;
-  _recPhotoPending = file;
-  // Show local preview immediately (fast feedback before upload)
+  input.value = '';
+  // Load into crop modal instead of showing directly
   const reader = new FileReader();
-  reader.onload = e => {
-    const upload = g('mRecPhotoUpload');
-    if (!upload) return;
-    // Remove old preview img if any
-    upload.querySelector('img.rec-photo-preview')?.remove();
-    const img = document.createElement('img');
-    img.className = 'rec-photo-preview';
-    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
-    img.src = e.target.result;
-    upload.prepend(img);
-    upload.classList.add('has-photo');
-  };
+  reader.onload = e => openPhotoCrop(e.target.result, file);
   reader.readAsDataURL(file);
-  input.value = ''; // reset so same file can be re-selected
 }
 
 function removeRecipePhoto(e) {
   e.stopPropagation();
   _recPhotoPending = null;
-  _recPhotoUrl = 'pending-remove'; // signal to saveRecipe to clear photo
+  _recPhotoUrl = 'pending-remove';
   const upload = g('mRecPhotoUpload');
   if (!upload) return;
   upload.querySelector('img.rec-photo-preview')?.remove();
   upload.classList.remove('has-photo');
 }
 
-// Compress an image File to a JPEG Blob at max 900px wide, 75% quality
-async function compressImage(file, maxWidth=900, quality=0.75) {
+// ── Photo Crop ───────────────────────────────
+// State for the crop UI
+const _crop = {
+  dataUrl: null,   // original image data URL
+  file: null,      // original File
+  imgW: 0,         // natural image dimensions
+  imgH: 0,
+  frameW: 0,       // crop frame dimensions (pixels on screen)
+  frameH: 0,
+  x: 0,            // current translation (image position within frame)
+  y: 0,
+  scale: 1,        // current zoom scale
+  minScale: 1,     // minimum scale (image must fill frame)
+  dragging: false,
+  lastX: 0, lastY: 0,
+  // pinch
+  lastPinchDist: 0,
+};
+
+function openPhotoCrop(dataUrl, file) {
+  _crop.dataUrl = dataUrl;
+  _crop.file = file;
+  _crop.x = 0; _crop.y = 0; _crop.scale = 1;
+  const img = g('cropImg');
+  const frame = g('cropFrame');
+  if (!img || !frame) return;
+  img.src = dataUrl;
+  img.onload = () => {
+    _crop.imgW = img.naturalWidth;
+    _crop.imgH = img.naturalHeight;
+    _crop.frameW = frame.offsetWidth;
+    _crop.frameH = frame.offsetHeight;
+    // Start scale so image fills the frame (cover behaviour)
+    const scaleX = _crop.frameW / _crop.imgW;
+    const scaleY = _crop.frameH / _crop.imgH;
+    _crop.minScale = Math.max(scaleX, scaleY);
+    _crop.scale = _crop.minScale;
+    // Center the image
+    _crop.x = (_crop.frameW - _crop.imgW * _crop.scale) / 2;
+    _crop.y = (_crop.frameH - _crop.imgH * _crop.scale) / 2;
+    applyCropTransform();
+  };
+  _openModal('photoCropModal');
+  wireCropGestures();
+}
+
+function applyCropTransform() {
+  const img = g('cropImg');
+  if (!img) return;
+  // Clamp so image always covers the frame
+  const scaledW = _crop.imgW * _crop.scale;
+  const scaledH = _crop.imgH * _crop.scale;
+  _crop.x = Math.min(0, Math.max(_crop.frameW - scaledW, _crop.x));
+  _crop.y = Math.min(0, Math.max(_crop.frameH - scaledH, _crop.y));
+  img.style.transform = `translate(${_crop.x}px, ${_crop.y}px) scale(${_crop.scale})`;
+  img.style.width = _crop.imgW + 'px';
+  img.style.height = _crop.imgH + 'px';
+}
+
+function cancelPhotoCrop() {
+  closeModal('photoCropModal');
+}
+
+async function confirmPhotoCrop() {
+  // Render the visible area of the crop frame to a canvas
+  const OUTPUT_W = 900;
+  const OUTPUT_H = 675; // 4:3
+  const canvas = document.createElement('canvas');
+  canvas.width = OUTPUT_W;
+  canvas.height = OUTPUT_H;
+  const ctx = canvas.getContext('2d');
+  // Map frame coords back to image coords
+  const srcX = (-_crop.x) / _crop.scale;
+  const srcY = (-_crop.y) / _crop.scale;
+  const srcW = _crop.frameW / _crop.scale;
+  const srcH = _crop.frameH / _crop.scale;
+  // Draw the cropped region scaled to output size
+  const imgEl = new Image();
+  imgEl.src = _crop.dataUrl;
+  await new Promise(res => { if (imgEl.complete) res(); else imgEl.onload = res; });
+  ctx.drawImage(imgEl, srcX, srcY, srcW, srcH, 0, 0, OUTPUT_W, OUTPUT_H);
+  canvas.toBlob(blob => {
+    if (!blob) { showToast('Crop failed', 'var(--terra)'); return; }
+    _recPhotoPending = blob;
+    // Show preview in upload area
+    const previewUrl = URL.createObjectURL(blob);
+    const upload = g('mRecPhotoUpload');
+    if (upload) {
+      upload.querySelector('img.rec-photo-preview')?.remove();
+      const prev = document.createElement('img');
+      prev.className = 'rec-photo-preview';
+      prev.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+      prev.src = previewUrl;
+      upload.prepend(prev);
+      upload.classList.add('has-photo');
+    }
+    closeModal('photoCropModal');
+  }, 'image/jpeg', 0.85);
+}
+
+function wireCropGestures() {
+  const frame = g('cropFrame');
+  if (!frame || frame._cropWired) return;
+  frame._cropWired = true;
+
+  // Mouse drag
+  frame.addEventListener('mousedown', e => {
+    _crop.dragging = true; _crop.lastX = e.clientX; _crop.lastY = e.clientY;
+    frame.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', e => {
+    if (!_crop.dragging) return;
+    _crop.x += e.clientX - _crop.lastX;
+    _crop.y += e.clientY - _crop.lastY;
+    _crop.lastX = e.clientX; _crop.lastY = e.clientY;
+    applyCropTransform();
+  });
+  window.addEventListener('mouseup', () => { _crop.dragging = false; frame.style.cursor = 'grab'; });
+
+  // Mouse wheel zoom
+  frame.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 1.08 : 0.93;
+    const newScale = Math.max(_crop.minScale, _crop.scale * delta);
+    // Zoom toward mouse position
+    const rect = frame.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    _crop.x = mx - (mx - _crop.x) * (newScale / _crop.scale);
+    _crop.y = my - (my - _crop.y) * (newScale / _crop.scale);
+    _crop.scale = newScale;
+    applyCropTransform();
+  }, { passive: false });
+
+  // Touch drag + pinch
+  frame.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      _crop.dragging = true;
+      _crop.lastX = e.touches[0].clientX;
+      _crop.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      _crop.dragging = false;
+      _crop.lastPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: true });
+
+  frame.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && _crop.dragging) {
+      _crop.x += e.touches[0].clientX - _crop.lastX;
+      _crop.y += e.touches[0].clientY - _crop.lastY;
+      _crop.lastX = e.touches[0].clientX;
+      _crop.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = dist / _crop.lastPinchDist;
+      const newScale = Math.max(_crop.minScale, _crop.scale * delta);
+      // Zoom toward pinch midpoint
+      const rect = frame.getBoundingClientRect();
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      _crop.x = mx - (mx - _crop.x) * (newScale / _crop.scale);
+      _crop.y = my - (my - _crop.y) * (newScale / _crop.scale);
+      _crop.scale = newScale;
+      _crop.lastPinchDist = dist;
+    }
+    applyCropTransform();
+  }, { passive: false });
+
+  frame.addEventListener('touchend', () => { _crop.dragging = false; });
+}
+
+// Compress a Blob/File to a JPEG Blob at given quality (used for final upload)
+async function compressImage(blob, quality=0.82) {
+  // If it's already a canvas-produced blob from confirmPhotoCrop, just return it
+  // (already at target size). Otherwise compress from file.
+  if (blob instanceof Blob && blob.type === 'image/jpeg') return blob;
   return new Promise((resolve, reject) => {
     const img = new Image();
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(blob);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxWidth / img.naturalWidth);
-      const w = Math.round(img.naturalWidth  * scale);
-      const h = Math.round(img.naturalHeight * scale);
       const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas compression failed'));
-      }, 'image/jpeg', quality);
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Compress failed')), 'image/jpeg', quality);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Load failed')); };
     img.src = url;
   });
 }
 
 // Upload a photo file to Supabase Storage, return the public URL
-async function uploadRecipePhoto(file, recipeId) {
+// Storage bucket name — must match exactly what you created in Supabase Storage
+const PHOTO_BUCKET = 'recipe-photos';
+
+async function uploadRecipePhoto(blobOrFile, recipeId) {
   const supa = getSupa();
   if (!supa || !_cloudHH) throw new Error('Not connected to cloud');
-  // Compress before upload
-  const blob = await compressImage(file);
-  const ext  = 'jpg';
-  const path = `${_cloudHH.id}/${recipeId}.${ext}`;
-  // Upsert (overwrite if editing same recipe)
+  // compressImage is a no-op if already a cropped JPEG blob
+  const blob = await compressImage(blobOrFile);
+  const path = `${_cloudHH.id}/${recipeId}.jpg`;
   const { error: upErr } = await supa.storage
-    .from('recipe-photos')
+    .from(PHOTO_BUCKET)
     .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
-  if (upErr) throw new Error(upErr.message);
-  // Get a signed URL (1 year expiry — long enough to be practical)
+  if (upErr) throw new Error(`Upload failed: ${upErr.message} (bucket: "${PHOTO_BUCKET}")`);
+  // Signed URL with 1 year expiry
   const { data, error: urlErr } = await supa.storage
-    .from('recipe-photos')
+    .from(PHOTO_BUCKET)
     .createSignedUrl(path, 60 * 60 * 24 * 365);
   if (urlErr) throw new Error(urlErr.message);
   return data.signedUrl;
 }
 
-// Delete a recipe photo from Storage
 async function deleteRecipePhoto(recipeId) {
   const supa = getSupa();
   if (!supa || !_cloudHH) return;
-  const path = `${_cloudHH.id}/${recipeId}.jpg`;
-  await supa.storage.from('recipe-photos').remove([path]);
+  await supa.storage.from(PHOTO_BUCKET).remove([`${_cloudHH.id}/${recipeId}.jpg`]);
 }
 
 // Build a thumbnail URL using Supabase Storage transform API
@@ -9415,7 +9600,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.11.4', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.11.5', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11629,7 +11814,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.11.4', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.11.5', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
