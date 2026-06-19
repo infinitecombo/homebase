@@ -8653,13 +8653,27 @@ const PHOTO_BUCKET = 'recipe-photos';
 async function uploadRecipePhoto(blobOrFile, recipeId) {
   const supa = getSupa();
   if (!supa || !_cloudHH) throw new Error('Not connected to cloud');
+  // Verify session is still valid before attempting upload
+  const { data: { session } } = await supa.auth.getSession();
+  if (!session) throw new Error('No active session — please sign out and sign in again');
   // compressImage is a no-op if already a cropped JPEG blob
   const blob = await compressImage(blobOrFile);
   const path = `${_cloudHH.id}/${recipeId}.jpg`;
+  console.log('Den: uploading photo', {
+    bucket: PHOTO_BUCKET,
+    path,
+    householdId: _cloudHH.id,
+    userId: session.user.id,
+    blobSize: blob.size,
+    blobType: blob.type,
+  });
   const { error: upErr } = await supa.storage
     .from(PHOTO_BUCKET)
     .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
-  if (upErr) throw new Error(`Upload failed: ${upErr.message} (bucket: "${PHOTO_BUCKET}")`);
+  if (upErr) {
+    console.error('Den: photo upload error', upErr);
+    throw new Error(`Upload failed: ${upErr.message} (bucket: "${PHOTO_BUCKET}", path: "${path}")`);
+  }
   // Signed URL with 1 year expiry
   const { data, error: urlErr } = await supa.storage
     .from(PHOTO_BUCKET)
