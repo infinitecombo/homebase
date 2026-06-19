@@ -1783,6 +1783,28 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .avatar-upload-wrap:hover .avatar-upload-overlay{opacity:1}
 .avatar-upload-overlay{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;font-size:18px;opacity:0;transition:opacity 0.2s;pointer-events:none}
 .avatar-remove{position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#c94040;color:#fff;border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1}
+
+/* ── Pull to Refresh ── */
+#ptrIndicator {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--text-3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  pointer-events: none;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+#ptrIndicator.ptr-ready { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -1945,7 +1967,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.6</p>
+      <p class="sidebar-version">v7.10.7</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -1990,6 +2012,9 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="bn-item" data-view="expenses"><span class="bn-ico">💰</span><span class="bn-lbl">Expenses</span></div>
   <div class="bn-item" id="bnMoreBtn"><span class="bn-ico" style="position:relative">☰<span class="bn-badge" id="moreBadge" style="display:none"></span></span><span class="bn-lbl">More</span></div>
 </nav>
+
+<!-- Pull to refresh indicator -->
+<div id="ptrIndicator">↓ Pull to refresh</div>
 
 <!-- Mobile more sheet -->
 <div id="moreSheetBackdrop" style="display:none;position:fixed;inset:0;z-index:298;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px)" onclick="closeMobileMore()"></div>
@@ -2725,7 +2750,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.6</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.7</span>
         </div>
       </div>
     </div>
@@ -9082,7 +9107,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.6', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.7', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10415,6 +10440,66 @@ function addSwipeGesture(el, onLeft, onRight, threshold=50) {
   }, {passive:true});
 }
 
+// ── Pull to Refresh (mobile only) ──────────
+function wirePullToRefresh() {
+  // Only wire on mobile (bottom nav visible)
+  if (window.innerWidth > 768) return;
+
+  const el    = g('main');
+  const ind   = g('ptrIndicator');
+  if (!el || !ind) return;
+
+  const THRESHOLD = 72;   // px to pull before triggering
+  let startY = 0;
+  let pulling = false;
+  let pullDist = 0;
+
+  el.addEventListener('touchstart', e => {
+    // Only start PTR when scrolled to very top
+    if (el.scrollTop > 2) return;
+    startY  = e.touches[0].clientY;
+    pulling = true;
+    pullDist = 0;
+  }, { passive: true });
+
+  el.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dist = e.touches[0].clientY - startY;
+    if (dist <= 0) { pulling = false; ind.style.display = 'none'; return; }
+    pullDist = Math.min(dist, THRESHOLD * 1.5);
+    ind.style.display = 'block';
+    ind.style.opacity = Math.min(1, pullDist / THRESHOLD);
+    if (pullDist >= THRESHOLD) {
+      ind.textContent = '↑ Release to refresh';
+      ind.classList.add('ptr-ready');
+    } else {
+      ind.textContent = '↓ Pull to refresh';
+      ind.classList.remove('ptr-ready');
+    }
+  }, { passive: true });
+
+  el.addEventListener('touchend', async () => {
+    if (!pulling) return;
+    pulling = false;
+    if (pullDist >= THRESHOLD) {
+      ind.textContent = '⏳ Syncing…';
+      ind.classList.remove('ptr-ready');
+      try {
+        await cloudPullAll();
+        await cloudPushAll();
+        ind.textContent = '✓ Up to date';
+        ind.style.opacity = '1';
+      } catch(e) {
+        ind.textContent = '⚠ Sync failed';
+      }
+      setTimeout(() => { ind.style.display = 'none'; }, 1200);
+    } else {
+      ind.style.display = 'none';
+    }
+    pullDist = 0;
+  });
+}
+
 function wireSwipeGestures() {
   // Week view: swipe to navigate weeks
   const weekGrid = g('weekGrid');
@@ -11236,7 +11321,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.6', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.7', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11419,11 +11504,11 @@ function wireGistSync() {
 const SYNC_STORES = {
   people:           { table: 'people',            fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
   categories:       { table: 'categories',         fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
-  chores:           { table: 'chores',             fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id' } },
-  completions:      { table: 'completions',        fields: { choreId:'chore_id', personId:'person_id' } },
-  diary:            { table: 'diary',              fields: { personId:'person_id', photo: null } },  // photo excluded (local blob)
+  chores:           { table: 'chores',             fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', recurEnd:null } },
+  completions:      { table: 'completions',        fields: { choreId:'chore_id', personId:'person_id', isBonus:'is_bonus' } },
+  diary:            { table: 'diary',              fields: { personId:'person_id', photo: null } },
   events:           { table: 'events',             fields: { personId:'person_id', endDate:'end_date', endTime:'end_time', recurEnd:'recur_end' } },
-  pins:             { table: 'pins',               fields: { personId:'person_id', createdAt: null } },  // createdAt local-only for now
+  pins:             { table: 'pins',               fields: { personId:'person_id', createdAt: null } },
   expenses:         { table: 'expenses',           fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
   expenseCategories:{ table: 'expense_categories', fields: { isIncome:'is_income', sortOrder:'sort_order' } },
   groceryItems:     { table: 'grocery_items',      fields: { nameKey:'name_key', sortOrder:'sort_order' } },
@@ -11448,6 +11533,8 @@ function toSupabaseRow(store, obj) {
       row[mapped] = val;                     // renamed field
     }
   }
+  // Ensure required NOT NULL columns have defaults if missing locally
+  if (row.deleted === undefined) row.deleted = false;
   // Ensure updated_at is always fresh on upsert
   row.updated_at = new Date().toISOString();
   return row;
@@ -11702,7 +11789,13 @@ function cloudStopRealtime() {
 // Uses upsert so it's safe to run multiple times (idempotent).
 async function cloudPushAll() {
   if (!_cloudHH || !getSupa()) return;
-  const stores = Object.keys(SYNC_STORES);
+  // Push in dependency order to satisfy foreign key constraints:
+  // parents before children (people/categories before chores/completions, expenseCategories before expenses)
+  const stores = [
+    'people', 'categories', 'expenseCategories',
+    'chores', 'completions', 'diary', 'events', 'pins',
+    'expenses', 'groceryItems',
+  ];
   let pushed = 0, errors = 0;
   for (const store of stores) {
     try {
@@ -12622,6 +12715,7 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
   initPwa(document.body.classList.contains('light'));
   wire();
   wireOnboarding();
+  wirePullToRefresh();
   await renderSidebarPeople();
   await nav('dashboard');
   g('diaryDate').value=today();
