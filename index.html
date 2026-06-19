@@ -1981,7 +1981,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.11.8</p>
+      <p class="sidebar-version">v7.11.9</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2764,7 +2764,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.8</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.9</span>
         </div>
       </div>
     </div>
@@ -7590,13 +7590,25 @@ function removeDiaryPhoto() {
 
 async function saveDiaryEntry() {
   const date=g('diaryDate').value, content=g('diaryTA').value;
-  const personId=g('diaryPerson').value?parseInt(g('diaryPerson').value):null;
+  const personId=g('diaryPerson').value||null;
   if(!date){ g('diaryDate').focus(); return; }
   const entries=await all('diary');
   let existing=S.diaryEntryId?entries.find(e=>e.id===S.diaryEntryId):entries.find(e=>e.date===date&&e.personId===personId);
   const entry={...(existing||{}),date,content,personId,mood:S.diaryMood,tags:S.diaryTags,photo:S.diaryPhoto||null,updatedAt:new Date().toISOString()};
   if(!existing) delete entry.id;
   await put('diary',entry);
+  // Upload diary photo to cloud if it's a pending blob and we're signed in
+  if (_cloudUser && S._diaryPhotoPendingBlob) {
+    try {
+      const entryId = entry.id || (await all('diary')).find(e=>e.date===date&&e.personId===personId)?.id;
+      if (entryId) {
+        const url = await uploadPhoto(S._diaryPhotoPendingBlob, `diary-${entryId}.jpg`);
+        const updated = await get('diary', entryId);
+        if (updated) { updated.photo = url; await put('diary', updated); }
+      }
+    } catch(e) { console.warn('Den: diary photo upload failed', e.message); }
+    S._diaryPhotoPendingBlob = null;
+  }
   // Return to landing after saving
   diaryShowLanding();
 }
@@ -8423,6 +8435,7 @@ function renderRecTagPicker(){
 // State: current photo URL being edited (null = no photo, 'pending-remove' = user wants to delete)
 let _recPhotoUrl = null;      // existing Supabase URL (when editing)
 let _recPhotoPending = null;  // newly selected File object awaiting upload
+let _personPhotoPendingBlob = null; // avatar crop blob pending upload
 
 function triggerRecipePhotoInput() {
   g('mRecPhotoInput')?.click();
@@ -8548,6 +8561,52 @@ async function confirmPhotoCrop() {
   }, 'image/jpeg', 0.85);
 }
 
+// openPhotoCropCustom — like openPhotoCrop but accepts aspect ratio + callback
+// Used for avatar (1:1) and diary (4:3) crops
+let _cropCustomCallback = null;
+let _cropAspect = 4/3;
+
+function openPhotoCropCustom(dataUrl, file, aspect, callback) {
+  _cropAspect = aspect || 4/3;
+  _cropCustomCallback = callback;
+  // Temporarily set the crop frame aspect ratio
+  const frame = g('cropFrame');
+  if (frame) frame.style.aspectRatio = String(_cropAspect).replace('/', '/');
+  openPhotoCrop(dataUrl, file);
+}
+
+// Override confirmPhotoCrop to handle custom callbacks
+const _origConfirmPhotoCrop = confirmPhotoCrop;
+async function confirmPhotoCrop() {
+  if (!_cropCustomCallback) { await _origConfirmPhotoCrop(); return; }
+  // Render the visible crop area
+  const aspect = _cropAspect;
+  const OUTPUT_W = 900;
+  const OUTPUT_H = Math.round(OUTPUT_W / aspect);
+  const canvas = document.createElement('canvas');
+  canvas.width = OUTPUT_W; canvas.height = OUTPUT_H;
+  const ctx = canvas.getContext('2d');
+  const srcX = (-_crop.x) / _crop.scale;
+  const srcY = (-_crop.y) / _crop.scale;
+  const srcW = _crop.frameW / _crop.scale;
+  const srcH = _crop.frameH / _crop.scale;
+  const imgEl = new Image();
+  imgEl.src = _crop.dataUrl;
+  await new Promise(res => { if (imgEl.complete) res(); else imgEl.onload = res; });
+  ctx.drawImage(imgEl, srcX, srcY, srcW, srcH, 0, 0, OUTPUT_W, OUTPUT_H);
+  canvas.toBlob(blob => {
+    if (!blob) { showToast('Crop failed', 'var(--terra)'); return; }
+    const previewUrl = URL.createObjectURL(blob);
+    const cb = _cropCustomCallback;
+    _cropCustomCallback = null;
+    // Reset frame aspect ratio
+    const frame = g('cropFrame');
+    if (frame) frame.style.aspectRatio = '4/3';
+    closeModal('photoCropModal');
+    cb(blob, previewUrl);
+  }, 'image/jpeg', 0.85);
+}
+
 function wireCropGestures() {
   const frame = g('cropFrame');
   if (!frame || frame._cropWired) return;
@@ -8649,6 +8708,34 @@ async function compressImage(blob, quality=0.82) {
 // Upload a photo file to Supabase Storage, return the public URL
 // Storage bucket name — must match exactly what you created in Supabase Storage
 const PHOTO_BUCKET = 'recipe-photos';
+
+// ── Generic photo upload helper ──────────────
+// Uploads a File/Blob to Storage at {userId}/{filename}, returns public URL.
+// Reuses the same bucket and UID-folder policy as recipe photos.
+async function uploadPhoto(blobOrFile, filename, quality=0.82) {
+  const supa = getSupa();
+  if (!supa || !_cloudUser) throw new Error('Not signed in');
+  const { data: { session } } = await supa.auth.getSession();
+  if (!session) throw new Error('No active session');
+  const blob = await compressImage(blobOrFile, quality);
+  const path = `${session.user.id}/${filename}`;
+  // Try upload; if exists, update
+  let { error } = await supa.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg' });
+  if (error?.message?.includes('already exists')) {
+    ({ error } = await supa.storage.from(PHOTO_BUCKET).update(path, blob, { contentType: 'image/jpeg' }));
+  }
+  if (error) throw new Error(error.message);
+  const { data } = supa.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function deletePhoto(filename) {
+  const supa = getSupa();
+  if (!supa || !_cloudUser) return;
+  const { data: { session } } = await supa.auth.getSession();
+  if (!session) return;
+  await supa.storage.from(PHOTO_BUCKET).remove([`${session.user.id}/${filename}`]);
+}
 
 async function uploadRecipePhoto(blobOrFile, recipeId) {
   const supa = getSupa();
@@ -9587,7 +9674,21 @@ async function savePerson() {
   const p={name,color:S.personColor,weekGoal:parseInt(g('mPersonWeek').value)||0,dayGoal:parseInt(g('mPersonDay').value)||0,
     photo:_avatarMode==='photo'?(S.personPhoto||null):null, avatarEmoji};
   if(S.editPersonId) p.id=S.editPersonId;
-  await put('people',p); closeModal('personModal'); await renderSidebarPeople(); await renderPeople();
+  await put('people',p);
+  // Upload avatar to cloud if it's a local blob (data URL) and we're signed in
+  if (_cloudUser && p.photo && p.photo.startsWith('data:') && _avatarMode==='photo') {
+    try {
+      const personId = S.editPersonId || (await all('people')).find(x=>x.name===name)?.id;
+      if (personId) {
+        const resp = await fetch(p.photo);
+        const blob = await resp.blob();
+        const url = await uploadPhoto(blob, `avatar-${personId}.jpg`);
+        const updated = await get('people', personId);
+        if (updated) { updated.photo = url; await put('people', updated); }
+      }
+    } catch(e) { console.warn('Den: avatar upload failed', e.message); }
+  }
+  closeModal('personModal'); await renderSidebarPeople(); await renderPeople();
   if(S.view==='person-detail'&&S.detailPersonId===p.id) await renderPersonDetail();
 }
 
@@ -9633,7 +9734,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.11.8', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.11.9', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -9921,12 +10022,24 @@ function wire() {
   g('mPersonAvatarWrap').onclick=e=>{ if(e.target.closest('#mPersonPhotoRemove')) return; g('mPersonPhotoInput').click(); };
   g('mPersonPhotoInput').onchange=e=>{
     const file=e.target.files[0]; if(!file) return;
+    e.target.value='';
+    // Use crop modal for consistent circular preview
     const reader=new FileReader();
-    reader.onload=ev=>{ S.personPhoto=ev.target.result; syncPersonAvatarPreview(); };
+    reader.onload=ev=>{
+      // For avatars, open a 1:1 crop
+      openPhotoCropCustom(ev.target.result, file, 1, (blob,dataUrl)=>{
+        S.personPhoto=dataUrl;
+        _personPhotoPendingBlob=blob;
+        switchAvatarTab('photo');
+        syncPersonAvatarPreview();
+      });
+    };
     reader.readAsDataURL(file);
   };
   g('mPersonPhotoRemove').onclick=e=>{ e.stopPropagation(); S.personPhoto=null; syncPersonAvatarPreview(); };
   g('mPersonName').oninput=()=>syncPersonAvatarPreview();
+  // Reset pending blob when modal opens
+  _personPhotoPendingBlob=null;
   // Sidebar collapse toggle
   g('sidebarCollapseBtn').onclick = () => {
     const sb = g('sidebar');
@@ -10074,8 +10187,16 @@ function wire() {
   // Photo input
   g('diaryPhotoInput').onchange=e=>{
     const file=e.target.files[0]; if(!file) return;
-    if(file.size>5*1024*1024){ askConfirm('Photo is larger than 5MB. Large photos can slow down the app. Use it anyway?',()=>{ readPhoto(file); }); return; }
-    readPhoto(file);
+    e.target.value='';
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      openPhotoCropCustom(ev.target.result, file, 4/3, (blob, dataUrl)=>{
+        S.diaryPhoto=dataUrl;
+        S._diaryPhotoPendingBlob=blob;
+        syncPhotoPreview();
+      });
+    };
+    reader.readAsDataURL(file);
   };
   function readPhoto(file) {
     const reader=new FileReader();
@@ -11847,7 +11968,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.11.8', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.11.9', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -12028,16 +12149,21 @@ function wireGistSync() {
 // Any field not listed passes through as-is (id, deleted, etc. are same in both).
 // Fields set to null are excluded from the Supabase payload (local-only).
 const SYNC_STORES = {
-  people:           { table: 'people',            fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
-  categories:       { table: 'categories',         fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
-  chores:           { table: 'chores',             fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', recurEnd:null } },
-  completions:      { table: 'completions',        fields: { choreId:'chore_id', personId:'person_id', isBonus:'is_bonus' } },
-  diary:            { table: 'diary',              fields: { personId:'person_id', photo: null } },
-  events:           { table: 'events',             fields: { personId:'person_id', endDate:'end_date', endTime:'end_time', recurEnd:'recur_end' } },
-  pins:             { table: 'pins',               fields: { personId:'person_id', createdAt: null } },
-  expenses:         { table: 'expenses',           fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
-  expenseCategories:{ table: 'expense_categories', fields: { isIncome:'is_income', sortOrder:'sort_order' } },
-  groceryItems:     { table: 'grocery_items',      fields: { nameKey:'name_key', sortOrder:'sort_order' } },
+  // Tier 1
+  people:            { table: 'people',             fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
+  categories:        { table: 'categories',          fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
+  chores:            { table: 'chores',              fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', recurEnd:null } },
+  completions:       { table: 'completions',         fields: { choreId:'chore_id', personId:'person_id', isBonus:'is_bonus' } },
+  diary:             { table: 'diary',               fields: { personId:'person_id' } },  // photo is a Storage URL — syncs as regular field
+  events:            { table: 'events',              fields: { personId:'person_id', endDate:'end_date', endTime:'end_time', recurEnd:'recur_end' } },
+  pins:              { table: 'pins',                fields: { personId:'person_id', createdAt:null } },
+  expenses:          { table: 'expenses',            fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
+  expenseCategories: { table: 'expense_categories',  fields: { isIncome:'is_income', sortOrder:'sort_order' } },
+  groceryItems:      { table: 'grocery_items',       fields: { nameKey:'name_key', sortOrder:'sort_order' } },
+  // Tier 2
+  recipes:           { table: 'recipes',             fields: { prepMin:'prep_min', cookMin:'cook_min', favorite:null } },
+  recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order' } },
+  mealPlan:          { table: 'meal_plan',           fields: { recipeId:'recipe_id' } },
 };
 
 // camelCase→snake_case using the field map for a given store.
@@ -12224,11 +12350,14 @@ let _realtimeChannel = null;
 
 // View names that should re-render when a store changes
 const STORE_VIEW_MAP = {
-  completions:  ['dashboard', 'tasks', 'week'],
-  groceryItems: ['recipes'],
-  chores:       ['dashboard', 'tasks', 'week'],
-  categories:   ['tasks'],
-  people:       ['dashboard', 'people'],
+  completions:       ['dashboard', 'tasks', 'week'],
+  groceryItems:      ['recipes'],
+  chores:            ['dashboard', 'tasks', 'week'],
+  categories:        ['tasks'],
+  people:            ['dashboard', 'people'],
+  recipes:           ['recipes'],
+  recipeIngredients: ['recipes'],
+  mealPlan:          ['recipes'],
 };
 
 async function handleRealtimeEvent(store, payload) {
@@ -12258,11 +12387,14 @@ function cloudStartRealtime() {
     _realtimeChannel = null;
   }
   const REALTIME_STORES = {
-    completions:  'completions',
-    groceryItems: 'grocery_items',
-    chores:       'chores',
-    categories:   'categories',
-    people:       'people',
+    completions:       'completions',
+    groceryItems:      'grocery_items',
+    chores:            'chores',
+    categories:        'categories',
+    people:            'people',
+    recipes:           'recipes',
+    recipeIngredients: 'recipe_ingredients',
+    mealPlan:          'meal_plan',
   };
   _realtimeChannel = supa.channel(`den_hh_${_cloudHH.id}`);
   for (const [store, table] of Object.entries(REALTIME_STORES)) {
@@ -12310,12 +12442,12 @@ function cloudStopRealtime() {
 // Uses upsert so it's safe to run multiple times (idempotent).
 async function cloudPushAll() {
   if (!_cloudHH || !getSupa()) return;
-  // Push in dependency order to satisfy foreign key constraints:
-  // parents before children (people/categories before chores/completions, expenseCategories before expenses)
+  // Push in dependency order to satisfy foreign key constraints
   const stores = [
     'people', 'categories', 'expenseCategories',
     'chores', 'completions', 'diary', 'events', 'pins',
     'expenses', 'groceryItems',
+    'recipes', 'recipeIngredients', 'mealPlan',  // Tier 2
   ];
   let pushed = 0, errors = 0;
   for (const store of stores) {
