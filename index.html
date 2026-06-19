@@ -1945,7 +1945,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.3</p>
+      <p class="sidebar-version">v7.10.4</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2725,7 +2725,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.3</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.4</span>
         </div>
       </div>
     </div>
@@ -4340,12 +4340,12 @@ async function renderSidebarPeople() {
       icon = avatarHtml(person, 18);
     }
     c.innerHTML = `${icon}<span class="person-chip-name">${person?.name||'Everyone'}</span>`;
-    c.onclick = () => {
-      S.person=id;
+    c.onclick = async () => {
+      S.person = id;
       c.classList.add('just-selected');
-      setTimeout(()=>c.classList.remove('just-selected'),300);
-      renderSidebarPeople();
-      render(S.view);
+      setTimeout(() => c.classList.remove('just-selected'), 300);
+      await renderSidebarPeople();
+      await render(S.view);
     };
     cont.appendChild(c);
   };
@@ -9082,7 +9082,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.3', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.4', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10757,7 +10757,12 @@ async function renderMobileMoreSheet() {
       c.className = 'more-sheet-chip' + (S.person===id?' active':'');
       const icon = person ? avatarHtml(person, 18) : `<div class="pdot" style="background:var(--text-3)"></div>`;
       c.innerHTML = `${icon}<span>${person?.name||'Everyone'}</span>`;
-      c.onclick = () => { S.person=id; c.classList.add('just-selected'); setTimeout(()=>c.classList.remove('just-selected'),300); renderSidebarPeople(); render(S.view); renderMobileMoreSheet(); };
+      c.onclick = async () => {
+        S.person = id;
+        closeMobileMore();
+        await renderSidebarPeople();
+        await render(S.view);
+      };
       chips.appendChild(c);
     };
     mkChip('all', null);
@@ -11231,7 +11236,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.3', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.4', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
