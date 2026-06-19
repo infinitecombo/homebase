@@ -775,6 +775,7 @@ textarea.diary-ta::placeholder{color:var(--text-3)}
   to   { opacity:1; transform:translateY(0); }
 }
 .view.active { animation: viewFadeIn 0.18s ease both; }
+.view.active.no-anim { animation: none; }
 
 /* 6. Progress bar glow at 100% */
 @keyframes goalGlow {
@@ -1967,7 +1968,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.8</p>
+      <p class="sidebar-version">v7.10.9</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2750,7 +2751,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.8</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.9</span>
         </div>
       </div>
     </div>
@@ -4329,6 +4330,16 @@ async function nav(view) {
     });
   }
 }
+// refresh() — re-renders the current view's data in place, no animation.
+// Used by sync engine so realtime/pull updates don't cause visual flashing.
+async function refresh(view) {
+  const el = g('view-' + view);
+  if (el) el.classList.add('no-anim');
+  await render(view);
+  // Remove no-anim after a tick so future real navigations still animate
+  if (el) requestAnimationFrame(() => el.classList.remove('no-anim'));
+}
+
 async function render(view) {
   if (view==='dashboard') await renderDash();
   else if (view==='week') { await renderWeek(); wireSwipeGestures(); }
@@ -9107,7 +9118,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.8', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.9', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11321,7 +11332,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.8', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.9', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11683,8 +11694,8 @@ async function cloudPullAll() {
     if (changed) {
       await renderSidebarPeople();
       const cur = document.querySelector('.view.active')?.id?.replace('view-','') || 'dashboard';
-      // Always re-nav to force a full re-render of the current view
-      await nav(cur);
+      // Re-render data in place — no animation flash
+      await refresh(cur);
     }
     return changed;
   } catch(e) {
@@ -11717,12 +11728,7 @@ async function handleRealtimeEvent(store, payload) {
   const views = STORE_VIEW_MAP[store] || [];
   const activeView = document.querySelector('.view.active')?.id?.replace('view-','');
   if (activeView && views.includes(activeView)) {
-    if (activeView === 'dashboard') {
-      const mod = document.querySelector('.view.active');
-      if (mod) await nav('dashboard');
-    } else {
-      await nav(activeView);
-    }
+    await refresh(activeView);
   }
   // Always refresh sidebar people counts
   await renderSidebarPeople();
