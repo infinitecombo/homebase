@@ -1968,7 +1968,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.9</p>
+      <p class="sidebar-version">v7.11.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2751,7 +2751,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.9</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.0</span>
         </div>
       </div>
     </div>
@@ -4330,14 +4330,47 @@ async function nav(view) {
     });
   }
 }
-// refresh() — re-renders the current view's data in place, no animation.
-// Used by sync engine so realtime/pull updates don't cause visual flashing.
+// ── Deferred background refresh ────────────
+// Sync writes land in IndexedDB silently. A debounced timer fires after
+// 600ms of no further changes, then re-renders only if the user isn't
+// actively interacting (no touch/click in the last 1s).
+let _refreshTimer = null;
+let _lastInteraction = 0;
+let _pendingRefreshView = null;
+
+// Call this from sync context instead of nav() or render()
+function scheduleRefresh(view) {
+  _pendingRefreshView = view || S.view;
+  clearTimeout(_refreshTimer);
+  _refreshTimer = setTimeout(async () => {
+    const idleSince = Date.now() - _lastInteraction;
+    if (idleSince < 800) {
+      // User is interacting — defer another 800ms
+      scheduleRefresh(_pendingRefreshView);
+      return;
+    }
+    const v = _pendingRefreshView;
+    _pendingRefreshView = null;
+    // Suppress animation, re-render, restore
+    const el = g('view-' + v);
+    if (el) el.classList.add('no-anim');
+    await renderSidebarPeople();
+    await render(v);
+    if (el) requestAnimationFrame(() => el.classList.remove('no-anim'));
+  }, 600);
+}
+
+// Track user interaction so we don't refresh mid-tap
+(function wireInteractionTracker() {
+  const mark = () => { _lastInteraction = Date.now(); };
+  document.addEventListener('touchstart', mark, { passive: true });
+  document.addEventListener('mousedown',  mark, { passive: true });
+  document.addEventListener('keydown',    mark, { passive: true });
+})();
+
+// refresh() kept for compatibility — now just schedules
 async function refresh(view) {
-  const el = g('view-' + view);
-  if (el) el.classList.add('no-anim');
-  await render(view);
-  // Remove no-anim after a tick so future real navigations still animate
-  if (el) requestAnimationFrame(() => el.classList.remove('no-anim'));
+  scheduleRefresh(view);
 }
 
 async function render(view) {
@@ -9118,7 +9151,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.9', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.11.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11332,7 +11365,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.9', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.11.0', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11692,10 +11725,9 @@ async function cloudPullAll() {
     }
     setSyncOffline(false);
     if (changed) {
-      await renderSidebarPeople();
       const cur = document.querySelector('.view.active')?.id?.replace('view-','') || 'dashboard';
-      // Re-render data in place — no animation flash
-      await refresh(cur);
+      // Schedule a background refresh — deferred until user is idle
+      scheduleRefresh(cur);
     }
     return changed;
   } catch(e) {
@@ -11728,10 +11760,11 @@ async function handleRealtimeEvent(store, payload) {
   const views = STORE_VIEW_MAP[store] || [];
   const activeView = document.querySelector('.view.active')?.id?.replace('view-','');
   if (activeView && views.includes(activeView)) {
-    await refresh(activeView);
+    scheduleRefresh(activeView);
+  } else {
+    // Store changed but view not active — schedule sidebar update only
+    scheduleRefresh(activeView || S.view);
   }
-  // Always refresh sidebar people counts
-  await renderSidebarPeople();
 }
 
 function cloudStartRealtime() {
