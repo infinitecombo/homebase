@@ -1945,7 +1945,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.2</p>
+      <p class="sidebar-version">v7.10.3</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2725,7 +2725,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.2</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.3</span>
         </div>
       </div>
     </div>
@@ -9082,7 +9082,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.2', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.3', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11231,7 +11231,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.2', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.3', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11568,14 +11568,16 @@ async function cloudPullAll() {
     }
     setSyncOffline(false);
     if (changed) {
-      // Re-render current view to show pulled data
       await renderSidebarPeople();
-      const cur = document.querySelector('.view.active')?.id?.replace('view-','');
-      if (cur) await nav(cur);
+      const cur = document.querySelector('.view.active')?.id?.replace('view-','') || 'dashboard';
+      // Always re-nav to force a full re-render of the current view
+      await nav(cur);
     }
+    return changed;
   } catch(e) {
     setSyncOffline(true);
     console.warn('Den: cloudPullAll failed:', e.message);
+    return false;
   }
 }
 
@@ -11954,8 +11956,18 @@ async function cloudLoadHousehold() {
     if (error) throw error;
     _cloudHH = data?.households || null;
     if (_cloudHH) {
+      // Check if local is empty (first time on this device)
+      const localPeople = await all('people');
+      const isFirstDevice = localPeople.length === 0;
       // Pull first (get latest cloud state), then push (flush any local-only changes)
       cloudPullAll()
+        .then(async () => {
+          if (isFirstDevice) {
+            // Fresh device — navigate to dashboard to show pulled data
+            await renderSidebarPeople();
+            await nav('dashboard');
+          }
+        })
         .then(() => cloudPushAll())
         .then(() => cloudStartRealtime())
         .catch(e => console.warn('Den: sync startup failed', e));
@@ -12039,12 +12051,20 @@ async function cloudJoinHousehold() {
     _cloudHH = hh;
     if (g('cloudJoinWrap')) g('cloudJoinWrap').style.display = 'none';
     cloudUpdateHouseholdUI();
-    showToast(`🏠 Joined "${hh.name}"`, 'var(--sage)');
-    cloudPullAll()
-      .then(() => cloudPushAll())
-      .then(r => { if (r && r.pushed > 0) showToast(`☁️ Synced ${r.pushed} records`, 'var(--sage)'); })
-      .then(() => cloudStartRealtime())
-      .catch(e => console.warn('Den: initial sync failed', e));
+    // Show syncing state in the join message
+    if (msgEl) { msgEl.textContent = '⏳ Downloading household data…'; msgEl.style.color = 'var(--gold)'; }
+    try {
+      await cloudPullAll();
+      await cloudPushAll();
+      await cloudStartRealtime();
+      // Navigate to dashboard so user lands on populated data
+      await renderSidebarPeople();
+      await nav('dashboard');
+      showToast(`🏠 Joined "${hh.name}" — household data loaded`, 'var(--sage)');
+    } catch(e) {
+      showToast(`🏠 Joined "${hh.name}" — sync failed, will retry on reload`, 'var(--gold)');
+      console.warn('Den: join sync failed', e);
+    }
   } catch (e) {
     if (msgEl) { msgEl.textContent = `✗ ${e.message}`; msgEl.style.color = 'var(--terra)'; }
   }
