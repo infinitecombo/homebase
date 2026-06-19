@@ -11523,38 +11523,15 @@ async function cloudCreateHousehold() {
   if (createBtn) { createBtn.disabled = true; createBtn.textContent = 'Creating…'; }
 
   try {
-    // Use a Supabase Edge Function isn't available yet, so we work around RLS
-    // by bypassing is_household_member() — the households table allows insert
-    // when owner_id = auth.uid() (set in the hh_insert policy).
-    // We must insert the household first (policy: owner_id = auth.uid()),
-    // then insert the member row (policy: is_household_member — now satisfied
-    // because the household exists and we query it by owner_id in the helper).
-    // To make is_household_member work for the member insert, we temporarily
-    // pass owner_id check: the member select checks household_id membership,
-    // but since we just created the HH we aren't a member yet.
-    // Solution: use a service-level insert for member via RPC, OR adjust the
-    // member insert to also allow the household owner.
-    // Simplest working approach: insert HH, then insert member using
-    // a raw upsert that Supabase allows when the user is the owner.
+    // Use a security definer RPC function to create the household + member row
+    // in one transaction, bypassing the RLS chicken-and-egg problem where
+    // auth.uid() may be null in the RLS check for direct inserts.
+    const { data, error } = await supa.rpc('create_household_for_user', {
+      household_name: 'My Household'
+    });
+    if (error) throw error;
 
-    // Step 1: create the household (hh_insert policy: owner_id = auth.uid())
-    const { data: hh, error: e1 } = await supa
-      .from('households')
-      .insert({ name: 'My Household', owner_id: _cloudUser.id })
-      .select()
-      .single();
-    if (e1) throw e1;
-
-    // Step 2: join as owner — the hm_rw policy calls is_household_member(household_id),
-    // but we aren't a member yet. Workaround: update the hm_rw policy to ALSO allow
-    // the household owner. Until that's deployed, we use upsert with a bypass approach:
-    // insert using the anon key still hits RLS. We need the policy updated in Supabase.
-    // For now, try the insert and surface a clear message if it fails.
-    const { error: e2 } = await supa
-      .from('household_members')
-      .insert({ household_id: hh.id, user_id: _cloudUser.id, role: 'owner' });
-    if (e2) throw e2;
-
+    const hh = data;
     _cloudHH = hh;
     cloudUpdateHouseholdUI();
     showToast(`🏠 Household created! Code: ${hh.join_code}`, 'var(--sage)');
