@@ -1945,7 +1945,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <div class="sidebar-head">
     <div class="logo">
       <h1>Den</h1>
-      <p class="sidebar-version">v7.10.4</p>
+      <p class="sidebar-version">v7.10.5</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2725,7 +2725,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.4</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.10.5</span>
         </div>
       </div>
     </div>
@@ -4764,7 +4764,7 @@ async function renderDash() {
           : (pin.content||'').slice(0,60)+(pin.content?.length>60?'…':'');
         const item=document.createElement('div'); item.className='dash-pin-item';
         item.style.cssText=`border-left-color:${pin.color}`;
-        item.innerHTML=`<span style="font-size:15px">${typeIco}</span><div style="flex:1;min-width:0"><div class="dash-pin-title">${pin.title||'Untitled'}</div>${preview?`<div class="dash-pin-preview">${preview}</div>`:''}</div>${pin.type==='reminder'?`<button class="pin-icon-btn" onclick="markPinDone(${pin.id})" title="Mark done" style="opacity:1">✓</button>`:''}`;
+        item.innerHTML=`<span style="font-size:15px">${typeIco}</span><div style="flex:1;min-width:0"><div class="dash-pin-title">${pin.title||'Untitled'}</div>${preview?`<div class="dash-pin-preview">${preview}</div>`:''}</div>${pin.type==='reminder'?`<button class="pin-icon-btn" onclick="markPinDone('${pin.id}')" title="Mark done" style="opacity:1">✓</button>`:''}`;
         item.onclick=(e)=>{ if(e.target.closest('.pin-icon-btn')) return; nav('pinboard'); };
         dp.appendChild(item);
       });
@@ -5007,7 +5007,7 @@ async function renderDash() {
       dm.innerHTML = sorted.map(m=>{
         const recipe = m.recipeId!=null ? mrById[m.recipeId] : null;
         const name = recipe ? recipe.name : (m.recipeId!=null ? '(deleted recipe)' : (m.text||'(meal)'));
-        const clickable = recipe ? `onclick="openRecipeView(${recipe.id})" style="cursor:pointer"` : '';
+        const clickable = recipe ? `onclick="openRecipeView('${recipe.id}')" style="cursor:pointer"` : '';
         return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-soft)" ${clickable}>
           <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-3);font-weight:600;width:64px;flex-shrink:0">${slotLabel[m.slot]||m.slot}</span>
           <div style="flex:1;min-width:0;font-size:13.5px;font-weight:500;border-left:3px solid ${recipe?'var(--sage)':'var(--text-3)'};padding-left:8px">${name}${recipe&&recipe.favorite?' <span style="color:#ffcf40">★</span>':''}</div>
@@ -5404,7 +5404,7 @@ async function renderCalDetail(ds) {
       row.style.cssText=`background:${e.color}12;border-left-color:${e.color}`;
       const isRecurring = e.recurrence && e.recurrence!=='none';
       const isSkipped = (e.exceptions||[]).some(ex=>ex.date===ds&&!ex.movedTo);
-      row.innerHTML=`<span style="font-size:18px">${e.icon||'📅'}</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:${e.color}">${e.title}${isSkipped?' <span style="color:var(--text-3);font-size:11px">(skipped)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${e.type}${e.time?' · '+fmtTime(e.time):''}${e.endTime?' – '+fmtTime(e.endTime):''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${e.notes}</div>`:''}</div><div style="display:flex;gap:4px;flex-shrink:0">${isRecurring&&!isSkipped?`<button class="evt-skip-btn" onclick="openSkipModal(${e.id},'${ds}')">Skip/Move</button>`:''}${isSkipped?`<button class="evt-skip-btn" style="border-color:var(--sage);color:var(--sage)" onclick="unskipOccurrence(${e.id},'${ds}')">Restore</button>`:''}<button class="act-btn" onclick="openEventModal(${e.id})" style="font-size:11px;padding:3px 8px">Edit</button></div>`;
+      row.innerHTML=`<span style="font-size:18px">${e.icon||'📅'}</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:${e.color}">${e.title}${isSkipped?' <span style="color:var(--text-3);font-size:11px">(skipped)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${e.type}${e.time?' · '+fmtTime(e.time):''}${e.endTime?' – '+fmtTime(e.endTime):''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${e.notes}</div>`:''}</div><div style="display:flex;gap:4px;flex-shrink:0">${isRecurring&&!isSkipped?`<button class="evt-skip-btn" onclick="openSkipModal(${e.id},'${ds}')">Skip/Move</button>`:''}${isSkipped?`<button class="evt-skip-btn" style="border-color:var(--sage);color:var(--sage)" onclick="unskipOccurrence(${e.id},'${ds}')">Restore</button>`:''}<button class="act-btn" onclick="openEventModal('${e.id}')" style="font-size:11px;padding:3px 8px">Edit</button></div>`;
       sec.appendChild(row);
     });
     wrap.appendChild(sec);
@@ -5556,7 +5556,7 @@ async function renderRewardLibrary() {
       <span class="rwd-tier-badge" style="background:${tierBg[r.type]||'var(--surface-3)'};color:${tierColors[r.type]||'var(--text-3)'}">${tierLabels[r.type]||r.type}</span>
       <div class="rwd-card-v2-name">${r.name}</div>
       ${metaPts?`<div class="rwd-card-v2-pts">${metaPts}</div>`:''}
-      <div class="item-actions"><button class="act-btn" onclick="openRewardModal(${r.id})">Edit</button><button class="act-btn del" onclick="deleteReward(${r.id})">Del</button></div>`;
+      <div class="item-actions"><button class="act-btn" onclick="openRewardModal('${r.id}')">Edit</button><button class="act-btn del" onclick="deleteReward('${r.id}')">Del</button></div>`;
     return card;
   };
   const makeSection = (ico, title, color, items) => {
@@ -5613,7 +5613,7 @@ async function renderCreditsView() {
   if(!megaRewards.length){ ml.innerHTML='<div class="empty"><div class="ico">🌟</div><p>No credit rewards yet. Add one with the button above!</p></div>'; return; }
   megaRewards.forEach(r=>{
     const card=document.createElement('div'); card.className='reward-card'; card.style.borderLeftColor=r.color;
-    card.innerHTML=`<div class="reward-icon">${r.icon||'🌟'}</div><div class="reward-body"><div class="reward-name">${r.name}</div><div class="reward-meta"><span class="reward-type-badge mega">🌟 Credit Reward</span><span class="credit-cost-badge">💰 ${r.creditCost||1} credit${(r.creditCost||1)!==1?'s':''}</span></div></div><div class="item-actions"><button class="act-btn" onclick="openRewardModal(${r.id})">Edit</button><button class="act-btn del" onclick="deleteReward(${r.id})">Delete</button></div>`;
+    card.innerHTML=`<div class="reward-icon">${r.icon||'🌟'}</div><div class="reward-body"><div class="reward-name">${r.name}</div><div class="reward-meta"><span class="reward-type-badge mega">🌟 Credit Reward</span><span class="credit-cost-badge">💰 ${r.creditCost||1} credit${(r.creditCost||1)!==1?'s':''}</span></div></div><div class="item-actions"><button class="act-btn" onclick="openRewardModal('${r.id}')">Edit</button><button class="act-btn del" onclick="deleteReward('${r.id}')">Delete</button></div>`;
     ml.appendChild(card);
   });
 }
@@ -5665,7 +5665,7 @@ async function renderEarnedRewards() {
       entries.sort((a,b)=>(b.claimedDate||'').localeCompare(a.claimedDate||'')).forEach(e=>{
         const r=rewards.find(rr=>rr.id===e.rewardId); if(!r) return;
         const card=document.createElement('div'); card.className='earned-card'+(e.used?' used':'');
-        card.innerHTML=`<div class="earned-icon">${r.icon||'🏆'}</div><div class="earned-body"><div class="earned-name">${r.name}</div><div class="earned-meta">${e.claimedDate?'Claimed '+e.claimedDate:''}${e.used?' · Used '+e.usedDate:' · Available'}</div></div><div class="used-toggle${e.used?' done':''}" onclick="toggleEarnedUsed(${e.id})">${e.used?'✓':''}</div>`;
+        card.innerHTML=`<div class="earned-icon">${r.icon||'🏆'}</div><div class="earned-body"><div class="earned-name">${r.name}</div><div class="earned-meta">${e.claimedDate?'Claimed '+e.claimedDate:''}${e.used?' · Used '+e.usedDate:' · Available'}</div></div><div class="used-toggle${e.used?' done':''}" onclick="toggleEarnedUsed('${e.id}')">${e.used?'✓':''}</div>`;
         gbody.appendChild(card);
       });
       grp.appendChild(gbody);
@@ -6070,7 +6070,7 @@ async function renderStats() {
       const pBestWk=Object.entries(pWeekMap).sort((a,b)=>b[1]-a[1])[0];
 
       const card=document.createElement('div'); card.className='person-stat-card';
-      card.innerHTML=`<div class="person-stat-head">${avatarHtml(p,44)}<div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:17px">${p.name}</div><div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${p.weekGoal?'Goal: '+p.weekGoal+' pts/wk':'No weekly goal'}</div></div><button class="act-btn" onclick="openPersonDetail(${p.id})" style="font-size:12px">View Detail →</button></div>
+      card.innerHTML=`<div class="person-stat-head">${avatarHtml(p,44)}<div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:17px">${p.name}</div><div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${p.weekGoal?'Goal: '+p.weekGoal+' pts/wk':'No weekly goal'}</div></div><button class="act-btn" onclick="openPersonDetail('${p.id}')" style="font-size:12px">View Detail →</button></div>
       <div class="person-stat-grid">
         <div class="person-mini-stat"><div class="person-mini-num">${pPts.toLocaleString()}</div><div class="person-mini-label">Total Pts</div></div>
         <div class="person-mini-stat"><div class="person-mini-num">${pTasks}</div><div class="person-mini-label">Tasks${pBonus?`<br><span style="font-size:9px">+${pBonus} bonus</span>`:''}</div></div>
@@ -6554,8 +6554,8 @@ async function renderPauseList() {
         <div class="pause-period-who">👥 ${who}${p.note?' · '+p.note:''}</div>
       </div>
       <div class="item-actions">
-        <button class="act-btn" onclick="openPauseModal(${p.id})">Edit</button>
-        <button class="act-btn del" onclick="deletePause(${p.id})">Delete</button>
+        <button class="act-btn" onclick="openPauseModal('${p.id}')">Edit</button>
+        <button class="act-btn del" onclick="deletePause('${p.id}')">Delete</button>
       </div>`;
     cont.appendChild(card);
   });
@@ -6641,7 +6641,7 @@ async function renderEvents() {
       const item=document.createElement('div'); item.className='evt-item';
       item.style.borderLeftColor=e.color;
       const recurLabel = {weekly:'↻ Weekly',monthly:'↻ Monthly',yearly:'↻ Yearly'}[e.recurrence]||'';
-      item.innerHTML=`<div class="evt-icon">${e.icon||'📅'}</div><div class="evt-body"><div class="evt-title">${e.title}</div><div class="evt-meta"><span class="evt-type ${e.type}">${e.type}</span><span class="evt-date">${e.date}${e.endDate&&e.endDate!==e.date?' → '+e.endDate:''}${e.time?' · '+fmtTime(e.time):''}</span>${recurLabel?`<span class="tag recur">${recurLabel}</span>`:''} ${person?`<span class="evt-person" style="color:${person.color}">👤 ${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:12px;color:var(--text-3);margin-top:4px">${e.notes}</div>`:''}</div><div class="item-actions"><button class="act-btn" onclick="openEventModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteEvent(${e.id})">Delete</button></div>`;
+      item.innerHTML=`<div class="evt-icon">${e.icon||'📅'}</div><div class="evt-body"><div class="evt-title">${e.title}</div><div class="evt-meta"><span class="evt-type ${e.type}">${e.type}</span><span class="evt-date">${e.date}${e.endDate&&e.endDate!==e.date?' → '+e.endDate:''}${e.time?' · '+fmtTime(e.time):''}</span>${recurLabel?`<span class="tag recur">${recurLabel}</span>`:''} ${person?`<span class="evt-person" style="color:${person.color}">👤 ${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:12px;color:var(--text-3);margin-top:4px">${e.notes}</div>`:''}</div><div class="item-actions"><button class="act-btn" onclick="openEventModal('${e.id}')">Edit</button><button class="act-btn del" onclick="deleteEvent('${e.id}')">Delete</button></div>`;
       cont.appendChild(item);
     });
   };
@@ -6821,7 +6821,7 @@ async function renderTasks() {
         <button class="task-reorder-btn" onclick="moveTaskOrder(${c.id},1,${c.categoryId||'null'})" ${idx===tasks.length-1?'disabled':''} title="Move down">▼</button>
       </div>`:'';
 
-      item.innerHTML=`${dragHandle}<div class="task-item-color" style="background:${color2}"></div><div class="task-item-body"><div class="task-item-top"><span class="task-item-name">${c.name}</span><span class="pts-badge">${pts(c.points)}</span>${c.isRecurring?'<span class="tag rec">↻ Recurring</span>':'<span class="tag" style="background:rgba(90,142,212,0.12);color:#5a8ed4">📅 One-time</span>'}</div>${c.description?`<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">${c.description}</div>`:''}<div class="task-item-meta">${c.isRecurring?`<div class="day-tags">${DAYS.map((d,i)=>`<span class="day-tag${c.days&&c.days.includes(i)?' on':''}">${d[0]}</span>`).join('')}</div>${c.startDate||c.endDate?`<span style="font-size:11px;color:var(--text-3)">${c.startDate||''}${c.startDate&&c.endDate?' – ':''}${c.endDate||''}</span>`:''}${c.recurEnd?`<span style="font-size:11px;color:var(--terra)">ends ${c.recurEnd}</span>`:''}`:c.date?`<span style="font-size:11px;color:var(--text-3)">${c.date}</span>`:''}${assigned.length?`<span style="font-size:11px;color:var(--text-3)">→ ${assigned.join(', ')}</span>`:''}</div></div><div class="item-actions">${reorderBtns}<button class="act-btn" onclick="openTaskModal(${c.id})">Edit</button><button class="act-btn" onclick="duplicateTask(${c.id})" title="Duplicate task">Copy</button><button class="act-btn del" onclick="deleteTask(${c.id})">Delete</button></div>`;
+      item.innerHTML=`${dragHandle}<div class="task-item-color" style="background:${color2}"></div><div class="task-item-body"><div class="task-item-top"><span class="task-item-name">${c.name}</span><span class="pts-badge">${pts(c.points)}</span>${c.isRecurring?'<span class="tag rec">↻ Recurring</span>':'<span class="tag" style="background:rgba(90,142,212,0.12);color:#5a8ed4">📅 One-time</span>'}</div>${c.description?`<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">${c.description}</div>`:''}<div class="task-item-meta">${c.isRecurring?`<div class="day-tags">${DAYS.map((d,i)=>`<span class="day-tag${c.days&&c.days.includes(i)?' on':''}">${d[0]}</span>`).join('')}</div>${c.startDate||c.endDate?`<span style="font-size:11px;color:var(--text-3)">${c.startDate||''}${c.startDate&&c.endDate?' – ':''}${c.endDate||''}</span>`:''}${c.recurEnd?`<span style="font-size:11px;color:var(--terra)">ends ${c.recurEnd}</span>`:''}`:c.date?`<span style="font-size:11px;color:var(--text-3)">${c.date}</span>`:''}${assigned.length?`<span style="font-size:11px;color:var(--text-3)">→ ${assigned.join(', ')}</span>`:''}</div></div><div class="item-actions">${reorderBtns}<button class="act-btn" onclick="openTaskModal('${c.id}')">Edit</button><button class="act-btn" onclick="duplicateTask('${c.id}')" title="Duplicate task">Copy</button><button class="act-btn del" onclick="deleteTask('${c.id}')">Delete</button></div>`;
 
       if(manualOrder){
         item.addEventListener('dragstart',e=>{ dragSrc=item; item.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
@@ -6888,8 +6888,8 @@ async function renderCategories() {
       ${cat.isBonus?'<span class="bonus-cat-chip">bonus</span>':''}
       <span class="cat-count">${taskCount} task${taskCount!==1?'s':''}</span>
       <div class="item-actions">
-        <button class="act-btn" onclick="openCatModal(${cat.id})">Edit</button>
-        <button class="act-btn del" onclick="deleteCategory(${cat.id})">Delete</button>
+        <button class="act-btn" onclick="openCatModal('${cat.id}')">Edit</button>
+        <button class="act-btn del" onclick="deleteCategory('${cat.id}')">Delete</button>
       </div>`;
 
     // Drag events
@@ -7017,7 +7017,7 @@ async function renderPeople() {
           <div class="person-body-meta" style="margin-top:4px">${p.weekGoal?`Goal: <strong>${p.weekGoal} pts</strong> · `:''}This week: <strong style="color:var(--gold)">${wkPts} pts</strong>${p.weekGoal&&wkPts>=p.weekGoal?' 🎉':''}</div>
           ${p.weekGoal?`<div class="prog-bg" style="margin-top:8px"><div class="prog-fill" style="width:${pct}%;background:${p.color}"></div></div>`:''}
         </div>
-        <div style="display:flex;gap:5px;flex-shrink:0"><button class="act-btn" onclick="openPersonDetail(${p.id})">View</button><button class="act-btn" onclick="openPersonModal(${p.id})">Edit</button><button class="act-btn del" onclick="deletePerson(${p.id})">Delete</button></div>
+        <div style="display:flex;gap:5px;flex-shrink:0"><button class="act-btn" onclick="openPersonDetail('${p.id}')">View</button><button class="act-btn" onclick="openPersonModal('${p.id}')">Edit</button><button class="act-btn del" onclick="deletePerson('${p.id}')">Delete</button></div>
       </div>
       ${taskStreakHtml}`;
     cont.appendChild(card);
@@ -7082,7 +7082,7 @@ async function renderPersonDetail() {
         <div class="pdet-name">${person.name}</div>
         <div class="pdet-goal-label">${person.weekGoal?`Weekly goal: ${person.weekGoal} pts`:'No goal set'}${person.dayGoal?` · Daily: ${person.dayGoal} pts`:''}</div>
       </div>
-      <button class="btn btn-ghost" onclick="openPersonModal(${person.id})" style="flex-shrink:0">✏️ Edit</button>
+      <button class="btn btn-ghost" onclick="openPersonModal('${person.id}')" style="flex-shrink:0">✏️ Edit</button>
     </div>`;
   cont.appendChild(header);
 
@@ -7900,8 +7900,8 @@ async function renderPinboard() {
         bodyHtml+=`<div class="pin-list-complete-bar">
           <span class="pin-list-count${allDone?' complete':''}">${countText}</span>
           <div class="pin-list-actions">
-            ${doneItems.length>0?`<button class="pin-list-act-btn" onclick="clearCheckedPinItems(${pin.id})" title="Remove checked items">Clear checked</button>`:''}
-            ${doneItems.length>0?`<button class="pin-list-act-btn" onclick="resetPinList(${pin.id})" title="Uncheck all for next use">↺ Reset</button>`:''}
+            ${doneItems.length>0?`<button class="pin-list-act-btn" onclick="clearCheckedPinItems('${pin.id}')" title="Remove checked items">Clear checked</button>`:''}
+            ${doneItems.length>0?`<button class="pin-list-act-btn" onclick="resetPinList('${pin.id}')" title="Uncheck all for next use">↺ Reset</button>`:''}
           </div>
         </div>`;
       }
@@ -7918,9 +7918,9 @@ async function renderPinboard() {
         <span style="font-size:14px;margin-top:1px">${typeIco}</span>
         <span class="pin-card-title">${pin.title||'Untitled'}</span>
         <div class="pin-card-actions">
-          <button class="pin-icon-btn${pin.pinned?' pinned':''}" onclick="togglePinned(${pin.id})" title="${pin.pinned?'Unpin':'Pin to dashboard'}">📌</button>
-          <button class="pin-icon-btn" onclick="openPinModal(${pin.id})" title="Edit">✏️</button>
-          <button class="pin-icon-btn" onclick="deletePin(${pin.id})" title="Delete" style="color:var(--text-3)">🗑</button>
+          <button class="pin-icon-btn${pin.pinned?' pinned':''}" onclick="togglePinned('${pin.id}')" title="${pin.pinned?'Unpin':'Pin to dashboard'}">📌</button>
+          <button class="pin-icon-btn" onclick="openPinModal('${pin.id}')" title="Edit">✏️</button>
+          <button class="pin-icon-btn" onclick="deletePin('${pin.id}')" title="Delete" style="color:var(--text-3)">🗑</button>
         </div>
       </div>
       <span class="pin-type-badge ${pin.type}" style="${typeBadgeStyle}">${typeIco} ${typeLabel}${pin.type==='list'&&totalCount?` · ${doneCount}/${totalCount}`:''}</span>
@@ -7928,7 +7928,7 @@ async function renderPinboard() {
       <div class="pin-meta">
         ${person?`<div class="pdot" style="background:${person.color}"></div><span style="font-size:11px;color:${person.color}">${person.name}</span>`:''}
         <span class="pin-date">${pin.createdAt?pin.createdAt.slice(0,10):''}</span>
-        ${pin.type==='reminder'&&!pin.done?`<button class="act-btn" onclick="markPinDone(${pin.id})" style="margin-left:auto;font-size:11px;padding:3px 9px">✓ Done</button>`:''}
+        ${pin.type==='reminder'&&!pin.done?`<button class="act-btn" onclick="markPinDone('${pin.id}')" style="margin-left:auto;font-size:11px;padding:3px 9px">✓ Done</button>`:''}
         ${pin.done?`<span style="font-size:11px;color:var(--sage);margin-left:auto">✓ Done</span>`:''}
       </div>`;
     grid.appendChild(card);
@@ -9082,7 +9082,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.10.4', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.10.5', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10086,7 +10086,7 @@ function renderExpEntries(monthExp, cats, people) {
       const cat=cats.find(c=>c.id===e.categoryId);
       const person=e.personId?people.find(p=>p.id===e.personId):null;
       const item=document.createElement('div'); item.className='exp-entry-item';
-      item.innerHTML=`<div class="exp-entry-ico" style="background:${cat?.color||'var(--surface-3)'}22">${cat?.icon||'💰'}</div><div class="exp-entry-body"><div class="exp-entry-desc">${e.description||'(no description)'}</div><div class="exp-entry-meta">${cat?cat.name:'Uncategorized'}${person?' · '+person.name:''}</div></div><div class="exp-entry-amount ${e.isIncome?'income':'expense'}">${e.isIncome?'+':'-'}${fmt$(e.amount)}</div><div class="item-actions"><button class="act-btn" onclick="openExpenseModal(${e.id})">Edit</button><button class="act-btn del" onclick="deleteExpense(${e.id})">Del</button></div>`;
+      item.innerHTML=`<div class="exp-entry-ico" style="background:${cat?.color||'var(--surface-3)'}22">${cat?.icon||'💰'}</div><div class="exp-entry-body"><div class="exp-entry-desc">${e.description||'(no description)'}</div><div class="exp-entry-meta">${cat?cat.name:'Uncategorized'}${person?' · '+person.name:''}</div></div><div class="exp-entry-amount ${e.isIncome?'income':'expense'}">${e.isIncome?'+':'-'}${fmt$(e.amount)}</div><div class="item-actions"><button class="act-btn" onclick="openExpenseModal('${e.id}')">Edit</button><button class="act-btn del" onclick="deleteExpense('${e.id}')">Del</button></div>`;
       list.appendChild(item);
     });
   });
@@ -10118,7 +10118,7 @@ async function renderExpBudgets(cats, monthExp) {
       else pacingHtml=`<span style="font-size:10px;color:var(--text-3);margin-left:6px">On pace</span>`;
     }
     const item=document.createElement('div'); item.className='exp-cat-item';
-    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${c.color}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${c.icon}</div><div class="exp-cat-body"><div style="display:flex;align-items:center;gap:8px"><span class="exp-cat-name">${c.name}</span>${c.isIncome?'<span style="font-size:10px;background:rgba(106,171,130,0.2);color:var(--sage);padding:1px 6px;border-radius:8px">Income</span>':''}</div>${c.budget?`<div class="exp-cat-budget-bar"><div class="exp-cat-budget-fill" style="width:${pct}%;background:${over?'var(--terra)':c.color}"></div></div><div class="exp-cat-budget-label">${fmt$(spent)} of ${fmt$(c.budget)} budget${over?' <span style="color:var(--terra)">⚠ Over budget</span>':''}${pacingHtml}</div>`:`<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${fmt$(spent)} spent · No budget set</div>`}</div><div class="item-actions"><button class="act-btn" onclick="openExpCatModal(${c.id})">Edit</button><button class="act-btn del" onclick="deleteExpCat(${c.id})">Del</button></div>`;
+    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${c.color}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${c.icon}</div><div class="exp-cat-body"><div style="display:flex;align-items:center;gap:8px"><span class="exp-cat-name">${c.name}</span>${c.isIncome?'<span style="font-size:10px;background:rgba(106,171,130,0.2);color:var(--sage);padding:1px 6px;border-radius:8px">Income</span>':''}</div>${c.budget?`<div class="exp-cat-budget-bar"><div class="exp-cat-budget-fill" style="width:${pct}%;background:${over?'var(--terra)':c.color}"></div></div><div class="exp-cat-budget-label">${fmt$(spent)} of ${fmt$(c.budget)} budget${over?' <span style="color:var(--terra)">⚠ Over budget</span>':''}${pacingHtml}</div>`:`<div style="font-size:11.5px;color:var(--text-3);margin-top:2px">${fmt$(spent)} spent · No budget set</div>`}</div><div class="item-actions"><button class="act-btn" onclick="openExpCatModal('${c.id}')">Edit</button><button class="act-btn del" onclick="deleteExpCat('${c.id}')">Del</button></div>`;
     list.appendChild(item);
   });
 }
@@ -10133,7 +10133,7 @@ async function renderExpTemplates(cats, people) {
     const next=nextDueDate(t, t.startDate);
     const todayS=fmtDate(new Date()), dueSoon=next<=fmtDate(new Date(new Date().setDate(new Date().getDate()+7)));
     const item=document.createElement('div'); item.className='exp-tpl-item';
-    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${cat?.color||'var(--surface-3)'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cat?.icon||'🔄'}</div><div class="exp-tpl-body"><div class="exp-tpl-name">${t.name}${dueSoon?` <span style="font-size:10px;background:rgba(224,196,106,0.2);color:var(--gold);padding:1px 6px;border-radius:8px;font-weight:600">Due soon</span>`:''}</div><div class="exp-tpl-meta">${t.recurrence.charAt(0).toUpperCase()+t.recurrence.slice(1)} · ${fmt$(t.amount)}${person?' · '+person.name:''}${cat?' · '+cat.name:''}</div><div class="exp-tpl-next">Next due: ${next}</div></div><div class="item-actions"><button class="act-btn" style="background:var(--gold);color:#13111a;border-color:var(--gold)" onclick="logExpenseFromTemplate(${t.id})">Log</button><button class="act-btn" onclick="openExpTemplateModal(${t.id})">Edit</button><button class="act-btn del" onclick="deleteExpTemplate(${t.id})">Del</button></div>`;
+    item.innerHTML=`<div style="width:36px;height:36px;border-radius:50%;background:${cat?.color||'var(--surface-3)'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cat?.icon||'🔄'}</div><div class="exp-tpl-body"><div class="exp-tpl-name">${t.name}${dueSoon?` <span style="font-size:10px;background:rgba(224,196,106,0.2);color:var(--gold);padding:1px 6px;border-radius:8px;font-weight:600">Due soon</span>`:''}</div><div class="exp-tpl-meta">${t.recurrence.charAt(0).toUpperCase()+t.recurrence.slice(1)} · ${fmt$(t.amount)}${person?' · '+person.name:''}${cat?' · '+cat.name:''}</div><div class="exp-tpl-next">Next due: ${next}</div></div><div class="item-actions"><button class="act-btn" style="background:var(--gold);color:#13111a;border-color:var(--gold)" onclick="logExpenseFromTemplate('${t.id}')">Log</button><button class="act-btn" onclick="openExpTemplateModal('${t.id}')">Edit</button><button class="act-btn del" onclick="deleteExpTemplate('${t.id}')">Del</button></div>`;
     list.appendChild(item);
   });
 }
@@ -11236,7 +11236,7 @@ async function gistCollectData() {
   const diaryStripped = diary.map(e => e.photo ? {...e, photo:null, _photoStripped:true} : e);
   const peopleStripped = people.map(p => p.photo ? {...p, photo:null, _photoStripped:true} : p);
 
-  return { _meta:{ app:'HomeBase', version:'7.10.4', syncedAt:new Date().toISOString(),
+  return { _meta:{ app:'HomeBase', version:'7.10.5', syncedAt:new Date().toISOString(),
     photosStripped: diaryStripped.some(e=>e._photoStripped)||peopleStripped.some(p=>p._photoStripped) },
     chores, people:peopleStripped, completions, diary:diaryStripped,
     categories, events, rewards, earnedRewards, pins, pauses,
@@ -11505,7 +11505,8 @@ function fromSupabaseRow(store, row) {
   const rev = buildReverseMap(store);
   const obj = {};
   for (const [key, val] of Object.entries(row)) {
-    if (key === 'household_id' || key === 'updated_at') continue; // local doesn't need these
+    if (key === 'household_id') continue;
+    if (key === 'updated_at') { obj.updatedAt = val; continue; } // preserve as updatedAt for merge
     const localKey = rev[key] || key;
     obj[localKey] = val;
   }
@@ -11569,6 +11570,18 @@ async function cloudPullAll() {
       for (const row of (data || [])) {
         const didChange = await mergeRecord(store, row);
         if (didChange) changed = true;
+      }
+      // Sweep out any leftover integer-ID records (pre-migration duplicates)
+      // These exist when migration was skipped but cloud pull wrote UUID versions
+      const allLocal = await all(store);
+      for (const rec of allLocal) {
+        if (rec.id && typeof rec.id === 'number') {
+          await new Promise((res, rej) => {
+            const q = tx(store, 'readwrite').objectStore(store).delete(rec.id);
+            q.onsuccess = res; q.onerror = rej;
+          });
+          changed = true;
+        }
       }
     }
     setSyncOffline(false);
