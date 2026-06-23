@@ -2006,7 +2006,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.11.0</p>
+      <p class="sidebar-version">v7.13.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2802,7 +2802,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.13.0</span>
         </div>
       </div>
     </div>
@@ -3539,6 +3539,14 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <label class="fl" style="margin-bottom:8px;display:block">Pick a Task</label>
       <div id="bonusTaskList"></div>
     </div>
+    <div id="bonusQtyRow" style="display:none;align-items:center;justify-content:center;gap:14px;padding:10px 0 4px">
+      <span style="font-size:13px;color:var(--text-2)">Completions:</span>
+      <div class="comp-stepper" style="border-radius:100px">
+        <button id="bonusQtyMinus" style="width:32px;height:32px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text-2)">−</button>
+        <span id="bonusQtyVal" style="min-width:24px;text-align:center;font-size:15px;font-weight:600;color:var(--gold)">1</span>
+        <button id="bonusQtyPlus" style="width:32px;height:32px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text-2)">+</button>
+      </div>
+    </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" id="bonusCancelBtn">Cancel</button>
       <button class="btn btn-primary" id="bonusLogBtn" style="display:none">Log Task</button>
@@ -4095,7 +4103,17 @@ function openDB() {
   });
 }
 const tx  = (stores, mode='readonly') => DB.transaction(stores, mode);
-const all = store => new Promise((r,j) => { const q=tx(store).objectStore(store).getAll(); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
+const all = store => new Promise((r,j) => {
+  const q=tx(store).objectStore(store).getAll();
+  q.onsuccess=()=>{
+    // Filter out soft-deleted records for synced stores
+    const results = SYNC_STORES && SYNC_STORES[store]
+      ? q.result.filter(rec => !rec.deleted)
+      : q.result;
+    r(results);
+  };
+  q.onerror=()=>j(q.error);
+});
 const get = (store,id) => new Promise((r,j) => { const q=tx(store).objectStore(store).get(id); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
 const put = (store,obj) => {
   // Auto-assign UUID for new records (no id set, or id is falsy)
@@ -4113,14 +4131,25 @@ const put = (store,obj) => {
     q.onerror=()=>j(q.error);
   });
 };
-const del = (store,id) => new Promise((r,j) => {
-  const q=tx(store,'readwrite').objectStore(store).delete(id);
-  q.onsuccess=()=>{
-    cloudDelete(store, id).catch(e=>console.warn('Den sync delete failed:',store,e.message));
-    r();
-  };
-  q.onerror=()=>j(q.error);
-});
+const del = async (store, id) => {
+  if (SYNC_STORES[store]) {
+    // Soft-delete: mark deleted locally + push to cloud via put()
+    // This ensures the deleted flag syncs to other devices via the normal push path
+    const existing = await get(store, id);
+    if (existing) {
+      await put(store, { ...existing, deleted: true });
+      return;
+    }
+    // Record not found locally — still tell cloud to delete
+    cloudDelete(store, id).catch(e => console.warn('Den sync delete failed:', store, e.message));
+  } else {
+    // Non-synced store — hard delete as before
+    await new Promise((r, j) => {
+      const q = tx(store, 'readwrite').objectStore(store).delete(id);
+      q.onsuccess = r; q.onerror = () => j(q.error);
+    });
+  }
+};
 const byIdx = (store,idx,val) => new Promise((r,j) => { const q=tx(store).objectStore(store).index(idx).getAll(val); q.onsuccess=()=>r(q.result); q.onerror=()=>j(q.error); });
 
 // ═══════════════════════════════════════════
@@ -4141,7 +4170,7 @@ const S = {
   // category modal
   editCategoryId: null, catColor: '#e07070', catBonus: false,
   // bonus task modal
-  bonusSelCatId: null, bonusSelTaskId: null,
+  bonusSelCatId: null, bonusSelTaskId: null, bonusQty: 1,
   // dashboard week summary offset (0 = last week, 1 = 2 weeks ago, etc.)
   sumWkOffset: 0,
   // household settings
@@ -5249,21 +5278,73 @@ async function renderDash() {
     } else {
       const checked=gItems.filter(i=>i.checked).length;
       const pct=Math.round(checked/gItems.length*100);
-      const unchecked=gItems.filter(i=>!i.checked);
-      let html=`<div class="grocery-prog" style="margin-bottom:10px"><span>${checked}/${gItems.length}</span><div class="grocery-prog-bar"><div class="grocery-prog-fill" style="width:${pct}%"></div></div><span>${pct}%</span></div>`;
-      if(!unchecked.length){
-        html+='<div style="text-align:center;padding:8px;color:var(--sage);font-size:13px;font-weight:500">✓ All items checked off!</div>';
+      dg.innerHTML='';
+
+      // Progress bar
+      const progEl=document.createElement('div');
+      progEl.innerHTML=`<div class="grocery-prog" style="margin-bottom:10px"><span>${checked}/${gItems.length}</span><div class="grocery-prog-bar"><div class="grocery-prog-fill" style="width:${pct}%"></div></div><span>${pct}%</span></div>`;
+      dg.appendChild(progEl);
+
+      if(checked===gItems.length){
+        const done=document.createElement('div');
+        done.style.cssText='text-align:center;padding:8px;color:var(--sage);font-size:13px;font-weight:500';
+        done.textContent='✓ All items checked off!';
+        dg.appendChild(done);
       } else {
-        html+=unchecked.slice(0,8).map(it=>`<div class="dash-grocery-row" data-id="${it.id}" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-soft);cursor:pointer">
-          <div class="gi-check" style="width:20px;height:20px;border-radius:5px;border:2px solid var(--border);flex-shrink:0"></div>
-          <span style="flex:1;font-size:13px">${it.qty?`<span style="color:var(--gold);font-weight:600;margin-right:5px">${it.qty}</span>`:''}${it.name}</span>
-        </div>`).join('');
-        if(unchecked.length>8) html+=`<div style="font-size:11px;color:var(--text-3);text-align:center;padding-top:8px">+${unchecked.length-8} more</div>`;
+        // Group unchecked by category, show max 3 cats with up to 3 items each
+        const cats = await getGlibCats();
+        const catMap = {}; cats.forEach(c=>{catMap[c.id]=c;});
+        const unchecked = gItems.filter(i=>!i.checked);
+        const groups = {};
+        cats.forEach(c=>{groups[c.id]=[];});
+        groups['__none__']=[];
+        unchecked.forEach(it=>{
+          const key=it.categoryId&&groups[it.categoryId]?it.categoryId:'__none__';
+          groups[key].push(it);
+        });
+        const catOrder=[...cats,{id:'__none__',name:'Other',color:'#999',icon:'📦'}];
+        let shownCats=0, totalShown=0;
+        for(const cat of catOrder){
+          const group=groups[cat.id]||[];
+          if(!group.length) continue;
+          if(shownCats>=4) break;
+          const catWrap=document.createElement('div');
+          catWrap.style.cssText='margin-bottom:8px';
+          // Mini category header
+          const catHdr=document.createElement('div');
+          catHdr.style.cssText=`display:flex;align-items:center;gap:5px;margin-bottom:4px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${cat.color}`;
+          catHdr.innerHTML=`<span style="width:7px;height:7px;border-radius:50%;background:${cat.color};flex-shrink:0;display:inline-block"></span>${cat.icon||''} ${cat.name} <span style="opacity:0.6;font-weight:400;margin-left:2px">(${group.length})</span>`;
+          catWrap.appendChild(catHdr);
+          // Up to 3 items per category on dashboard
+          group.slice(0,3).forEach(it=>{
+            const row=document.createElement('div');
+            row.className='dash-grocery-row';
+            row.dataset.id=it.id;
+            row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border-soft);cursor:pointer';
+            row.innerHTML=`<div class="gi-check" style="width:18px;height:18px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div>
+              <span style="flex:1;font-size:13px">${it.qty?`<span style="color:var(--gold);font-weight:600;margin-right:4px">${it.qty}</span>`:''}${it.name}</span>`;
+            row.onclick=()=>dashToggleGrocery(it.id);
+            catWrap.appendChild(row);
+            totalShown++;
+          });
+          if(group.length>3){
+            const more=document.createElement('div');
+            more.style.cssText='font-size:11px;color:var(--text-3);padding:3px 0 0 22px';
+            more.textContent=`+${group.length-3} more`;
+            catWrap.appendChild(more);
+          }
+          dg.appendChild(catWrap);
+          shownCats++;
+        }
+        // If more categories have items, show a summary line
+        const remainingCats=catOrder.filter(c=>(groups[c.id]||[]).length>0).length - shownCats;
+        if(remainingCats>0){
+          const more=document.createElement('div');
+          more.style.cssText='font-size:11px;color:var(--text-3);text-align:center;padding-top:4px';
+          more.textContent=`+${remainingCats} more categor${remainingCats===1?'y':'ies'}`;
+          dg.appendChild(more);
+        }
       }
-      dg.innerHTML=html;
-      dg.querySelectorAll('.dash-grocery-row').forEach(row=>{
-        row.onclick=()=>dashToggleGrocery(row.dataset.id);
-      });
     }
   }
 
@@ -9651,6 +9732,9 @@ async function renderGroceryList(){
   const cats = await getGlibCats();
   const catMap = {}; cats.forEach(c => { catMap[c.id] = c; });
 
+  // Persist collapse state per category in S.groceryCatCollapsed (Set of cat ids)
+  if (!S.groceryCatCollapsed) S.groceryCatCollapsed = new Set();
+
   // Group items by categoryId
   const groups = {};
   cats.forEach(c => { groups[c.id] = []; });
@@ -9683,20 +9767,38 @@ async function renderGroceryList(){
     return row;
   };
 
-  // Render by category order, then uncategorised
+  // Render by category order, then uncategorised — each section collapsible
   const catOrder = [...cats, { id: '__none__', name: 'Other', color: '#999', icon: '📦' }];
   for (const cat of catOrder) {
     const group = groups[cat.id] || [];
     if (!group.length) continue;
 
+    const isCollapsed = S.groceryCatCollapsed.has(cat.id);
+    const checkedInGroup = group.filter(i=>i.checked).length;
+
     const hdr = document.createElement('div');
     hdr.className = 'grocery-cat-hdr-colored';
-    hdr.style.borderColor = cat.color;
+    hdr.style.cssText = `border-color:${cat.color};cursor:pointer;user-select:none`;
     hdr.innerHTML = `<span class="grocery-cat-dot" style="background:${cat.color}"></span>
-      <span style="color:${cat.color}">${cat.icon||''} ${cat.name}</span>
-      <span style="margin-left:auto;font-size:10px;color:var(--text-3)">${group.filter(i=>i.checked).length}/${group.length}</span>`;
+      <span style="color:${cat.color};font-weight:700">${cat.icon||''} ${cat.name}</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--text-3);margin-right:6px">${checkedInGroup}/${group.length}</span>
+      <span style="font-size:11px;color:${cat.color};opacity:0.7;transition:transform 0.2s;display:inline-block;transform:rotate(${isCollapsed?'-90':'0'}deg)">▾</span>`;
+
+    const itemsWrap = document.createElement('div');
+    itemsWrap.style.cssText = `overflow:hidden;transition:max-height 0.25s ease;max-height:${isCollapsed?'0':'2000px'}`;
+    group.forEach(it => itemsWrap.appendChild(renderItem(it)));
+
+    hdr.onclick = () => {
+      const nowCollapsed = !S.groceryCatCollapsed.has(cat.id);
+      if (nowCollapsed) S.groceryCatCollapsed.add(cat.id);
+      else S.groceryCatCollapsed.delete(cat.id);
+      const arrow = hdr.querySelector('span:last-child');
+      if (arrow) arrow.style.transform = nowCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+      itemsWrap.style.maxHeight = nowCollapsed ? '0' : '2000px';
+    };
+
     list.appendChild(hdr);
-    group.forEach(it => list.appendChild(renderItem(it)));
+    list.appendChild(itemsWrap);
   }
 
   actions.style.display = 'flex';
@@ -9879,11 +9981,12 @@ function applyPinSort(pins) {
 
 // ═══════════════════════════════════════════
 async function openBonusModal(presetDate=null) {
-  S.bonusSelCatId=null; S.bonusSelTaskId=null;
+  S.bonusSelCatId=null; S.bonusSelTaskId=null; S.bonusQty=1;
   g('mBonusDate').value=presetDate||today();
   g('bonusStep1').style.display='';
   g('bonusStep2').style.display='none';
   g('bonusLogBtn').style.display='none';
+  const _qr=g('bonusQtyRow'); if(_qr) _qr.style.display='none';
 
   const people=await all('people');
   const ps=g('mBonusPerson'); ps.innerHTML='<option value="">Everyone</option>';
@@ -9935,7 +10038,10 @@ async function selectBonusCat(cat) {
       cont.querySelectorAll('.bonus-task-opt').forEach(o=>o.classList.remove('sel'));
       opt.classList.add('sel');
       S.bonusSelTaskId=t.id;
+      S.bonusQty=1;
+      g('bonusQtyVal').textContent='1';
       g('bonusLogBtn').style.display='';
+      g('bonusQtyRow').style.display='flex';
     };
     cont.appendChild(opt);
   });
@@ -9976,13 +10082,18 @@ async function logBonusTask() {
   const beforePts={};
   people.forEach(p=>{ beforePts[p.id]=allComps.filter(c=>c.personId===p.id&&wkDates.includes(c.date)).reduce((s,c)=>s+(c.points||0),0); });
 
+  const qty = S.bonusQty || 1;
   const addedPersonIds=[];
   for(const pid of assignees){
-    await put('completions',{choreId:task.id,date,personId:pid,points:task.points||0,isBonus:true});
+    for(let q=0;q<qty;q++){
+      await put('completions',{choreId:task.id,date,personId:pid,points:task.points||0,isBonus:true});
+    }
     addedPersonIds.push(pid);
   }
   if(!assignees.length){
-    await put('completions',{choreId:task.id,date,personId:null,points:task.points||0,isBonus:true});
+    for(let q=0;q<qty;q++){
+      await put('completions',{choreId:task.id,date,personId:null,points:task.points||0,isBonus:true});
+    }
   }
 
   closeModal('bonusModal');
@@ -9992,7 +10103,7 @@ async function logBonusTask() {
   if(addedPersonIds.length) checkGoalMet(addedPersonIds, beforePts);
 
   // Animate new bonus entry
-  const bonusPts = task.points * (assignees.length||1);
+  const bonusPts = task.points * (assignees.length||1) * qty;
   setTimeout(()=>{
     const weekChips = [...document.querySelectorAll('.w-bonus')];
     const dashRows = [...document.querySelectorAll('#dashChores .bonus-badge')];
@@ -10424,8 +10535,20 @@ function wire() {
   g('wkBonusBtn').onclick=()=>openBonusModal(today());
   g('bonusCancelBtn').onclick=()=>closeModal('bonusModal');
   g('bonusLogBtn').onclick=logBonusTask;
+  g('bonusQtyMinus').onclick=()=>{
+    if(!S.bonusQty||S.bonusQty<=1) return;
+    S.bonusQty--;
+    g('bonusQtyVal').textContent=S.bonusQty;
+  };
+  g('bonusQtyPlus').onclick=()=>{
+    if(!S.bonusQty) S.bonusQty=1;
+    S.bonusQty++;
+    g('bonusQtyVal').textContent=S.bonusQty;
+  };
   g('bonusBackBtn').onclick=async()=>{
-    S.bonusSelCatId=null; S.bonusSelTaskId=null;
+    S.bonusSelCatId=null; S.bonusSelTaskId=null; S.bonusQty=1;
+    const _qr2=g('bonusQtyRow'); if(_qr2) _qr2.style.display='none';
+    g('bonusLogBtn').style.display='none';
     g('bonusStep1').style.display=''; g('bonusStep2').style.display='none';
     g('bonusLogBtn').style.display='none';
     await renderBonusCats();
@@ -12578,20 +12701,23 @@ function wireGistSync() {
 // Any field not listed passes through as-is (id, deleted, etc. are same in both).
 // Fields set to null are excluded from the Supabase payload (local-only).
 const SYNC_STORES = {
-  // Tier 1
+  // Tier 1 — core data
   people:            { table: 'people',             fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
   categories:        { table: 'categories',          fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
   chores:            { table: 'chores',              fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', recurEnd:null } },
   completions:       { table: 'completions',         fields: { choreId:'chore_id', personId:'person_id', isBonus:'is_bonus' } },
-  diary:             { table: 'diary',               fields: { personId:'person_id' } },  // photo is a Storage URL — syncs as regular field
+  diary:             { table: 'diary',               fields: { personId:'person_id' } },
   events:            { table: 'events',              fields: { personId:'person_id', endDate:'end_date', endTime:'end_time', recurEnd:'recur_end' } },
   pins:              { table: 'pins',                fields: { personId:'person_id', createdAt:null } },
   expenses:          { table: 'expenses',            fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
   expenseCategories: { table: 'expense_categories',  fields: { isIncome:'is_income', sortOrder:'sort_order' } },
-  groceryItems:      { table: 'grocery_items',       fields: { nameKey:'name_key', sortOrder:'sort_order' } },
-  // Tier 2
+  // Grocery — all three tables sync together
+  groceryCategories: { table: 'grocery_categories',  fields: { sortOrder:'sort_order' } },
+  groceryLibrary:    { table: 'grocery_library',     fields: { nameKey:'name_key', categoryId:'category_id' } },
+  groceryItems:      { table: 'grocery_items',       fields: { nameKey:'name_key', sortOrder:'sort_order', categoryId:'category_id' } },
+  // Tier 2 — recipes & meal planning
   recipes:           { table: 'recipes',             fields: { prepMin:'prep_min', cookMin:'cook_min', favorite:null } },
-  recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order' } },
+  recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order', libraryId:'library_id' } },
   mealPlan:          { table: 'meal_plan',           fields: { recipeId:'recipe_id' } },
 };
 
@@ -12780,7 +12906,9 @@ let _realtimeChannel = null;
 // View names that should re-render when a store changes
 const STORE_VIEW_MAP = {
   completions:       ['dashboard', 'tasks', 'week'],
-  groceryItems:      ['recipes'],
+  groceryItems:      ['dashboard', 'recipes'],
+  groceryCategories: ['recipes'],
+  groceryLibrary:    ['recipes'],
   chores:            ['dashboard', 'tasks', 'week'],
   categories:        ['tasks'],
   people:            ['dashboard', 'people'],
@@ -12818,6 +12946,8 @@ function cloudStartRealtime() {
   const REALTIME_STORES = {
     completions:       'completions',
     groceryItems:      'grocery_items',
+    groceryCategories: 'grocery_categories',
+    groceryLibrary:    'grocery_library',
     chores:            'chores',
     categories:        'categories',
     people:            'people',
@@ -12875,7 +13005,8 @@ async function cloudPushAll() {
   const stores = [
     'people', 'categories', 'expenseCategories',
     'chores', 'completions', 'diary', 'events', 'pins',
-    'expenses', 'groceryItems',
+    'expenses',
+    'groceryCategories', 'groceryLibrary', 'groceryItems',  // grocery — in dependency order
     'recipes', 'recipeIngredients', 'mealPlan',  // Tier 2
   ];
   let pushed = 0, errors = 0;
