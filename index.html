@@ -1106,6 +1106,31 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .grocery-cat-hdr{font-size:10px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-3);font-weight:600;padding:12px 2px 6px;border-bottom:1px solid var(--border-soft);margin-bottom:8px}
 .gi-ban{flex-shrink:0;width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:6px;cursor:pointer;font-size:13px;line-height:1}
 .gi-ban:hover{color:var(--gold);background:var(--surface-2)}
+.grocery-cat-hdr-colored{display:flex;align-items:center;gap:8px;padding:10px 2px 6px;border-bottom:2px solid;margin-bottom:8px;margin-top:14px;font-size:11px;text-transform:uppercase;letter-spacing:0.07em;font-weight:700;color:var(--text)}
+.grocery-cat-hdr-colored:first-child{margin-top:0}
+.grocery-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* Ingredient search dropdown */
+.ing-search-wrap{position:relative;flex:1;min-width:0}
+.ing-search-dropdown{position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,0.3);max-height:200px;overflow-y:auto;margin-top:2px}
+.ing-search-opt{padding:8px 10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-soft)}
+.ing-search-opt:last-child{border-bottom:none}
+.ing-search-opt:hover{background:var(--surface-2)}
+.ing-search-opt-cat{font-size:11px;color:var(--text-3);margin-left:auto}
+.ing-search-new{color:var(--gold);font-style:italic}
+/* Grocery library list */
+.glib-cat-section{margin-bottom:18px}
+.glib-cat-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid}
+.glib-cat-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}
+.glib-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);margin-bottom:5px;font-size:13.5px}
+.glib-item-name{flex:1;min-width:0}
+.glib-item-edit{flex-shrink:0;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:4px}
+.glib-item-edit:hover{color:var(--gold);background:var(--surface-2)}
+.glib-item-del{flex-shrink:0;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:15px;padding:2px 5px;border-radius:4px}
+.glib-item-del:hover{color:var(--terra);background:var(--surface-2)}
+/* Category manager */
+.cat-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.gcat-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all 0.15s}
+.gcat-chip:hover{filter:brightness(1.15)}
 .bl-item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border-soft);margin-bottom:6px}
 .bl-item-name{flex:1;font-size:13.5px;color:var(--text);text-transform:capitalize}
 .bl-item-del{flex-shrink:0;width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
@@ -1505,7 +1530,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     padding: 14px 16px 80px;
     min-height: 0;
   }
-  #subview-recAll, #subview-recPlan, #subview-recGrocery {
+  #subview-recAll, #subview-recPlan, #subview-recGrocery, #subview-recGLib {
     flex: 1;
     overflow-y: auto;
     padding: 12px 16px 80px;
@@ -1981,7 +2006,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.12.1</p>
+      <p class="sidebar-version">v7.11.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2510,6 +2535,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="vtab active" id="recTabAll">📖 Recipes</div>
       <div class="vtab" id="recTabPlan">🗓 Meal Plan</div>
       <div class="vtab" id="recTabGrocery">🛒 Grocery</div>
+      <div class="vtab" id="recTabGLib">🏪 Groceries</div>
     </div>
 
     <!-- Recipes tab -->
@@ -2560,6 +2586,18 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <button class="btn btn-ghost" id="groceryClearChecked" style="font-size:12px">Clear checked</button>
         <button class="btn btn-ghost del" id="groceryClearAll" style="font-size:12px;color:var(--terra)">Clear all</button>
       </div>
+    </div>
+
+    <!-- Groceries Library tab -->
+    <div id="subview-recGLib" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <div style="position:relative;flex:1;min-width:180px">
+          <input class="fi" id="glibSearch" placeholder="Search grocery items…" style="width:100%;padding-right:36px">
+          <button class="btn btn-primary" id="glibAddBtn" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 10px;font-size:12px">+ New</button>
+        </div>
+        <button class="btn btn-ghost" id="glibManageCatsBtn" style="font-size:12px;flex-shrink:0">🎨 Categories</button>
+      </div>
+      <div id="glibList"></div>
     </div>
   </div>
 
@@ -2764,7 +2802,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.12.1</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.11.0</span>
         </div>
       </div>
     </div>
@@ -3969,7 +4007,7 @@ function loadSetting(key) { try { const v=localStorage.getItem('hb_'+key); retur
 let DB;
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('HomeBaseDB', 12);
+    const r = indexedDB.open('HomeBaseDB', 13);
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('chores'))
@@ -4028,6 +4066,14 @@ function openDB() {
       if (!d.objectStoreNames.contains('groceryItems')) {
         const s = d.createObjectStore('groceryItems', { keyPath: 'id', autoIncrement: true });
         s.createIndex('nameKey', 'nameKey');
+      }
+      // v13: Grocery library + categories
+      if (!d.objectStoreNames.contains('groceryCategories'))
+        d.createObjectStore('groceryCategories', { keyPath: 'id', autoIncrement: false });
+      if (!d.objectStoreNames.contains('groceryLibrary')) {
+        const s = d.createObjectStore('groceryLibrary', { keyPath: 'id', autoIncrement: false });
+        s.createIndex('nameKey', 'nameKey');
+        s.createIndex('categoryId', 'categoryId');
       }
       // v12: Migrate existing integer IDs to UUIDs for all stores
       // New records will get UUIDs via the put() helper going forward.
@@ -4166,15 +4212,18 @@ async function migrateToUUIDs() {
     pins:              { personId: 'people' },
     pauses:            { choreId: 'chores' },
     taskSkips:         { choreId: 'chores' },
-    recipeIngredients: { recipeId: 'recipes' },
+    recipeIngredients: { recipeId: 'recipes', libraryId: 'groceryLibrary' },
     mealPlan:          { recipeId: 'recipes' },
+    groceryLibrary:    { categoryId: 'groceryCategories' },
+    groceryItems:      { categoryId: 'groceryCategories' },
   };
 
   const ALL_STORES = [
     'chores','people','completions','diary','categories','events',
     'rewards','earnedRewards','pins','pauses','expenseCategories',
     'expenses','expenseTemplates','taskSkips','recipes',
-    'recipeIngredients','mealPlan','groceryItems'
+    'recipeIngredients','mealPlan','groceryItems',
+    'groceryCategories','groceryLibrary'
   ];
 
   // Step 1: Build id maps for every store (old int id -> new UUID)
@@ -8264,14 +8313,14 @@ function removeFromBlacklist(key){
 
 function switchRecipeTab(tab){
   S.recTab = tab;
-  const map = {all:'recAll', plan:'recPlan', grocery:'recGrocery'};
+  const map = {all:'recAll', plan:'recPlan', grocery:'recGrocery', glib:'recGLib'};
   Object.entries(map).forEach(([t,sv])=>{
     const el=g('subview-'+sv); if(el) el.style.display = (t===tab)?'':'none';
   });
-  ['recTabAll','recTabPlan','recTabGrocery'].forEach(id=>{
+  ['recTabAll','recTabPlan','recTabGrocery','recTabGLib'].forEach(id=>{
     const el=g(id); if(el) el.classList.remove('active');
   });
-  const active={all:'recTabAll',plan:'recTabPlan',grocery:'recTabGrocery'}[tab];
+  const active={all:'recTabAll',plan:'recTabPlan',grocery:'recTabGrocery',glib:'recTabGLib'}[tab];
   if(g(active)) g(active).classList.add('active');
 }
 
@@ -8283,6 +8332,7 @@ async function renderRecipes(){
   g('recTabAll').onclick=()=>{ switchRecipeTab('all'); };
   g('recTabPlan').onclick=()=>{ switchRecipeTab('plan'); renderMealPlan(); };
   g('recTabGrocery').onclick=()=>{ switchRecipeTab('grocery'); renderGrocery(); };
+  g('recTabGLib').onclick=()=>{ switchRecipeTab('glib'); renderGroceryLib(); };
 
   // Wire toolbar
   const searchEl=g('recSearch'), ingEl=g('recIngSearch');
@@ -8293,6 +8343,7 @@ async function renderRecipes(){
   await renderRecipeGrid();
   if(S.recTab==='plan') await renderMealPlan();
   if(S.recTab==='grocery') await renderGrocery();
+  if(S.recTab==='glib') await renderGroceryLib();
 }
 
 async function renderRecipeGrid(){
@@ -8413,14 +8464,21 @@ function recUnitOptions(selected){
   });
   return html;
 }
-function addIngredientRow(qty='', unit='', name=''){
+function addIngredientRow(qty='', unit='', name='', libraryId=null){
   const wrap=g('mRecIngredients');
   const row=document.createElement('div'); row.className='rec-ing-row';
-  row.innerHTML=`<input class="fi rec-ing-qty" placeholder="Qty" value="${qty!=null?String(qty).replace(/"/g,'&quot;'):''}">
-    <select class="fi rec-ing-unit">${recUnitOptions(unit)}</select>
-    <input class="fi rec-ing-name" placeholder="Ingredient" value="${name?name.replace(/"/g,'&quot;'):''}">
-    <button class="rec-ing-del" title="Remove">×</button>`;
+  const safeQty=qty!=null?String(qty).replace(/"/g,'&quot;'):'';
+  const safeName=name?name.replace(/"/g,'&quot;'):'';
+  row.innerHTML=`<input class="fi rec-ing-qty" placeholder="Qty" value="${safeQty}" style="width:62px;flex-shrink:0">
+    <select class="fi rec-ing-unit" style="width:96px;flex-shrink:0">${recUnitOptions(unit)}</select>
+    <div class="ing-search-wrap" style="flex:1;min-width:0;position:relative">
+      <input class="fi rec-ing-name" placeholder="Search ingredient…" value="${safeName}" autocomplete="off" data-library-id="${libraryId||''}" style="width:100%">
+    </div>
+    <button class="rec-ing-del" title="Remove" style="flex-shrink:0">×</button>`;
   row.querySelector('.rec-ing-del').onclick=()=>row.remove();
+  const nameInput=row.querySelector('.rec-ing-name');
+  nameInput.addEventListener('input', () => ingSearchInput(nameInput, row));
+  nameInput.addEventListener('blur', () => setTimeout(()=>closeIngDropdown(row), 200));
   wrap.appendChild(row);
 }
 
@@ -8805,7 +8863,7 @@ async function openRecipeModal(recipeId=null){
       g('mRecSource').value=r.source||'';
       g('mRecNotes').value=r.notes||'';
       S.recModalTags=[...(r.tags||[])];
-      ings.sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id)).forEach(i=>addIngredientRow(i.qty,i.unit,i.name));
+      ings.sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id)).forEach(i=>addIngredientRow(i.qty, i.unit, i.name, i.libraryId||null));
     }
   }
   if(!g('mRecIngredients').children.length){ addIngredientRow(); addIngredientRow(); }
@@ -8897,9 +8955,11 @@ async function saveRecipe(){
   for(const row of rows){
     const qty=row.querySelector('.rec-ing-qty').value.trim();
     const unit=row.querySelector('.rec-ing-unit').value.trim();
-    const nm=row.querySelector('.rec-ing-name').value.trim();
+    const nameInput=row.querySelector('.rec-ing-name');
+    const nm=nameInput.value.trim();
+    const libraryId=nameInput.dataset.libraryId||null;
     if(!nm) continue;
-    await put('recipeIngredients',{recipeId:rid, qty:qty||null, unit:unit||null, name:nm, nameKey:recKey(nm), sortOrder:order++});
+    await put('recipeIngredients',{recipeId:rid, qty:qty||null, unit:unit||null, name:nm, nameKey:recKey(nm), sortOrder:order++, libraryId:libraryId||null});
   }
   playSound('tick');
   closeModal('recipeModal');
@@ -9082,6 +9142,7 @@ async function renderGrocery(){
   g('groceryAddBtn').onclick=addGroceryItemFromInput;
   const addInput=g('groceryAddInput');
   addInput.onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); addGroceryItemFromInput(); } };
+  wireGroceryAddSearch();
   g('groceryClearChecked').onclick=()=>{
     askConfirm('Remove all checked items?', async()=>{
       const items=await all('groceryItems');
@@ -9137,6 +9198,11 @@ async function generateGroceryList(){
   const merged={}; // key -> {name, unit, qty (number|null), nameKey, hadNonNumeric}
   const byNameKey={}; // nameKey -> Set of keys (to detect dupes across units)
 
+  // Build a library map for category lookup
+  const libItems = await all('groceryLibrary');
+  const libByNameKey = {};
+  libItems.forEach(l => { libByNameKey[l.nameKey||recKey(l.name)] = l; });
+
   for(const [rid, times] of Object.entries(occurrences)){
     const ings=allIngs.filter(i=>String(i.recipeId)===String(rid));
     for(const ing of ings){
@@ -9144,8 +9210,11 @@ async function generateGroceryList(){
       if(isBlacklisted(ing.name)) continue; // skip pantry staples like water, salt
       const unit=(ing.unit||'').trim();
       const key=nameKey+'|'+unit;
-      if(!merged[key]) merged[key]={name:ing.name, unit, qty:0, nameKey, hadNonNumeric:false, anyQty:false};
+      const libEntry = ing.libraryId ? libItems.find(l=>l.id===ing.libraryId) : libByNameKey[nameKey];
+      const categoryId = libEntry?.categoryId || null;
+      if(!merged[key]) merged[key]={name:ing.name, unit, qty:0, nameKey, hadNonNumeric:false, anyQty:false, categoryId};
       const m=merged[key];
+      if(!m.categoryId && categoryId) m.categoryId = categoryId;
       // qty may be "2", "1.5", "1/2", or non-numeric ("a pinch")
       const parsed=parseQtyValue(ing.qty);
       if(parsed!=null){ m.qty += parsed*times; m.anyQty=true; }
@@ -9171,7 +9240,8 @@ async function generateGroceryList(){
     }
     await put('groceryItems',{
       name:m.name, nameKey:m.nameKey, qty:qtyDisplay||null, unit:m.unit||null,
-      checked:false, source:'gen', dupe:!!isDupe, sortOrder:order++
+      checked:false, source:'gen', dupe:!!isDupe, sortOrder:order++,
+      categoryId: m.categoryId||null
     });
   }
 
@@ -9202,12 +9272,52 @@ async function addGroceryItemFromInput(){
   const input=g('groceryAddInput');
   const v=input.value.trim();
   if(!v) return;
-  const items=await all('groceryItems');
-  const maxOrder=items.reduce((mx,i)=>Math.max(mx,i.sortOrder||0),0);
-  await put('groceryItems',{name:v, nameKey:recKey(v), qty:null, unit:null, checked:false, source:'manual', dupe:false, sortOrder:maxOrder+1});
+  const libraryId=input.dataset.libraryId||null;
+  await addGroceryItemFromLibSearch(v, libraryId);
   input.value='';
-  playSound('tick');
-  await renderGroceryList();
+  input.dataset.libraryId='';
+}
+
+async function wireGroceryAddSearch(){
+  const input=g('groceryAddInput');
+  if(!input||input.dataset.searchWired) return;
+  input.dataset.searchWired='1';
+  let timer=null;
+  input.addEventListener('input',async()=>{
+    const q=input.value.trim();
+    g('groceryAddDropdown')?.remove();
+    if(q.length<1) return;
+    clearTimeout(timer);
+    timer=setTimeout(async()=>{
+      const [cats,items]=await Promise.all([getGlibCats(),all('groceryLibrary')]);
+      const catMap={}; cats.forEach(c=>{catMap[c.id]=c;});
+      const lower=q.toLowerCase();
+      const matches=items.filter(i=>i.name.toLowerCase().includes(lower)).slice(0,6);
+      if(!matches.length) return;
+      const dd=document.createElement('div');
+      dd.id='groceryAddDropdown';
+      dd.className='ing-search-dropdown';
+      dd.style.cssText='position:absolute;top:100%;left:0;right:0;z-index:200';
+      matches.forEach(item=>{
+        const cat=catMap[item.categoryId];
+        const opt=document.createElement('div'); opt.className='ing-search-opt';
+        opt.innerHTML=`<span>${item.name}</span>${cat?`<span class="ing-search-opt-cat" style="color:${cat.color}">${cat.icon||''} ${cat.name}</span>`:''}`;
+        opt.onmousedown=(e)=>{
+          e.preventDefault();
+          input.value=item.name;
+          input.dataset.libraryId=item.id;
+          dd.remove();
+        };
+        dd.appendChild(opt);
+      });
+      // wrap input in relative container if not already
+      if(input.parentElement.style.position!=='relative'){
+        input.parentElement.style.position='relative';
+      }
+      input.parentElement.appendChild(dd);
+    },180);
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>g('groceryAddDropdown')?.remove(),200));
 }
 
 async function toggleGroceryItem(id){
@@ -9232,6 +9342,297 @@ async function removeGroceryItem(id){
   await renderGroceryList();
 }
 
+// renderGroceryList moved to GROCERY LIBRARY section below
+
+// ═══════════════════════════════════════════
+// GROCERY LIBRARY & CATEGORIES
+// ═══════════════════════════════════════════
+
+const GLIB_DEFAULT_CATS = [
+  { name: 'Produce',          color: '#5cb85c', icon: '🥦' },
+  { name: 'Meat & Seafood',   color: '#d9534f', icon: '🥩' },
+  { name: 'Dairy',            color: '#f0ad4e', icon: '🧀' },
+  { name: 'Bakery',           color: '#c4a35a', icon: '🍞' },
+  { name: 'Frozen',           color: '#5bc0de', icon: '❄️'  },
+  { name: 'Canned & Dry',     color: '#8e6dbf', icon: '🥫' },
+  { name: 'Beverages',        color: '#5a8ed4', icon: '🥤' },
+  { name: 'Snacks',           color: '#e07070', icon: '🍿' },
+  { name: 'Household',        color: '#7a8a9a', icon: '🧹' },
+  { name: 'Other',            color: '#999',    icon: '📦' },
+];
+
+async function seedGroceryCategories() {
+  const existing = await all('groceryCategories');
+  if (existing.length) return;
+  let order = 0;
+  for (const cat of GLIB_DEFAULT_CATS) {
+    await put('groceryCategories', { name: cat.name, color: cat.color, icon: cat.icon, sortOrder: order++ });
+  }
+}
+
+// ── Category state cache ─────────────────
+let _glibCats = null;
+async function getGlibCats() {
+  if (!_glibCats) {
+    _glibCats = (await all('groceryCategories')).sort((a,b) => (a.sortOrder||0) - (b.sortOrder||0));
+  }
+  return _glibCats;
+}
+function invalidateGlibCats() { _glibCats = null; }
+
+// ── Grocery Library tab render ────────────
+async function renderGroceryLib() {
+  await seedGroceryCategories();
+  // Wire toolbar buttons (idempotent)
+  const glibSearchEl = g('glibSearch');
+  if (glibSearchEl && !glibSearchEl.dataset.wired) {
+    glibSearchEl.dataset.wired = '1';
+    glibSearchEl.oninput = () => renderGroceryLib();
+    glibSearchEl.onkeydown = (e) => { if(e.key==='Enter'){ e.preventDefault(); } };
+  }
+  const glibAddBtn = g('glibAddBtn');
+  if (glibAddBtn) glibAddBtn.onclick = () => openGlibItemModal(null, g('glibSearch')?.value.trim()||'');
+  const glibCatsBtn = g('glibManageCatsBtn');
+  if (glibCatsBtn) glibCatsBtn.onclick = openGlibCatsModal;
+  const [cats, items] = await Promise.all([getGlibCats(), all('groceryLibrary')]);
+  const searchVal = (g('glibSearch')?.value || '').trim().toLowerCase();
+  const filtered = searchVal
+    ? items.filter(i => i.name.toLowerCase().includes(searchVal) || (i.nameKey||'').includes(searchVal))
+    : items;
+
+  // Group by category
+  const bycat = {};
+  cats.forEach(c => { bycat[c.id] = []; });
+  bycat['__none__'] = [];
+  filtered.forEach(item => {
+    const key = item.categoryId && bycat[item.categoryId] ? item.categoryId : '__none__';
+    bycat[key].push(item);
+  });
+
+  const wrap = g('glibList'); wrap.innerHTML = '';
+
+  // Uncategorised first if no search, else show all flat
+  const catOrder = [...cats, { id: '__none__', name: 'Other', color: '#999', icon: '📦' }];
+  for (const cat of catOrder) {
+    const catItems = (bycat[cat.id] || []).sort((a,b) => a.name.localeCompare(b.name));
+    if (!catItems.length) continue;
+
+    const section = document.createElement('div'); section.className = 'glib-cat-section';
+    const hdr = document.createElement('div');
+    hdr.className = 'glib-cat-header';
+    hdr.style.borderColor = cat.color;
+    hdr.innerHTML = `<span class="grocery-cat-dot" style="background:${cat.color}"></span>
+      <span class="glib-cat-title" style="color:${cat.color}">${cat.icon||''} ${cat.name}</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--text-3)">${catItems.length}</span>`;
+    section.appendChild(hdr);
+
+    catItems.forEach(item => {
+      const row = document.createElement('div'); row.className = 'glib-item';
+      row.innerHTML = `<span class="glib-item-name">${item.name}</span>
+        <button class="glib-item-edit" title="Edit">✏️</button>
+        <button class="glib-item-del" title="Delete">×</button>`;
+      row.querySelector('.glib-item-edit').onclick = () => openGlibItemModal(item);
+      row.querySelector('.glib-item-del').onclick = async () => {
+        await del('groceryLibrary', item.id);
+        showToast(`Removed "${item.name}"`, 'var(--text-3)');
+        await renderGroceryLib();
+      };
+      section.appendChild(row);
+    });
+    wrap.appendChild(section);
+  }
+
+  if (!filtered.length) {
+    const empty = document.createElement('div'); empty.className = 'empty';
+    if (searchVal) {
+      empty.innerHTML = `<div class="ico">🔍</div><p>No items match "${searchVal}"</p>
+        <button class="btn btn-primary" style="margin-top:10px" onclick="openGlibItemModal(null,'${searchVal.replace(/'/g,"\'")}')">+ Add "${searchVal}" to library</button>`;
+    } else {
+      empty.innerHTML = `<div class="ico">🏪</div><p>Your grocery library is empty</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Add items here to get category grouping in your grocery list.</p>`;
+    }
+    wrap.appendChild(empty);
+  }
+}
+
+// ── Grocery Library item modal ────────────
+let _glibEditItem = null;
+async function openGlibItemModal(item=null, prefillName='') {
+  _glibEditItem = item;
+  const cats = await getGlibCats();
+  // Build a simple inline modal-style panel
+  const existing = g('glibItemPanel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'glibItemPanel';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;box-shadow:0 -8px 32px rgba(0,0,0,0.4)">
+      <div style="display:flex;align-items:center;margin-bottom:14px">
+        <div style="font-weight:700;font-size:15px;flex:1">${item ? 'Edit Item' : 'Add to Library'}</div>
+        <button onclick="document.getElementById('glibItemPanel').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      <label class="fl">Name</label>
+      <input class="fi" id="glibItemName" placeholder="e.g. Chicken breast" value="${item ? item.name : prefillName}" style="margin-bottom:10px">
+      <label class="fl">Category</label>
+      <select class="fi" id="glibItemCat" style="margin-bottom:16px">
+        <option value="">— None —</option>
+        ${cats.map(c => `<option value="${c.id}" ${item?.categoryId===c.id?'selected':''}>${c.icon||''} ${c.name}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:8px">
+        ${item ? `<button class="btn btn-ghost del" onclick="glibItemDelete('${item.id}')" style="color:var(--terra)">Delete</button>` : ''}
+        <button class="btn btn-primary" style="flex:1" onclick="glibItemSave()">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(panel);
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+  setTimeout(() => g('glibItemName')?.focus(), 50);
+}
+
+async function glibItemSave() {
+  const name = g('glibItemName')?.value.trim();
+  if (!name) { g('glibItemName')?.classList.add('error'); return; }
+  const categoryId = g('glibItemCat')?.value || null;
+  const obj = {
+    name,
+    nameKey: recKey(name),
+    categoryId: categoryId || null,
+    ...(_glibEditItem ? { id: _glibEditItem.id } : {})
+  };
+  await put('groceryLibrary', obj);
+  document.getElementById('glibItemPanel')?.remove();
+  showToast(name + (_glibEditItem ? ' updated' : ' added'), 'var(--sage)');
+  await renderGroceryLib();
+}
+
+async function glibItemDelete(id) {
+  await del('groceryLibrary', id);
+  document.getElementById('glibItemPanel')?.remove();
+  showToast('Item removed', 'var(--text-3)');
+  await renderGroceryLib();
+}
+
+// ── Category manager modal ────────────────
+async function openGlibCatsModal() {
+  const cats = await getGlibCats();
+  const existing = g('glibCatsPanel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'glibCatsPanel';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+
+  const rows = cats.map(c => `
+    <div class="glib-item" id="gcrow-${c.id}">
+      <input type="color" value="${c.color}" style="width:32px;height:32px;border:none;border-radius:6px;cursor:pointer;flex-shrink:0;padding:0" onchange="glibCatColorChange('${c.id}',this.value)">
+      <input class="fi" value="${c.icon||''}" style="width:40px;flex-shrink:0;text-align:center;font-size:16px;padding:4px 6px" placeholder="🏷" maxlength="2" onchange="glibCatIconChange('${c.id}',this.value)">
+      <input class="fi" value="${c.name}" style="flex:1" onchange="glibCatNameChange('${c.id}',this.value)">
+      <button class="glib-item-del" onclick="glibCatDelete('${c.id}')">×</button>
+    </div>`).join('');
+
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,0.4)">
+      <div style="display:flex;align-items:center;margin-bottom:14px">
+        <div style="font-weight:700;font-size:15px;flex:1">🎨 Grocery Categories</div>
+        <button onclick="document.getElementById('glibCatsPanel').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      <div id="glibCatRows">${rows}</div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px;font-size:13px" onclick="glibCatAdd()">+ Add category</button>
+    </div>`;
+  document.body.appendChild(panel);
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+}
+
+async function glibCatColorChange(id, color) {
+  const cat = await get('groceryCategories', id);
+  if (cat) { cat.color = color; await put('groceryCategories', cat); invalidateGlibCats(); }
+}
+async function glibCatIconChange(id, icon) {
+  const cat = await get('groceryCategories', id);
+  if (cat) { cat.icon = icon; await put('groceryCategories', cat); invalidateGlibCats(); }
+}
+async function glibCatNameChange(id, name) {
+  const cat = await get('groceryCategories', id);
+  if (cat) { cat.name = name; await put('groceryCategories', cat); invalidateGlibCats(); }
+}
+async function glibCatDelete(id) {
+  // Unlink library items that used this category
+  const items = await all('groceryLibrary');
+  for (const item of items.filter(i => i.categoryId === id)) {
+    await put('groceryLibrary', { ...item, categoryId: null });
+  }
+  await del('groceryCategories', id);
+  invalidateGlibCats();
+  // Re-render the manager
+  await openGlibCatsModal();
+  await renderGroceryLib();
+}
+async function glibCatAdd() {
+  await put('groceryCategories', { name: 'New Category', color: '#888', icon: '📦', sortOrder: 999 });
+  invalidateGlibCats();
+  await openGlibCatsModal();
+}
+
+// ── Ingredient search in recipe modal ─────
+let _ingSearchTimer = null;
+async function ingSearchInput(input, row) {
+  const q = input.value.trim();
+  closeIngDropdown(row);
+  if (q.length < 1) return;
+  clearTimeout(_ingSearchTimer);
+  _ingSearchTimer = setTimeout(async () => {
+    const [cats, items] = await Promise.all([getGlibCats(), all('groceryLibrary')]);
+    const catMap = {}; cats.forEach(c => { catMap[c.id] = c; });
+    const lower = q.toLowerCase();
+    const matches = items
+      .filter(i => i.name.toLowerCase().includes(lower))
+      .sort((a,b) => a.name.localeCompare(b.name))
+      .slice(0, 8);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'ing-search-dropdown';
+
+    matches.forEach(item => {
+      const cat = catMap[item.categoryId];
+      const opt = document.createElement('div');
+      opt.className = 'ing-search-opt';
+      opt.innerHTML = `<span>${item.name}</span>${cat ? `<span class="ing-search-opt-cat" style="color:${cat.color}">${cat.icon||''} ${cat.name}</span>` : ''}`;
+      opt.onmousedown = (e) => {
+        e.preventDefault();
+        input.value = item.name;
+        input.dataset.libraryId = item.id;
+        closeIngDropdown(row);
+      };
+      dropdown.appendChild(opt);
+    });
+
+    // "Add to library" option if no exact match
+    const exactMatch = items.find(i => i.name.toLowerCase() === lower);
+    if (!exactMatch) {
+      const addOpt = document.createElement('div');
+      addOpt.className = 'ing-search-opt ing-search-new';
+      addOpt.innerHTML = `<span>+ Add "${q}" to library</span>`;
+      addOpt.onmousedown = async (e) => {
+        e.preventDefault();
+        closeIngDropdown(row);
+        await openGlibItemModal(null, q);
+        // After saving, user can re-type to select it
+      };
+      dropdown.appendChild(addOpt);
+    }
+
+    if (dropdown.children.length) {
+      const wrap = row.querySelector('.ing-search-wrap');
+      wrap.appendChild(dropdown);
+    }
+  }, 180);
+}
+
+function closeIngDropdown(row) {
+  row.querySelector('.ing-search-dropdown')?.remove();
+}
+
+// ── Grocery list with category grouping ───
 async function renderGroceryList(){
   const items=(await all('groceryItems')).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
   const list=g('groceryList'); const prog=g('groceryProgress'); const actions=g('groceryActions');
@@ -9247,44 +9648,83 @@ async function renderGroceryList(){
   const pct=Math.round(checked/items.length*100);
   prog.innerHTML=`<div class="grocery-prog"><span>${checked}/${items.length}</span><div class="grocery-prog-bar"><div class="grocery-prog-fill" style="width:${pct}%"></div></div><span>${pct}%</span></div>`;
 
-  // Split generated vs manual for light grouping
-  const gen=items.filter(i=>i.source==='gen');
-  const manual=items.filter(i=>i.source==='manual');
-  list.innerHTML='';
+  const cats = await getGlibCats();
+  const catMap = {}; cats.forEach(c => { catMap[c.id] = c; });
 
-  const renderItem=(it)=>{
-    const row=document.createElement('div'); row.className='grocery-item'+(it.checked?' checked':'');
-    const banBtn = it.source==='gen' ? `<button class="gi-ban" title="Never add this ingredient again">🚫</button>` : '';
-    row.innerHTML=`<div class="gi-check${it.checked?' on':''}">${it.checked?'✓':''}</div>
-      <div class="gi-body"><span class="gi-name">${it.qty?`<span class="gi-qty">${it.qty}</span>`:''}${it.name}${it.dupe?'<span class="gi-dupe-badge" title="This ingredient appears with more than one unit — check both entries to estimate the total">⚠ multi-unit</span>':''}</span></div>
+  // Group items by categoryId
+  const groups = {};
+  cats.forEach(c => { groups[c.id] = []; });
+  groups['__none__'] = [];
+  items.forEach(item => {
+    const key = item.categoryId && groups[item.categoryId] ? item.categoryId : '__none__';
+    groups[key].push(item);
+  });
+
+  list.innerHTML = '';
+
+  const renderItem = (it) => {
+    const row = document.createElement('div');
+    row.className = 'grocery-item' + (it.checked ? ' checked' : '');
+    row.dataset.id = it.id;
+    const banBtn = it.source === 'gen' ? `<button class="gi-ban" title="Never add this again">🚫</button>` : '';
+    row.innerHTML = `<div class="gi-check${it.checked?' on':''}">${it.checked?'✓':''}</div>
+      <div class="gi-body"><span class="gi-name">${it.qty?`<span class="gi-qty">${it.qty}</span>`:''}${it.name}${it.dupe?'<span class="gi-dupe-badge" title="Appears with more than one unit">⚠ multi-unit</span>':''}</span></div>
       ${banBtn}
       <button class="gi-del" title="Remove">×</button>`;
-    row.querySelector('.gi-check').onclick=()=>toggleGroceryItem(it.id);
-    row.querySelector('.gi-del').onclick=()=>removeGroceryItem(it.id);
-    const ban=row.querySelector('.gi-ban');
-    if(ban) ban.onclick=async()=>{
+    row.querySelector('.gi-check').onclick = () => toggleGroceryItem(it.id);
+    row.querySelector('.gi-del').onclick = () => removeGroceryItem(it.id);
+    const ban = row.querySelector('.gi-ban');
+    if (ban) ban.onclick = async () => {
       addToBlacklist(it.name);
       await del('groceryItems', it.id);
       showToast(`"${it.name}" won't be added in future`, 'var(--gold)');
       await renderGroceryList();
     };
-    list.appendChild(row);
+    return row;
   };
 
-  if(gen.length){
-    const hdr=document.createElement('div'); hdr.className='grocery-cat-hdr'; hdr.textContent='From meal plan';
+  // Render by category order, then uncategorised
+  const catOrder = [...cats, { id: '__none__', name: 'Other', color: '#999', icon: '📦' }];
+  for (const cat of catOrder) {
+    const group = groups[cat.id] || [];
+    if (!group.length) continue;
+
+    const hdr = document.createElement('div');
+    hdr.className = 'grocery-cat-hdr-colored';
+    hdr.style.borderColor = cat.color;
+    hdr.innerHTML = `<span class="grocery-cat-dot" style="background:${cat.color}"></span>
+      <span style="color:${cat.color}">${cat.icon||''} ${cat.name}</span>
+      <span style="margin-left:auto;font-size:10px;color:var(--text-3)">${group.filter(i=>i.checked).length}/${group.length}</span>`;
     list.appendChild(hdr);
-    gen.forEach(renderItem);
-  }
-  if(manual.length){
-    const hdr=document.createElement('div'); hdr.className='grocery-cat-hdr'; hdr.textContent='Added manually';
-    list.appendChild(hdr);
-    manual.forEach(renderItem);
+    group.forEach(it => list.appendChild(renderItem(it)));
   }
 
-  actions.style.display='flex';
+  actions.style.display = 'flex';
 }
 
+// ── Grocery manual add with library search ─
+async function addGroceryItemFromLibSearch(name, libraryId) {
+  if (!name) return;
+  // Look up category from library
+  let categoryId = null;
+  if (libraryId) {
+    const libItem = await get('groceryLibrary', libraryId);
+    if (libItem) categoryId = libItem.categoryId || null;
+  } else {
+    // Try nameKey match
+    const lower = recKey(name);
+    const items = await all('groceryLibrary');
+    const match = items.find(i => i.nameKey === lower);
+    if (match) categoryId = match.categoryId || null;
+  }
+  const existing = await all('groceryItems');
+  const sortOrder = existing.length;
+  await put('groceryItems', { name, nameKey: recKey(name), qty: null, unit: null, checked: false, source: 'manual', dupe: false, sortOrder, categoryId });
+  playSound('tick');
+  await renderGroceryList();
+}
+
+// ═══════════════════════════════════════════
 // ── Blacklist modal ──────────────────────────────────────────────────
 function openBlacklistModal(){
   renderBlacklistList();
