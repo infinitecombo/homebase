@@ -9137,9 +9137,8 @@ async function generateGroceryList(){
   const merged={}; // key -> {name, unit, qty (number|null), nameKey, hadNonNumeric}
   const byNameKey={}; // nameKey -> Set of keys (to detect dupes across units)
 
-  for(const [ridStr, times] of Object.entries(occurrences)){
-    const rid=parseInt(ridStr);
-    const ings=allIngs.filter(i=>i.recipeId===rid);
+  for(const [rid, times] of Object.entries(occurrences)){
+    const ings=allIngs.filter(i=>String(i.recipeId)===String(rid));
     for(const ing of ings){
       const nameKey=ing.nameKey||recKey(ing.name);
       if(isBlacklisted(ing.name)) continue; // skip pantry staples like water, salt
