@@ -2006,7 +2006,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.13.0</p>
+      <p class="sidebar-version">v7.14.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2802,7 +2802,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.13.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.14.0</span>
         </div>
       </div>
     </div>
@@ -7057,7 +7057,7 @@ async function saveEvent() {
     endTime:g('mEvtEndTime').value||null,
     recurrence, recurEnd,
     color:S.evtColor, icon:S.evtIcon,
-    personId:g('mEvtPerson').value?parseInt(g('mEvtPerson').value):null,
+    personId:g('mEvtPerson').value||null,
     notes:g('mEvtNotes').value||null,
   };
   if(S.editEvtId) e.id=S.editEvtId;
@@ -8316,7 +8316,7 @@ async function savePin() {
     title, type:S.pinType, color:S.pinColor, pinned:S.pinPinned,
     content:S.pinType!=='list'?g('mPinContent').value:'',
     items:S.pinType==='list'?S.pinItems:[],
-    personId:g('mPinPerson').value?parseInt(g('mPinPerson').value):null,
+    personId:g('mPinPerson').value||null,
     done:false, createdAt:new Date().toISOString()
   };
   if(S.editPinId){ pin.id=S.editPinId; const existing=await get('pins',S.editPinId); if(existing){ pin.done=existing.done; pin.createdAt=existing.createdAt; } }
@@ -10074,7 +10074,7 @@ async function logBonusTask() {
   if(!task) return;
   const date=g('mBonusDate').value||today();
   const personVal=g('mBonusPerson').value;
-  const assignees=personVal?[parseInt(personVal)]:(task.assignedTo?.length?task.assignedTo:people.map(p=>p.id));
+  const assignees=personVal?[personVal]:(task.assignedTo?.length?task.assignedTo:people.map(p=>p.id));
 
   // Snapshot BEFORE saving
   const ws=weekStart(0);
@@ -11412,8 +11412,8 @@ async function saveExpense() {
     amount, date,
     description:g('mExpDesc').value.trim()||null,
     notes:g('mExpNotes').value.trim()||null,
-    categoryId:g('mExpCategory').value?parseInt(g('mExpCategory').value):null,
-    personId:g('mExpPerson').value?parseInt(g('mExpPerson').value):null,
+    categoryId:g('mExpCategory').value||null,
+    personId:g('mExpPerson').value||null,
     isIncome:S.expIsIncome||false,
   };
   if(S.expEditId) entry.id=S.expEditId;
@@ -11537,8 +11537,8 @@ async function saveExpTemplate() {
   const tpl={
     name, amount,
     isIncome:_expTplIsIncome,
-    categoryId:g('mTplCategory').value?parseInt(g('mTplCategory').value):null,
-    personId:g('mTplPerson').value?parseInt(g('mTplPerson').value):null,
+    categoryId:g('mTplCategory').value||null,
+    personId:g('mTplPerson').value||null,
     recurrence:g('mTplRecurrence').value,
     startDate,
     endDate:g('mTplEnd').value||null,
@@ -11886,7 +11886,7 @@ function csvParseRow(row, di, desi, ai, ti) {
 async function csvImport() {
   const di=parseInt(g('csvColDate').value), desi=parseInt(g('csvColDesc').value);
   const ai=parseInt(g('csvColAmt').value), ti=g('csvColType').value!==''?parseInt(g('csvColType').value):-1;
-  const catId=g('csvDefaultCat').value?parseInt(g('csvDefaultCat').value):null;
+  const catId=g('csvDefaultCat').value||null;
   const personId=S.person!=='all'?S.person:null;
   const parsed=_csvRows.map(row=>csvParseRow(row,di,desi,ai,ti)).filter(Boolean);
   if(!parsed.length) return;
@@ -12701,21 +12701,29 @@ function wireGistSync() {
 // Any field not listed passes through as-is (id, deleted, etc. are same in both).
 // Fields set to null are excluded from the Supabase payload (local-only).
 const SYNC_STORES = {
-  // Tier 1 — core data
+  // Core — people, tasks, categories
   people:            { table: 'people',             fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
   categories:        { table: 'categories',          fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
   chores:            { table: 'chores',              fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', recurEnd:null } },
   completions:       { table: 'completions',         fields: { choreId:'chore_id', personId:'person_id', isBonus:'is_bonus' } },
+  taskSkips:         { table: 'task_skips',          fields: { choreId:'chore_id' } },
+  pauses:            { table: 'pauses',              fields: { choreId:'chore_id', startDate:'start_date', endDate:'end_date' } },
+  // Diary, calendar, pinboard
   diary:             { table: 'diary',               fields: { personId:'person_id' } },
   events:            { table: 'events',              fields: { personId:'person_id', endDate:'end_date', endTime:'end_time', recurEnd:'recur_end' } },
   pins:              { table: 'pins',                fields: { personId:'person_id', createdAt:null } },
-  expenses:          { table: 'expenses',            fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
+  // Rewards
+  rewards:           { table: 'rewards',             fields: { pointsRequired:'points_required', creditCost:'credit_cost' } },
+  earnedRewards:     { table: 'earned_rewards',      fields: { rewardId:'reward_id', personId:'person_id', weekStart:'week_start', claimedDate:'claimed_date', usedDate:'used_date' } },
+  // Expenses
   expenseCategories: { table: 'expense_categories',  fields: { isIncome:'is_income', sortOrder:'sort_order' } },
+  expenses:          { table: 'expenses',            fields: { categoryId:'category_id', personId:'person_id', isIncome:'is_income' } },
+  expenseTemplates:  { table: 'expense_templates',   fields: { sortOrder:'sort_order' } },
   // Grocery — all three tables sync together
   groceryCategories: { table: 'grocery_categories',  fields: { sortOrder:'sort_order' } },
   groceryLibrary:    { table: 'grocery_library',     fields: { nameKey:'name_key', categoryId:'category_id' } },
   groceryItems:      { table: 'grocery_items',       fields: { nameKey:'name_key', sortOrder:'sort_order', categoryId:'category_id' } },
-  // Tier 2 — recipes & meal planning
+  // Recipes & meal planning
   recipes:           { table: 'recipes',             fields: { prepMin:'prep_min', cookMin:'cook_min', favorite:null } },
   recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order', libraryId:'library_id' } },
   mealPlan:          { table: 'meal_plan',           fields: { recipeId:'recipe_id' } },
@@ -12858,24 +12866,51 @@ async function mergeRecord(store, cloudRow) {
 }
 
 // ── Initial pull (background, all Tier 1 stores) ─
-async function cloudPullAll() {
+// High-water mark: per-store timestamp of last successful pull
+// Stored in localStorage as JSON under 'den_sync_hwm'
+function getSyncHWM() {
+  try { return JSON.parse(localStorage.getItem('den_sync_hwm') || '{}'); } catch { return {}; }
+}
+function setSyncHWM(store, ts) {
+  const hwm = getSyncHWM();
+  hwm[store] = ts;
+  try { localStorage.setItem('den_sync_hwm', JSON.stringify(hwm)); } catch {}
+}
+function clearSyncHWM() {
+  try { localStorage.removeItem('den_sync_hwm'); } catch {}
+}
+
+async function cloudPullAll(force = false) {
   const supa = getSupa();
   if (!supa || !_cloudHH) return;
   let changed = false;
+  const hwm = getSyncHWM();
+  const pullStart = new Date().toISOString();
+
   try {
     for (const [store, cfg] of Object.entries(SYNC_STORES)) {
-      const { data, error } = await supa
+      // High-water mark: only fetch records updated since last pull (unless forced)
+      const since = !force && hwm[store];
+      let query = supa
         .from(cfg.table)
         .select('*')
         .eq('household_id', _cloudHH.id);
-      if (error) throw new Error(`${store}: ${error.message}`);
+      if (since) query = query.gt('updated_at', since);
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn(`Den: pull failed [${store}]:`, error.message);
+        continue; // skip this store, don't block others
+      }
       for (const row of (data || [])) {
         const didChange = await mergeRecord(store, row);
         if (didChange) changed = true;
       }
-      // Sweep out any leftover integer-ID records (pre-migration duplicates)
-      // These exist when migration was skipped but cloud pull wrote UUID versions
-      const allLocal = await all(store);
+      // Sweep leftover integer-ID records (pre-migration duplicates)
+      const allLocal = await new Promise((res, rej) => {
+        const q = tx(store).objectStore(store).getAll();
+        q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+      });
       for (const rec of allLocal) {
         if (rec.id && typeof rec.id === 'number') {
           await new Promise((res, rej) => {
@@ -12885,11 +12920,12 @@ async function cloudPullAll() {
           changed = true;
         }
       }
+      // Advance high-water mark for this store
+      setSyncHWM(store, pullStart);
     }
     setSyncOffline(false);
     if (changed) {
       const cur = document.querySelector('.view.active')?.id?.replace('view-','') || 'dashboard';
-      // Schedule a background refresh — deferred until user is idle
       scheduleRefresh(cur);
     }
     return changed;
@@ -12905,16 +12941,33 @@ let _realtimeChannel = null;
 
 // View names that should re-render when a store changes
 const STORE_VIEW_MAP = {
+  // Tasks
   completions:       ['dashboard', 'tasks', 'week'],
+  chores:            ['dashboard', 'tasks', 'week'],
+  categories:        ['tasks'],
+  taskSkips:         ['tasks', 'week'],
+  pauses:            ['tasks', 'week'],
+  // People
+  people:            ['dashboard', 'people'],
+  // Diary / calendar / pinboard
+  diary:             ['diary'],
+  events:            ['calendar', 'dashboard'],
+  pins:              ['pinboard'],
+  // Rewards
+  rewards:           ['rewards'],
+  earnedRewards:     ['dashboard', 'rewards'],
+  // Expenses
+  expenseCategories: ['expenses'],
+  expenses:          ['expenses', 'dashboard'],
+  expenseTemplates:  ['expenses'],
+  // Grocery
   groceryItems:      ['dashboard', 'recipes'],
   groceryCategories: ['recipes'],
   groceryLibrary:    ['recipes'],
-  chores:            ['dashboard', 'tasks', 'week'],
-  categories:        ['tasks'],
-  people:            ['dashboard', 'people'],
+  // Recipes
   recipes:           ['recipes'],
   recipeIngredients: ['recipes'],
-  mealPlan:          ['recipes'],
+  mealPlan:          ['recipes', 'dashboard'],
 };
 
 async function handleRealtimeEvent(store, payload) {
@@ -12943,18 +12996,10 @@ function cloudStartRealtime() {
     supa.removeChannel(_realtimeChannel);
     _realtimeChannel = null;
   }
-  const REALTIME_STORES = {
-    completions:       'completions',
-    groceryItems:      'grocery_items',
-    groceryCategories: 'grocery_categories',
-    groceryLibrary:    'grocery_library',
-    chores:            'chores',
-    categories:        'categories',
-    people:            'people',
-    recipes:           'recipes',
-    recipeIngredients: 'recipe_ingredients',
-    mealPlan:          'meal_plan',
-  };
+  // Subscribe all synced stores to realtime — keyed by local store name to table name
+  const REALTIME_STORES = Object.fromEntries(
+    Object.entries(SYNC_STORES).map(([store, cfg]) => [store, cfg.table])
+  );
   _realtimeChannel = supa.channel(`den_hh_${_cloudHH.id}`);
   for (const [store, table] of Object.entries(REALTIME_STORES)) {
     _realtimeChannel.on(
@@ -13002,12 +13047,24 @@ function cloudStopRealtime() {
 async function cloudPushAll() {
   if (!_cloudHH || !getSupa()) return;
   // Push in dependency order to satisfy foreign key constraints
+  // Push in dependency order (FKs must exist before referencing rows)
   const stores = [
-    'people', 'categories', 'expenseCategories',
-    'chores', 'completions', 'diary', 'events', 'pins',
-    'expenses',
-    'groceryCategories', 'groceryLibrary', 'groceryItems',  // grocery — in dependency order
-    'recipes', 'recipeIngredients', 'mealPlan',  // Tier 2
+    // No deps
+    'people', 'categories', 'expenseCategories', 'rewards',
+    'groceryCategories',
+    // Depend on above
+    'chores', 'expenses', 'earnedRewards', 'expenseTemplates',
+    'groceryLibrary',
+    // Depend on chores
+    'completions', 'taskSkips', 'pauses',
+    // Depend on people or categories
+    'diary', 'events', 'pins',
+    // Grocery (depends on groceryCategories + groceryLibrary)
+    'groceryItems',
+    // Recipes (no FKs except household)
+    'recipes',
+    // Depend on recipes
+    'recipeIngredients', 'mealPlan',
   ];
   let pushed = 0, errors = 0;
   for (const store of stores) {
@@ -13259,7 +13316,7 @@ function cloudForceSignOut() {
   try {
     // Clear Supabase session from localStorage
     Object.keys(localStorage).forEach(k => {
-      if (k.startsWith('den_auth') || k.startsWith('sb-') || k.includes('supabase')) {
+      if (k.startsWith('den_auth') || k.startsWith('sb-') || k.includes('supabase') || k === 'den_sync_hwm') {
         localStorage.removeItem(k);
       }
     });
@@ -13297,8 +13354,11 @@ async function cloudLoadHousehold() {
       // Check if local is empty (first time on this device)
       const localPeople = await all('people');
       const isFirstDevice = localPeople.length === 0;
+      // Force full pull if no HWM exists (new device or cleared state)
+      const hwmExists = Object.keys(getSyncHWM()).length > 0;
+      if (!hwmExists) clearSyncHWM(); // ensure clean state
       // Pull first (get latest cloud state), then push (flush any local-only changes)
-      cloudPullAll()
+      cloudPullAll(!hwmExists)
         .then(async () => {
           if (isFirstDevice) {
             // Fresh device — navigate to dashboard to show pulled data
@@ -13378,7 +13438,8 @@ async function cloudJoinHousehold() {
     // Show syncing state in the join message
     if (msgEl) { msgEl.textContent = '⏳ Downloading household data…'; msgEl.style.color = 'var(--gold)'; }
     try {
-      await cloudPullAll();
+      clearSyncHWM();               // force full pull for new member
+      await cloudPullAll(true);
       await cloudPushAll();
       await cloudStartRealtime();
       // Navigate to dashboard so user lands on populated data
