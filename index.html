@@ -4223,6 +4223,50 @@ const S = {
 // Builds an id map per store, rewrites all records with UUID ids,
 // then updates cross-references (choreId, personId, categoryId, etc.)
 
+async function cleanupBadCompletions() {
+  // Remove completions created with parseInt(uuid) = NaN before the bug was fixed.
+  // A bad record has personId that is NaN, a number, or the string "NaN".
+  const CLEANUP_KEY = 'hb_cleanup_bad_comps_v1';
+  if (localStorage.getItem(CLEANUP_KEY)) return;
+
+  const comps = await new Promise((res, rej) => {
+    const q = tx('completions').objectStore('completions').getAll();
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+
+  const bad = comps.filter(c => {
+    const pid = c.personId;
+    if (pid === null || pid === undefined) return false; // null is valid (unassigned)
+    if (typeof pid === 'number') return true;            // integer or NaN
+    if (typeof pid === 'string' && pid === 'NaN') return true;
+    return false;
+  });
+
+  if (bad.length) {
+    console.log(`Den: cleaning up ${bad.length} bad completion(s) with invalid personId`);
+    for (const c of bad) {
+      // Hard delete locally — these were never valid
+      await new Promise((res, rej) => {
+        const q = tx('completions', 'readwrite').objectStore('completions').delete(c.id);
+        q.onsuccess = res; q.onerror = rej;
+      });
+      // Also soft-delete on cloud if signed in
+      if (_cloudHH && getSupa()) {
+        getSupa()
+          .from('completions')
+          .update({ deleted: true, updated_at: new Date().toISOString() })
+          .eq('id', c.id)
+          .eq('household_id', _cloudHH.id)
+          .then(() => {})
+          .catch(() => {});
+      }
+    }
+    showToast(`Cleaned up ${bad.length} invalid completion${bad.length>1?'s':''}`, 'var(--text-3)');
+  }
+
+  localStorage.setItem(CLEANUP_KEY, '1');
+}
+
 async function migrateToUUIDs() {
   const MIGRATION_KEY = 'hb_uuid_migration_v12';
   if (localStorage.getItem(MIGRATION_KEY)) return; // already done
@@ -13966,6 +14010,7 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
 (async()=>{
   await openDB();
   await migrateToUUIDs();  // one-time UUID migration for existing data
+  await cleanupBadCompletions();  // remove completions with invalid personId from parseInt bug
   // Load persisted settings
   const savedWsd2=loadSetting('weekStartDay');
   if(savedWsd2!==null){ S.weekStartDay=parseInt(savedWsd2); }
