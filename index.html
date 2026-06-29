@@ -1042,6 +1042,21 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .rec-ing-name{flex:1;min-width:0}
 .rec-ing-del{flex-shrink:0;width:30px;height:30px;border:none;background:var(--surface-2);border-radius:6px;color:var(--terra);cursor:pointer;font-size:16px;line-height:1}
 .rec-ing-del:hover{background:var(--surface-3)}
+/* Ingredient section header row */
+.rec-ing-section{display:flex;gap:6px;align-items:center;margin:10px 0 4px;padding-bottom:4px;border-bottom:2px solid var(--border)}
+.rec-ing-section-input{flex:1;background:none;border:none;border-bottom:none;font-weight:700;font-size:13px;color:var(--text);padding:4px 2px;outline:none}
+.rec-ing-section-input::placeholder{color:var(--text-3);font-weight:400}
+.rec-ing-drag{width:22px;height:30px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--text-3);font-size:14px;flex-shrink:0;user-select:none}
+.rec-ing-drag:active{cursor:grabbing}
+/* Ingredient note */
+.rec-ing-note{font-size:11.5px;color:var(--text-3);padding:2px 4px;background:none;border:none;border-bottom:1px solid var(--border-soft);width:100%;margin-top:2px;outline:none}
+.rec-ing-note:focus{border-color:var(--gold);color:var(--text)}
+.rec-ing-note::placeholder{color:var(--text-3);opacity:0.6}
+.rec-ing-wrap{display:flex;flex-direction:column;margin-bottom:6px}
+/* Drag reorder for category manager */
+.glib-item[draggable]{cursor:grab}
+.glib-item[draggable]:active{cursor:grabbing}
+.glib-item.drag-over{border-color:var(--gold);background:var(--gold-glow)}
 .rec-view-photo{width:100%;height:200px;background:var(--surface-2);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
 .rec-view-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border-soft)}
 .rec-view-section-title{font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:0.05em;margin:14px 0 8px}
@@ -2006,7 +2021,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.14.0</p>
+      <p class="sidebar-version">v7.15.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2802,7 +2817,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.14.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.15.0</span>
         </div>
       </div>
     </div>
@@ -3694,7 +3709,10 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="fg">
       <label class="fl">Ingredients</label>
       <div id="mRecIngredients"></div>
-      <button class="btn btn-ghost" id="mRecAddIng" style="font-size:12px;margin-top:6px">+ Add ingredient</button>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn btn-ghost" id="mRecAddIng" style="font-size:12px;flex:1">+ Ingredient</button>
+        <button class="btn btn-ghost" id="mRecAddSection" style="font-size:12px;flex:1">+ Section</button>
+      </div>
     </div>
     <div class="fg">
       <label class="fl">Steps</label>
@@ -8589,22 +8607,78 @@ function recUnitOptions(selected){
   });
   return html;
 }
-function addIngredientRow(qty='', unit='', name='', libraryId=null){
+function addIngredientRow(qty='', unit='', name='', libraryId=null, note=''){
   const wrap=g('mRecIngredients');
+  const outer=document.createElement('div'); outer.className='rec-ing-wrap';
   const row=document.createElement('div'); row.className='rec-ing-row';
   const safeQty=qty!=null?String(qty).replace(/"/g,'&quot;'):'';
   const safeName=name?name.replace(/"/g,'&quot;'):'';
-  row.innerHTML=`<input class="fi rec-ing-qty" placeholder="Qty" value="${safeQty}" style="width:62px;flex-shrink:0">
+  const safeNote=note?note.replace(/"/g,'&quot;'):'';
+  row.innerHTML=`<span class="rec-ing-drag" title="Drag to reorder">⠿</span>
+    <input class="fi rec-ing-qty" placeholder="Qty" value="${safeQty}" style="width:62px;flex-shrink:0">
     <select class="fi rec-ing-unit" style="width:96px;flex-shrink:0">${recUnitOptions(unit)}</select>
     <div class="ing-search-wrap" style="flex:1;min-width:0;position:relative">
       <input class="fi rec-ing-name" placeholder="Search ingredient…" value="${safeName}" autocomplete="off" data-library-id="${libraryId||''}" style="width:100%">
     </div>
     <button class="rec-ing-del" title="Remove" style="flex-shrink:0">×</button>`;
-  row.querySelector('.rec-ing-del').onclick=()=>row.remove();
+  row.querySelector('.rec-ing-del').onclick=()=>outer.remove();
   const nameInput=row.querySelector('.rec-ing-name');
   nameInput.addEventListener('input', () => ingSearchInput(nameInput, row));
   nameInput.addEventListener('blur', () => setTimeout(()=>closeIngDropdown(row), 200));
+  outer.appendChild(row);
+  // Note field (always shown — placeholder makes it unobtrusive when empty)
+  const noteEl=document.createElement('input');
+  noteEl.className='rec-ing-note';
+  noteEl.placeholder='Note (e.g. diced, room temperature…)';
+  noteEl.value=safeNote;
+  outer.appendChild(noteEl);
+  // Drag reorder
+  wireIngDrag(outer, wrap);
+  wrap.appendChild(outer);
+}
+
+function addSectionRow(sectionName=''){
+  const wrap=g('mRecIngredients');
+  const row=document.createElement('div'); row.className='rec-ing-section';
+  const safeName=sectionName.replace(/"/g,'&quot;');
+  row.innerHTML=`<span class="rec-ing-drag" title="Drag to reorder">⠿</span>
+    <input class="rec-ing-section-input" placeholder="Section name (e.g. For the dressing)" value="${safeName}">
+    <button class="rec-ing-del" title="Remove section" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
+  row.querySelector('.rec-ing-del').onclick=()=>row.remove();
+  wireIngDrag(row, wrap);
   wrap.appendChild(row);
+}
+
+// Simple drag-to-reorder for ingredient rows
+let _ingDragEl = null;
+function wireIngDrag(el, container) {
+  el.setAttribute('draggable', 'true');
+  el.addEventListener('dragstart', e => {
+    _ingDragEl = el;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(()=>el.style.opacity='0.4', 0);
+  });
+  el.addEventListener('dragend', () => {
+    el.style.opacity='';
+    container.querySelectorAll('.rec-ing-wrap,.rec-ing-section').forEach(r=>r.classList.remove('drag-over'));
+    _ingDragEl = null;
+  });
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (_ingDragEl && _ingDragEl !== el) el.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    if (_ingDragEl && _ingDragEl !== el) {
+      const allRows = [...container.children];
+      const fromIdx = allRows.indexOf(_ingDragEl);
+      const toIdx   = allRows.indexOf(el);
+      if (fromIdx < toIdx) el.after(_ingDragEl);
+      else el.before(_ingDragEl);
+    }
+  });
 }
 
 function renderRecTagPicker(){
@@ -8988,7 +9062,10 @@ async function openRecipeModal(recipeId=null){
       g('mRecSource').value=r.source||'';
       g('mRecNotes').value=r.notes||'';
       S.recModalTags=[...(r.tags||[])];
-      ings.sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id)).forEach(i=>addIngredientRow(i.qty, i.unit, i.name, i.libraryId||null));
+      ings.sort((a,b)=>(a.sortOrder??a.id)-(b.sortOrder??b.id)).forEach(i=>{
+        if(i.sectionName!=null) addSectionRow(i.sectionName);
+        else addIngredientRow(i.qty, i.unit, i.name, i.libraryId||null, i.note||'');
+      });
     }
   }
   if(!g('mRecIngredients').children.length){ addIngredientRow(); addIngredientRow(); }
@@ -9075,16 +9152,28 @@ async function saveRecipe(){
   // Rebuild ingredient rows for this recipe
   const existing=await byIdx('recipeIngredients','recipeId',rid);
   for(const ex of existing) await del('recipeIngredients',ex.id);
-  const rows=g('mRecIngredients').querySelectorAll('.rec-ing-row');
+  // Collect all children — both .rec-ing-wrap (ingredient) and .rec-ing-section (section header)
+  const ingChildren = [...g('mRecIngredients').children];
   let order=0;
-  for(const row of rows){
-    const qty=row.querySelector('.rec-ing-qty').value.trim();
-    const unit=row.querySelector('.rec-ing-unit').value.trim();
-    const nameInput=row.querySelector('.rec-ing-name');
-    const nm=nameInput.value.trim();
-    const libraryId=nameInput.dataset.libraryId||null;
-    if(!nm) continue;
-    await put('recipeIngredients',{recipeId:rid, qty:qty||null, unit:unit||null, name:nm, nameKey:recKey(nm), sortOrder:order++, libraryId:libraryId||null});
+  for(const child of ingChildren){
+    if(child.classList.contains('rec-ing-section')){
+      // Section header row
+      const sectionName = child.querySelector('.rec-ing-section-input')?.value.trim()||'';
+      if(!sectionName) continue;
+      await put('recipeIngredients',{recipeId:rid, sectionName, qty:null, unit:null, name:null, nameKey:null, sortOrder:order++, libraryId:null, note:null});
+    } else if(child.classList.contains('rec-ing-wrap')){
+      // Ingredient row (outer wrapper)
+      const row = child.querySelector('.rec-ing-row');
+      if(!row) continue;
+      const qty=row.querySelector('.rec-ing-qty').value.trim();
+      const unit=row.querySelector('.rec-ing-unit').value.trim();
+      const nameInput=row.querySelector('.rec-ing-name');
+      const nm=nameInput.value.trim();
+      const libraryId=nameInput.dataset.libraryId||null;
+      const note=child.querySelector('.rec-ing-note')?.value.trim()||null;
+      if(!nm) continue;
+      await put('recipeIngredients',{recipeId:rid, qty:qty||null, unit:unit||null, name:nm, nameKey:recKey(nm), sortOrder:order++, libraryId:libraryId||null, note:note||null, sectionName:null});
+    }
   }
   playSound('tick');
   closeModal('recipeModal');
@@ -9109,7 +9198,10 @@ async function openRecipeView(recipeId){
       ${totalTime?`<span>⏱ ${totalTime} min total</span>`:''}
     </div>
     ${ings.length?`<div class="rec-view-section-title">Ingredients</div>
-      <ul class="rec-view-ings">${ings.map(i=>`<li><span class="q">${[i.qty,i.unit].filter(Boolean).join(' ')||'—'}</span><span>${i.name}</span></li>`).join('')}</ul>`:''}
+      <ul class="rec-view-ings">${ings.map(i=>{
+        if(i.sectionName!=null) return `</ul><div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${i.sectionName}</div><ul class="rec-view-ings">`;
+        return `<li><span class="q">${[i.qty,i.unit].filter(Boolean).join(' ')||'—'}</span><div style="flex:1"><span>${i.name}</span>${i.note?`<span style="display:block;font-size:11.5px;color:var(--text-3);font-style:italic">${i.note}</span>`:''}</div></li>`;
+      }).join('')}</ul>`:''}
     ${(r.steps||[]).length?`<div class="rec-view-section-title">Steps</div>
       <ol class="rec-view-steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`:''}
     ${r.notes?`<div class="rec-view-section-title">Notes</div><p style="font-size:13px;color:var(--text-2);line-height:1.6">${r.notes}</p>`:''}
@@ -9647,10 +9739,11 @@ async function openGlibCatsModal() {
   panel.id = 'glibCatsPanel';
   panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
 
-  const rows = cats.map(c => `
-    <div class="glib-item" id="gcrow-${c.id}">
+  const rows = cats.map((c,idx) => `
+    <div class="glib-item" id="gcrow-${c.id}" data-id="${c.id}" draggable="true" style="cursor:default">
+      <span class="rec-ing-drag" title="Drag to reorder" style="font-size:16px">⠿</span>
       <input type="color" value="${c.color}" style="width:32px;height:32px;border:none;border-radius:6px;cursor:pointer;flex-shrink:0;padding:0" onchange="glibCatColorChange('${c.id}',this.value)">
-      <input class="fi" value="${c.icon||''}" style="width:40px;flex-shrink:0;text-align:center;font-size:16px;padding:4px 6px" placeholder="🏷" maxlength="2" onchange="glibCatIconChange('${c.id}',this.value)">
+      <input class="fi" value="${c.icon||''}" style="width:40px;flex-shrink:0;text-align:center;font-size:16px;padding:4px 6px" placeholder="🏷" maxlength="2" oninput="glibCatIconChange('${c.id}',this.value)">
       <input class="fi" value="${c.name}" style="flex:1" onchange="glibCatNameChange('${c.id}',this.value)">
       <button class="glib-item-del" onclick="glibCatDelete('${c.id}')">×</button>
     </div>`).join('');
@@ -9666,6 +9759,43 @@ async function openGlibCatsModal() {
     </div>`;
   document.body.appendChild(panel);
   panel.onclick = e => { if (e.target === panel) panel.remove(); };
+  // Wire drag reorder on category rows
+  const catRowsContainer = g('glibCatRows');
+  if (catRowsContainer) wireGlibCatDrag(catRowsContainer);
+}
+
+function wireGlibCatDrag(container) {
+  let dragEl = null;
+  container.querySelectorAll('.glib-item[draggable]').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragEl = row; e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => row.style.opacity = '0.4', 0);
+    });
+    row.addEventListener('dragend', () => {
+      row.style.opacity = '';
+      container.querySelectorAll('.glib-item').forEach(r => r.classList.remove('drag-over'));
+      // Save new sortOrder
+      const newOrder = [...container.querySelectorAll('.glib-item[data-id]')];
+      newOrder.forEach((r, i) => {
+        const id = r.dataset.id;
+        get('groceryCategories', id).then(cat => {
+          if (cat && cat.sortOrder !== i) { cat.sortOrder = i; put('groceryCategories', cat); }
+        });
+      });
+      invalidateGlibCats();
+      dragEl = null;
+    });
+    row.addEventListener('dragover', e => { e.preventDefault(); if (dragEl && dragEl !== row) row.classList.add('drag-over'); });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault(); row.classList.remove('drag-over');
+      if (dragEl && dragEl !== row) {
+        const rows = [...container.children];
+        if (rows.indexOf(dragEl) < rows.indexOf(row)) row.after(dragEl);
+        else row.before(dragEl);
+      }
+    });
+  });
 }
 
 async function glibCatColorChange(id, color) {
@@ -10542,6 +10672,7 @@ function wire() {
   g('recipeCancelBtn').onclick=()=>closeModal('recipeModal');
   g('recipeSaveBtn').onclick=saveRecipe;
   g('mRecAddIng').onclick=()=>addIngredientRow();
+  g('mRecAddSection').onclick=()=>addSectionRow();
   const addRecTag = () => {
     const inp = g('mRecTagInput');
     const v = inp ? inp.value.trim() : '';
@@ -12769,7 +12900,7 @@ const SYNC_STORES = {
   groceryItems:      { table: 'grocery_items',       fields: { nameKey:'name_key', sortOrder:'sort_order', categoryId:'category_id' } },
   // Recipes & meal planning
   recipes:           { table: 'recipes',             fields: { prepMin:'prep_min', cookMin:'cook_min', favorite:null } },
-  recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order', libraryId:'library_id' } },
+  recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order', libraryId:'library_id', sectionName:'section_name' } },
   mealPlan:          { table: 'meal_plan',           fields: { recipeId:'recipe_id' } },
 };
 
@@ -12872,6 +13003,7 @@ function fromSupabaseRow(store, row) {
 // or if local doesn't exist. Handles soft-deletes.
 // Returns true if local state changed.
 async function mergeRecord(store, cloudRow) {
+  if (store === 'groceryCategories') invalidateGlibCats();
   const obj = fromSupabaseRow(store, cloudRow);
   const localRec = await get(store, obj.id);
 
