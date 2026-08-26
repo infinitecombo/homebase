@@ -2046,7 +2046,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.16.0</p>
+      <p class="sidebar-version">v7.17.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2231,6 +2231,15 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <div class="card">
           <div class="card-head"><span class="card-title">Recent Journal Entry</span></div>
           <div id="dashDiary"></div>
+        </div>
+      </div>
+      <div class="dash-card-wrap" data-card="schedule">
+        <div class="card full">
+          <div class="card-head">
+            <span class="card-title">📅 Today's Schedule</span>
+            <select id="dashSchedulePerson" class="fi" style="font-size:12px;padding:4px 8px;height:auto;flex-shrink:0;max-width:120px"></select>
+          </div>
+          <div id="dashSchedule" style="position:relative;overflow:hidden;border-radius:var(--radius-sm)"></div>
         </div>
       </div>
       <div class="dash-card-wrap" data-card="expenses">
@@ -2899,7 +2908,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.16.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.17.0</span>
         </div>
       </div>
     </div>
@@ -5588,6 +5597,9 @@ async function renderDash() {
       ds.appendChild(personBlock);
     });
   }
+
+  // ── Schedule card ──────────────────────────────
+  await renderDashSchedule();
 }
 
 // ═══════════════════════════════════════════
@@ -5628,6 +5640,15 @@ async function renderWeek() {
 
   const isMobile = window.innerWidth <= 768;
   const grid = g('weekGrid'); grid.innerHTML='';
+
+  // If schedule view is active, re-render it and keep weekGrid hidden
+  if (_scheduleVisible) {
+    grid.style.display = 'none';
+    await renderSchedule();
+    return;
+  }
+  // Ensure weekGrid is visible (in case we're returning from schedule mode)
+  grid.style.display = '';
 
   if(isMobile) {
     // ── MOBILE: vertical day picker + detail panel ──────────────────────
@@ -10644,7 +10665,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.16.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.17.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10904,6 +10925,7 @@ function wire() {
   g('dashBonusBtn').onclick=()=>openBonusModal(today());
   g('dashMealBtn').onclick=()=>{ S.recTab='plan'; nav('recipes'); };
   g('dashGroceryBtn').onclick=()=>{ S.recTab='grocery'; nav('recipes'); };
+  if(g('dashSchedulePerson')) g('dashSchedulePerson').onchange=()=>renderDashSchedule();
   g('dashCustomizeBtn').onclick=()=>{ if(_dashCustomizing) exitDashCustomizeMode(); else enterDashCustomizeMode(); };
   g('wkBonusBtn').onclick=()=>openBonusModal(today());
   g('wkScheduleToggle').onclick=()=>toggleScheduleView();
@@ -12401,9 +12423,9 @@ async function doResetPeriod(period) {
 const DASH_CARD_LABELS = {
   tasks:"Today's Tasks", week:'This Week', events:'Upcoming Events',
   meals:"Today's Meals", grocery:'Grocery List', streaks:'Streaks',
-  summary:'Weekly Summary', pins:'Pinboard', diary:'Journal', expenses:'Expenses'
+  summary:'Weekly Summary', schedule:"Today's Schedule", pins:'Pinboard', diary:'Journal', expenses:'Expenses'
 };
-const DASH_DEFAULT_ORDER = ['tasks','week','events','meals','grocery','streaks','summary','pins','diary','expenses'];
+const DASH_DEFAULT_ORDER = ['tasks','week','events','meals','grocery','streaks','schedule','summary','pins','diary','expenses'];
 
 function getDashLayout() {
   try {
@@ -13231,6 +13253,97 @@ async function gistPull() {
 }
 
 // ═══════════════════════════════════════════
+// DASHBOARD SCHEDULE CARD
+// ═══════════════════════════════════════════
+async function renderDashSchedule() {
+  const container = g('dashSchedule');
+  const personSel = g('dashSchedulePerson');
+  if (!container) return;
+
+  const [people, chores, schedBlocks, allComps, categories] = await Promise.all([
+    all('people'), all('chores'), all('taskSchedule').catch(()=>[]),
+    all('completions'), all('categories')
+  ]);
+
+  // Populate person selector on first render
+  if (personSel && !personSel.dataset.populated) {
+    personSel.dataset.populated = '1';
+    personSel.innerHTML = '';
+    const defaultPid = S.person !== 'all' ? S.person : (people[0]?.id || '');
+    people.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.name;
+      if (p.id === defaultPid) opt.selected = true;
+      personSel.appendChild(opt);
+    });
+  }
+
+  const personId = personSel?.value || (people[0]?.id);
+  const person = people.find(p => p.id === personId);
+  const todayStr = today();
+
+  // Get tasks active today for this person
+  const activeTasks = chores.filter(c =>
+    !c.isBonus && isTaskActiveFor(c, todayStr, personId) &&
+    (!c.assignedTo?.length || c.assignedTo.includes(personId))
+  );
+
+  // Build scheduled entries
+  const scheduled = [];
+  activeTasks.forEach(task => {
+    const override = schedBlocks.find(b => b.choreId === task.id && b.date === todayStr && b.personId === personId);
+    const startTime = override?.startTime || task.defaultTime || null;
+    const duration = override?.duration || task.duration || 30;
+    if (startTime) {
+      const [hh, mm] = startTime.split(':').map(Number);
+      const startMin = hh * 60 + mm;
+      const done = allComps.some(c => c.choreId === task.id && c.date === todayStr && c.personId === personId);
+      scheduled.push({ task, startTime, startMin, duration, done });
+    }
+  });
+
+  scheduled.sort((a, b) => a.startMin - b.startMin);
+
+  container.innerHTML = '';
+
+  if (!scheduled.length) {
+    container.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:10px 0;text-align:center">No scheduled tasks for today — add default times to tasks to see them here.</div>';
+    return;
+  }
+
+  // Compact list view for dashboard (not full timeline)
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+
+  scheduled.forEach(entry => {
+    const cat = categories.find(c => c.id === entry.task.categoryId);
+    const color = cat?.color || person?.color || 'var(--gold)';
+    const endMin = entry.startMin + entry.duration;
+    const isNow = nowMins >= entry.startMin && nowMins < endMin;
+    const isPast = endMin < nowMins;
+
+    const endHH = Math.floor(endMin / 60);
+    const endMM = endMin % 60;
+    const endTime = `${String(endHH).padStart(2,'0')}:${String(endMM).padStart(2,'0')}`;
+
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-soft);opacity:${isPast&&entry.done?'0.5':'1'}`;
+    row.innerHTML = `
+      <div style="width:44px;flex-shrink:0;text-align:right;font-size:11px;color:var(--text-3);line-height:1.3">
+        <div>${entry.startTime}</div>
+        <div style="opacity:0.6">${endTime}</div>
+      </div>
+      <div style="width:3px;height:36px;border-radius:2px;flex-shrink:0;background:${color};opacity:${entry.done?'0.4':'1'}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;${entry.done?'text-decoration:line-through;color:var(--text-3)':'color:var(--text)'}">${entry.task.name}</div>
+        <div style="font-size:11px;color:var(--text-3)">${entry.duration}min${isNow?' · <span style="color:var(--sage);font-weight:600">In progress</span>':''}</div>
+      </div>
+      ${entry.done ? '<span style="color:var(--sage);font-size:14px">✓</span>' : (isNow ? '<span style="color:var(--sage);font-size:11px;font-weight:600">▶</span>' : '')}`;
+    container.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════
 // SCHEDULE VIEW
 // ═══════════════════════════════════════════
 // taskSchedule IndexedDB store: { id, choreId, date, personId, startTime, duration }
@@ -13252,9 +13365,10 @@ function toggleScheduleView() {
     initScheduleView();
   } else {
     schedEl.style.display = 'none';
-    weekGrid.style.display = '';
+    // Don't just unhide - re-render the week grid cleanly
     btn.style.background = '';
     btn.style.color = '';
+    renderWeek(); // will set grid.style.display correctly
   }
 }
 
@@ -13287,8 +13401,8 @@ async function renderSchedule() {
   const personId = g('schedulePerson')?.value;
   if (!personId) return;
 
-  const [chores, schedBlocks, allComps, people] = await Promise.all([
-    all('chores'), all('taskSchedule').catch(()=>[]), all('completions'), all('people')
+  const [chores, schedBlocks, allComps, people, categories] = await Promise.all([
+    all('chores'), all('taskSchedule').catch(()=>[]), all('completions'), all('people'), all('categories')
   ]);
   const person = people.find(p => p.id === personId);
 
@@ -13368,58 +13482,52 @@ async function renderSchedule() {
     gridWrap.appendChild(nowLine);
   }
 
-  // Place scheduled task blocks — detect overlaps for side-by-side rendering
-  // Convert all to {top, height, task, ...} then compute columns
+  // Place scheduled task blocks — overlapping blocks are offset (staggered) not split
+  // Each block is full-width but offset down/right by a small amount per overlap depth
+  const LABEL_WIDTH = 48; // px reserved for hour labels
+  const BLOCK_OFFSET_PX = 12; // px to shift each overlapping block
+  const BLOCK_RIGHT_MARGIN = 6;
+
+  // Sort by startMin so earlier tasks get lower z-index
   const blockData = scheduled.map(entry => {
     const [hh, mm] = entry.startTime.split(':').map(Number);
     const startMin = hh * 60 + mm;
     const endMin = startMin + entry.duration;
-    return { ...entry, startMin, endMin, col: 0, totalCols: 1 };
-  });
+    return { ...entry, startMin, endMin, depth: 0 };
+  }).sort((a,b) => a.startMin - b.startMin);
 
-  // Compute overlap columns (simple greedy)
+  // Compute overlap depth: how many prior blocks overlap this one
   for (let i = 0; i < blockData.length; i++) {
-    const cols = [false]; // col 0 is available
+    let depth = 0;
     for (let j = 0; j < i; j++) {
-      if (blockData[j].endMin > blockData[i].startMin && blockData[j].startMin < blockData[i].endMin) {
-        // Overlapping — block j's col is taken
-        while (cols.length <= blockData[j].col) cols.push(false);
-        cols[blockData[j].col] = true;
-      }
+      if (blockData[j].endMin > blockData[i].startMin) depth++;
     }
-    blockData[i].col = cols.indexOf(false) === -1 ? cols.length : cols.indexOf(false);
-  }
-  // Compute totalCols for each overlapping group
-  for (let i = 0; i < blockData.length; i++) {
-    let maxCol = blockData[i].col;
-    for (let j = 0; j < blockData.length; j++) {
-      if (i !== j && blockData[j].endMin > blockData[i].startMin && blockData[j].startMin < blockData[i].endMin) {
-        maxCol = Math.max(maxCol, blockData[j].col);
-      }
-    }
-    blockData[i].totalCols = maxCol + 1;
+    blockData[i].depth = depth;
   }
 
-  blockData.forEach(entry => {
-    const topPx = (entry.startMin - startMins) * PX_PER_MIN;
-    const heightPx = Math.max(entry.duration * PX_PER_MIN, 28);
-    const laneWidth = 100 / entry.totalCols;
-    const leftPct = 44 + (laneWidth * entry.col); // 44px for hour labels
-    const widthCalc = `calc(${laneWidth}% - 8px)`;
+  blockData.forEach((entry, idx) => {
+    const topPx = (entry.startMin - startMins) * PX_PER_MIN + (entry.depth * BLOCK_OFFSET_PX);
+    const heightPx = Math.max(entry.duration * PX_PER_MIN - (entry.depth * BLOCK_OFFSET_PX * 0.5), 28);
+    const leftPx = LABEL_WIDTH + (entry.depth * BLOCK_OFFSET_PX);
+    const rightPx = BLOCK_RIGHT_MARGIN + (entry.depth * BLOCK_OFFSET_PX * 0.5);
+
+    // Use category color if available, else fall back to person color
+    const cat = categories.find(c => c.id === entry.task.categoryId);
+    const color = cat?.color || person?.color || 'var(--gold)';
+    const alpha = entry.done ? '66' : (entry.depth > 0 ? 'bb' : 'dd');
 
     const block = document.createElement('div'); block.className = 'sched-block';
-    const color = person?.color || 'var(--gold)';
-    const colLeftPct  = laneWidth * entry.col;
-    const colWidthPct = laneWidth;
     block.style.cssText = `
-      top:${topPx}px; height:${heightPx}px;
-      left:calc(44px + ${colLeftPct}% - ${colLeftPct * 0.44}px);
-      width:calc(${colWidthPct}% - 12px);
-      background:${color}${entry.done ? '55' : 'cc'};
-      color:${entry.done ? 'var(--text-3)' : '#fff'};
       position:absolute;
-      text-decoration:${entry.done?'line-through':''};
-      opacity:${entry.totalCols > 1 ? '0.88' : '1'}`;
+      top:${topPx}px;
+      height:${heightPx}px;
+      left:${leftPx}px;
+      right:${rightPx}px;
+      background:${color}${alpha};
+      color:#fff;
+      z-index:${idx + 1};
+      text-decoration:${entry.done ? 'line-through' : ''};
+      border-left-color:${color}`;
     block.innerHTML = `<div class="sched-block-name">${entry.task.name}</div>
       <div class="sched-block-time">${entry.startTime} · ${entry.duration}min</div>`;
     block.onclick = () => openScheduleBlockModal(entry.task.id, date, personId, entry.startTime, entry.duration, entry.overrideId);
