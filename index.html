@@ -1119,15 +1119,19 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .sched-hour-row{display:flex;min-height:48px;border-bottom:1px solid var(--border-soft);position:relative}
 .sched-hour-label{width:44px;flex-shrink:0;font-size:10px;color:var(--text-3);padding:2px 6px 0;text-align:right;user-select:none;margin-top:-6px}
 .sched-hour-lane{flex:1;position:relative;min-height:48px}
-.sched-block{position:absolute;left:4px;right:4px;border-radius:6px;padding:4px 6px;font-size:11.5px;font-weight:600;cursor:pointer;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:opacity 0.15s;border-left:3px solid rgba(255,255,255,0.4)}
-.sched-block:hover{opacity:0.85;z-index:10}
-.sched-block-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sched-block-time{font-size:10px;opacity:0.75;font-weight:400}
-.sched-unscheduled{padding:8px 10px;border-bottom:1px solid var(--border-soft)}
+.sched-timeline-wrap{position:relative;width:100%;box-sizing:border-box}
+.sched-block{position:absolute;border-radius:7px;padding:5px 8px;font-size:12px;font-weight:600;cursor:pointer;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.25);transition:filter 0.15s;border-left:4px solid rgba(255,255,255,0.35);box-sizing:border-box}
+.sched-block:hover{filter:brightness(1.12);z-index:50!important}
+.sched-block-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.sched-block-time{font-size:10.5px;opacity:0.8;font-weight:400;margin-top:2px}
+.sched-hour-row{display:flex;height:60px;border-bottom:1px solid var(--border-soft);box-sizing:border-box}
+.sched-hour-label{width:48px;flex-shrink:0;font-size:10px;color:var(--text-3);padding:0 8px 0 4px;text-align:right;margin-top:-7px;user-select:none;box-sizing:border-box}
+.sched-hour-lane{flex:1;position:relative}
+.sched-unscheduled{padding:8px 10px 12px;border-bottom:1px solid var(--border-soft);background:var(--surface-2)}
 .sched-unscheduled-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-3);margin-bottom:6px;font-weight:600}
-.sched-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:100px;font-size:12px;margin:2px;cursor:grab;border:1px solid var(--border-soft);background:var(--surface-2)}
+.sched-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:12px;margin:2px;cursor:pointer;border:1px solid var(--border-soft);background:var(--surface)}
 .sched-chip:hover{background:var(--surface-3)}
-.sched-now-line{position:absolute;left:44px;right:0;height:2px;background:var(--terra);z-index:5;pointer-events:none}
+.sched-now-line{position:absolute;right:0;height:2px;background:var(--terra);z-index:20;pointer-events:none}
 .sched-now-line::before{content:'';position:absolute;left:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--terra)}
 .dash-customize-mode .dash-card-wrap{border:2px dashed var(--border);border-radius:var(--radius);margin-bottom:4px;cursor:grab;transition:opacity 0.15s}
 .dash-customize-mode .dash-card-wrap:active{cursor:grabbing}
@@ -2046,7 +2050,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.17.0</p>
+      <p class="sidebar-version">v7.18.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2349,7 +2353,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <select id="schedulePerson" class="fi" style="flex:1;font-size:13px"></select>
         <button class="btn btn-ghost" id="scheduleAddBlock" style="font-size:12px">+ Block</button>
       </div>
-      <div id="scheduleTimeline" style="position:relative;overflow-y:auto;max-height:70vh;border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface)"></div>
+      <div id="scheduleTimeline" style="position:relative;overflow-y:auto;max-height:70vh;border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);overflow-x:hidden"></div>
     </div>
   </div>
 
@@ -2908,7 +2912,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.17.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.18.0</span>
         </div>
       </div>
     </div>
@@ -10665,7 +10669,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.17.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.18.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -13455,20 +13459,25 @@ async function renderSchedule() {
 
   // Build hour grid: 5am to 11pm (hours 5–23)
   const HOUR_START = 5, HOUR_END = 23;
-  const PX_PER_MIN = 1.6; // pixels per minute
-  const HOUR_HEIGHT = PX_PER_MIN * 60;
-  const totalHeight = (HOUR_END - HOUR_START) * HOUR_HEIGHT;
-
+  const PX_PER_MIN = 1.0; // 1px per minute = 60px per hour (matches .sched-hour-row height:60px)
+  const HOUR_HEIGHT = 60; // must match .sched-hour-row height in CSS
+  // Outer wrapper: flow layout for hour rows (not absolute positioning)
+  // Inner overlay: absolute positioning for task blocks, constrained to same size
   const gridWrap = document.createElement('div');
-  gridWrap.style.cssText = `position:relative;height:${totalHeight}px`;
+  gridWrap.className = 'sched-timeline-wrap';
+  gridWrap.style.cssText = 'position:relative';
+  // The blocks overlay sits on top of the hour rows with pointer-events passthrough
+  const blockLayer = document.createElement('div');
+  blockLayer.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:visible';
 
   // Hour rows
   for (let h = HOUR_START; h <= HOUR_END; h++) {
     const row = document.createElement('div'); row.className = 'sched-hour-row';
-    row.style.cssText = `position:absolute;top:${(h-HOUR_START)*HOUR_HEIGHT}px;left:0;right:0;height:${HOUR_HEIGHT}px`;
     const label = document.createElement('div'); label.className = 'sched-hour-label';
     label.textContent = h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h-12}pm`;
     row.appendChild(label);
+    const lane = document.createElement('div'); lane.className = 'sched-hour-lane';
+    row.appendChild(lane);
     gridWrap.appendChild(row);
   }
 
@@ -13477,18 +13486,23 @@ async function renderSchedule() {
   const nowMins = now.getHours() * 60 + now.getMinutes();
   const startMins = HOUR_START * 60;
   if (date === today() && nowMins >= startMins && nowMins <= HOUR_END * 60) {
+    // Calculate how many hours of rows have been rendered above the now position
+    // Each row is HOUR_HEIGHT px, so nowTop = (nowMins - startMins) * PX_PER_MIN
+    const nowTop = (nowMins - startMins) * PX_PER_MIN;
     const nowLine = document.createElement('div'); nowLine.className = 'sched-now-line';
-    nowLine.style.top = `${(nowMins - startMins) * PX_PER_MIN}px`;
-    gridWrap.appendChild(nowLine);
+    nowLine.style.cssText = `position:absolute;top:${nowTop}px;left:48px;right:0;height:2px;background:var(--terra);z-index:20;pointer-events:none`;
+    blockLayer.appendChild(nowLine);
   }
 
-  // Place scheduled task blocks — overlapping blocks are offset (staggered) not split
-  // Each block is full-width but offset down/right by a small amount per overlap depth
-  const LABEL_WIDTH = 48; // px reserved for hour labels
-  const BLOCK_OFFSET_PX = 12; // px to shift each overlapping block
-  const BLOCK_RIGHT_MARGIN = 6;
+  // Set blockLayer height to match the total height of the hour rows
+  const totalH = (HOUR_END - HOUR_START) * HOUR_HEIGHT;
+  blockLayer.style.height = `${totalH}px`;
 
-  // Sort by startMin so earlier tasks get lower z-index
+  // Build block data — sort by start time so earlier = lower z-index
+  const LABEL_W = 48;      // px width of the hour label column
+  const INSET = 4;         // px gap between label and block left edge
+  const OVERLAP_OFFSET = 16; // px to shift each successive overlapping block
+
   const blockData = scheduled.map(entry => {
     const [hh, mm] = entry.startTime.split(':').map(Number);
     const startMin = hh * 60 + mm;
@@ -13496,7 +13510,7 @@ async function renderSchedule() {
     return { ...entry, startMin, endMin, depth: 0 };
   }).sort((a,b) => a.startMin - b.startMin);
 
-  // Compute overlap depth: how many prior blocks overlap this one
+  // Compute overlap depth
   for (let i = 0; i < blockData.length; i++) {
     let depth = 0;
     for (let j = 0; j < i; j++) {
@@ -13505,35 +13519,47 @@ async function renderSchedule() {
     blockData[i].depth = depth;
   }
 
+  // PX_PER_MIN based on HOUR_HEIGHT=60px and 60min
+  // Use CSS variables on blockLayer so blocks use percentage-based height relative to gridWrap
   blockData.forEach((entry, idx) => {
-    const topPx = (entry.startMin - startMins) * PX_PER_MIN + (entry.depth * BLOCK_OFFSET_PX);
-    const heightPx = Math.max(entry.duration * PX_PER_MIN - (entry.depth * BLOCK_OFFSET_PX * 0.5), 28);
-    const leftPx = LABEL_WIDTH + (entry.depth * BLOCK_OFFSET_PX);
-    const rightPx = BLOCK_RIGHT_MARGIN + (entry.depth * BLOCK_OFFSET_PX * 0.5);
+    const topPx    = (entry.startMin - startMins) * PX_PER_MIN + (entry.depth * OVERLAP_OFFSET);
+    const heightPx = Math.max(entry.duration * PX_PER_MIN - (entry.depth * OVERLAP_OFFSET * 0.3), 32);
+    const leftOff  = LABEL_W + INSET + (entry.depth * OVERLAP_OFFSET);
+    const rightOff = INSET + Math.max(0, (blockData.length - 1 - idx) * 2); // slight taper so deeper blocks show behind
 
-    // Use category color if available, else fall back to person color
-    const cat = categories.find(c => c.id === entry.task.categoryId);
-    const color = cat?.color || person?.color || 'var(--gold)';
-    const alpha = entry.done ? '66' : (entry.depth > 0 ? 'bb' : 'dd');
+    const cat   = categories.find(c => c.id === entry.task.categoryId);
+    const color = cat?.color || person?.color || '#5a8ed4';
+    // Lighter shade for overlapping blocks so the stack is visible
+    const opacity = entry.done ? 0.4 : (entry.depth === 0 ? 1 : 0.82 - entry.depth * 0.06);
 
-    const block = document.createElement('div'); block.className = 'sched-block';
-    block.style.cssText = `
-      position:absolute;
-      top:${topPx}px;
-      height:${heightPx}px;
-      left:${leftPx}px;
-      right:${rightPx}px;
-      background:${color}${alpha};
-      color:#fff;
-      z-index:${idx + 1};
-      text-decoration:${entry.done ? 'line-through' : ''};
-      border-left-color:${color}`;
-    block.innerHTML = `<div class="sched-block-name">${entry.task.name}</div>
-      <div class="sched-block-time">${entry.startTime} · ${entry.duration}min</div>`;
+    const block = document.createElement('div');
+    block.className = 'sched-block';
+    block.style.position   = 'absolute';
+    block.style.top        = `${topPx}px`;
+    block.style.height     = `${heightPx}px`;
+    block.style.left       = `${leftOff}px`;
+    block.style.right      = `${rightOff}px`;
+    block.style.background = color;
+    block.style.opacity    = opacity;
+    block.style.color      = '#fff';
+    block.style.zIndex     = idx + 1;
+    block.style.borderLeftColor = color;
+    block.style.pointerEvents = 'all';
+    if (entry.done) block.style.textDecoration = 'line-through';
+
+    const endHH  = Math.floor(entry.endMin / 60);
+    const endMM  = entry.endMin % 60;
+    const endStr = `${String(endHH).padStart(2,'0')}:${String(endMM).padStart(2,'0')}`;
+
+    block.innerHTML = `
+      <div class="sched-block-name">${entry.task.name}</div>
+      <div class="sched-block-time">${entry.startTime}–${endStr} · ${entry.duration}min</div>`;
     block.onclick = () => openScheduleBlockModal(entry.task.id, date, personId, entry.startTime, entry.duration, entry.overrideId);
-    gridWrap.appendChild(block);
+    blockLayer.appendChild(block);
   });
 
+  // Append block layer on top of rows, then add everything to timeline
+  gridWrap.appendChild(blockLayer);
   timeline.appendChild(gridWrap);
 }
 
