@@ -1114,6 +1114,31 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .gi-body{flex:1;min-width:0}
 .gi-name{font-size:13.5px;color:var(--text);font-weight:500}
 .gi-qty{font-size:11.5px;color:var(--gold);font-weight:600;margin-right:6px}
+.dash-card-wrap{position:relative}
+/* Schedule timeline */
+.sched-hour-row{display:flex;min-height:48px;border-bottom:1px solid var(--border-soft);position:relative}
+.sched-hour-label{width:44px;flex-shrink:0;font-size:10px;color:var(--text-3);padding:2px 6px 0;text-align:right;user-select:none;margin-top:-6px}
+.sched-hour-lane{flex:1;position:relative;min-height:48px}
+.sched-block{position:absolute;left:4px;right:4px;border-radius:6px;padding:4px 6px;font-size:11.5px;font-weight:600;cursor:pointer;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:opacity 0.15s;border-left:3px solid rgba(255,255,255,0.4)}
+.sched-block:hover{opacity:0.85;z-index:10}
+.sched-block-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-block-time{font-size:10px;opacity:0.75;font-weight:400}
+.sched-unscheduled{padding:8px 10px;border-bottom:1px solid var(--border-soft)}
+.sched-unscheduled-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-3);margin-bottom:6px;font-weight:600}
+.sched-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:100px;font-size:12px;margin:2px;cursor:grab;border:1px solid var(--border-soft);background:var(--surface-2)}
+.sched-chip:hover{background:var(--surface-3)}
+.sched-now-line{position:absolute;left:44px;right:0;height:2px;background:var(--terra);z-index:5;pointer-events:none}
+.sched-now-line::before{content:'';position:absolute;left:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--terra)}
+.dash-customize-mode .dash-card-wrap{border:2px dashed var(--border);border-radius:var(--radius);margin-bottom:4px;cursor:grab;transition:opacity 0.15s}
+.dash-customize-mode .dash-card-wrap:active{cursor:grabbing}
+.dash-customize-mode .dash-card-wrap.hidden-card{opacity:0.35;filter:grayscale(0.6)}
+.dash-customize-mode .dash-card-wrap.drag-over{border-color:var(--gold);background:var(--gold-glow)}
+.dash-card-customize-bar{display:none;position:absolute;top:6px;right:6px;z-index:10;gap:6px}
+.dash-customize-mode .dash-card-customize-bar{display:flex}
+.dash-card-eye{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer;color:var(--text-2)}
+.dash-card-eye:hover{background:var(--surface-3)}
+.dash-card-drag-handle{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;color:var(--text-3);cursor:grab}
+.dash-customize-banner{display:none;background:var(--gold-glow);border:1px solid var(--gold-dim);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;font-size:13px;color:var(--gold);display:flex;align-items:center;gap:10px}
 .gi-dupe-badge{display:inline-block;font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;background:rgba(224,170,90,0.15);color:var(--gold);border:1px solid var(--gold-dim);padding:1px 6px;border-radius:100px;margin-left:6px;font-weight:600}
 .gi-src{font-size:10px;color:var(--text-3);flex-shrink:0}
 .gi-del{flex-shrink:0;width:26px;height:26px;border:none;background:transparent;color:var(--text-3);border-radius:6px;cursor:pointer;font-size:15px;line-height:1}
@@ -2021,7 +2046,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.15.0</p>
+      <p class="sidebar-version">v7.16.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2132,76 +2157,92 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   <!-- DASHBOARD -->
   <div class="view active" id="view-dashboard">
     <div class="dash-greeting" id="dashGreeting"></div>
-    <div class="dash-grid">
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 4px 6px">
+      <button class="btn btn-ghost" id="dashCustomizeBtn" style="font-size:12px;padding:5px 12px">✏️ Customize</button>
+    </div>
+    <div class="dash-grid" id="dashGrid">
       <!-- Pinboard alert (hidden when nothing pinned/pending) -->
       <div class="dash-pin-alert" id="dashPinAlert" style="display:none"></div>
-      <!-- Row 1: Today tasks + This week progress side by side -->
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">Today's Tasks</span>
-          <div style="display:flex;gap:6px">
-            <button class="btn-bonus" id="dashMarkAllBtn" title="Complete all tasks for today">✓ All Done</button>
-            <button class="btn-bonus" id="dashBonusBtn">✨ Bonus</button>
+      <div class="dash-card-wrap" data-card="tasks">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Today's Tasks</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn-bonus" id="dashMarkAllBtn" title="Complete all tasks for today">✓ All Done</button>
+              <button class="btn-bonus" id="dashBonusBtn">✨ Bonus</button>
+            </div>
           </div>
+          <div id="dashChores"></div>
         </div>
-        <div id="dashChores"></div>
       </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">This Week</span><span id="dashWkGoalBadge" style="font-size:11px;color:var(--text-3)"></span></div>
-        <div id="dashProgress"></div>
-        <div id="dashThisWeek"></div>
-      </div>
-      <!-- Row 2: Upcoming events + Streaks -->
-      <div class="card">
-        <div class="card-head"><span class="card-title">Upcoming Events</span></div>
-        <div id="dashEvents"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">🍳 Today's Meals</span><button class="btn-bonus" id="dashMealBtn" title="Open meal planner">Plan →</button></div>
-        <div id="dashMeals"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">🛒 Grocery List</span><button class="btn-bonus" id="dashGroceryBtn" title="Open grocery list">View →</button></div>
-        <div id="dashGrocery"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">🔥 Streaks</span></div>
-        <div id="dashStreaks"></div>
-      </div>
-      <!-- Row 3: Last week summary -->
-      <div class="card full">
-        <div class="card-head">
-          <span class="card-title">🏆 Weekly Summary &amp; Rewards</span>
+      <div class="dash-card-wrap" data-card="week">
+        <div class="card">
+          <div class="card-head"><span class="card-title">This Week</span><span id="dashWkGoalBadge" style="font-size:11px;color:var(--text-3)"></span></div>
+          <div id="dashProgress"></div>
+          <div id="dashThisWeek"></div>
         </div>
-        <div class="wk-nav-bar">
-          <button id="sumWkPrev">← Prev</button>
-          <span class="wk-nav-label" id="dashWeekRange"></span>
-          <button id="sumWkNext" disabled>Next →</button>
-          <button id="sumWkToday" style="color:var(--gold);border-color:var(--gold-dim)">This Week</button>
+      </div>
+      <div class="dash-card-wrap" data-card="events">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Upcoming Events</span></div>
+          <div id="dashEvents"></div>
         </div>
-        <div id="dashWeekSummary"></div>
       </div>
-      <!-- Row 4: Pinboard widget + Recent diary -->
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">📌 Pinboard</span>
-          <button class="btn-bonus" onclick="nav('pinboard')" style="font-size:11px;padding:4px 10px">View all</button>
+      <div class="dash-card-wrap" data-card="meals">
+        <div class="card">
+          <div class="card-head"><span class="card-title">🍳 Today's Meals</span><button class="btn-bonus" id="dashMealBtn" title="Open meal planner">Plan →</button></div>
+          <div id="dashMeals"></div>
         </div>
-        <div id="dashPins"></div>
       </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">Recent Journal Entry</span></div>
-        <div id="dashDiary"></div>
-      </div>
-      <!-- Expense summary at bottom -->
-      <div class="card full" id="dashExpCard">
-        <div class="card-head">
-          <span class="card-title">💰 This Month</span>
-          <button class="btn-bonus" onclick="nav('expenses')" style="font-size:11px;padding:4px 10px">View all</button>
+      <div class="dash-card-wrap" data-card="grocery">
+        <div class="card">
+          <div class="card-head"><span class="card-title">🛒 Grocery List</span><button class="btn-bonus" id="dashGroceryBtn" title="Open grocery list">View →</button></div>
+          <div id="dashGrocery"></div>
         </div>
-        <div id="dashExp"></div>
       </div>
-  </div>
+      <div class="dash-card-wrap" data-card="streaks">
+        <div class="card">
+          <div class="card-head"><span class="card-title">🔥 Streaks</span></div>
+          <div id="dashStreaks"></div>
+        </div>
+      </div>
+      <div class="dash-card-wrap" data-card="summary">
+        <div class="card full">
+          <div class="card-head"><span class="card-title">🏆 Weekly Summary &amp; Rewards</span></div>
+          <div class="wk-nav-bar">
+            <button id="sumWkPrev">← Prev</button>
+            <span class="wk-nav-label" id="dashWeekRange"></span>
+            <button id="sumWkNext" disabled>Next →</button>
+            <button id="sumWkToday" style="color:var(--gold);border-color:var(--gold-dim)">This Week</button>
+          </div>
+          <div id="dashWeekSummary"></div>
+        </div>
+      </div>
+      <div class="dash-card-wrap" data-card="pins">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">📌 Pinboard</span>
+            <button class="btn-bonus" onclick="nav('pinboard')" style="font-size:11px;padding:4px 10px">View all</button>
+          </div>
+          <div id="dashPins"></div>
+        </div>
+      </div>
+      <div class="dash-card-wrap" data-card="diary">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Recent Journal Entry</span></div>
+          <div id="dashDiary"></div>
+        </div>
+      </div>
+      <div class="dash-card-wrap" data-card="expenses">
+        <div class="card full" id="dashExpCard">
+          <div class="card-head">
+            <span class="card-title">💰 This Month</span>
+            <button class="btn-bonus" onclick="nav('expenses')" style="font-size:11px;padding:4px 10px">View all</button>
+          </div>
+          <div id="dashExp"></div>
+        </div>
+      </div>
+    </div>
 </div><!-- /view-dashboard -->
 
   <!-- PINBOARD -->
@@ -2288,9 +2329,19 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <button class="btn btn-ghost" id="wkToday">Today</button>
       <button class="btn btn-ghost" id="wkNext">Next →</button>
       <button class="btn-bonus" id="wkBonusBtn" style="margin-left:auto">✨ Bonus Task</button>
+      <button class="btn btn-ghost" id="wkScheduleToggle" style="font-size:12px;padding:5px 10px" title="Toggle schedule view">📅 Schedule</button>
     </div>
     <div class="week-range-label" id="wkLabel"></div>
     <div class="week-grid" id="weekGrid"></div>
+    <!-- Schedule view (hidden by default, shown for single-day per-person view) -->
+    <div id="scheduleView" style="display:none">
+      <div id="scheduleHeader" style="display:flex;align-items:center;gap:8px;padding:8px 0 4px;flex-wrap:wrap">
+        <input type="date" id="scheduleDate" class="fi" style="width:150px;font-size:13px">
+        <select id="schedulePerson" class="fi" style="flex:1;font-size:13px"></select>
+        <button class="btn btn-ghost" id="scheduleAddBlock" style="font-size:12px">+ Block</button>
+      </div>
+      <div id="scheduleTimeline" style="position:relative;overflow-y:auto;max-height:70vh;border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface)"></div>
+    </div>
   </div>
 
   <!-- CALENDAR -->
@@ -2785,6 +2836,37 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 
     <!-- Data -->
     <div class="settings-section">
+      <div class="settings-section-title">🔄 Points &amp; Rewards Reset</div>
+      <div class="card">
+        <div class="setting-label" style="margin-bottom:6px">Reset earned points and rewards for a time window</div>
+        <div class="setting-sub" style="margin-bottom:14px">This removes completions and earned rewards within the chosen period. Tasks, recipes, events, and everything else are untouched.</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Last 7 days</div>
+              <div class="setting-sub">Remove all completions and earned rewards from the past week</div>
+            </div>
+            <button class="btn btn-ghost" style="color:var(--terra);flex-shrink:0" onclick="openResetModal('week')">Reset</button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Last 30 days</div>
+              <div class="setting-sub">Remove all completions and earned rewards from the past month</div>
+            </div>
+            <button class="btn btn-ghost" style="color:var(--terra);flex-shrink:0" onclick="openResetModal('month')">Reset</button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">All time</div>
+              <div class="setting-sub">Remove all completions and earned rewards ever recorded</div>
+            </div>
+            <button class="btn btn-ghost" style="color:var(--terra);flex-shrink:0" onclick="openResetModal('all')">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">💾 Data</div>
       <div class="card">
         <div class="setting-row">
@@ -2817,7 +2899,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.15.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.16.0</span>
         </div>
       </div>
     </div>
@@ -3365,6 +3447,16 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div id="mBonusHint" style="display:none;padding:9px 12px;background:rgba(224,196,106,0.08);border:1px solid rgba(224,196,106,0.25);border-radius:var(--radius-sm);font-size:12px;color:var(--gold);margin-bottom:14px">
       ✨ This is a <strong>bonus task</strong> — no day is assigned. Log it from the dashboard or week view on any day you complete it.
     </div>
+    <div class="fr">
+      <div class="fg" style="max-width:110px">
+        <label class="fl">Duration <span style="opacity:.5">(min)</span></label>
+        <input type="number" class="fi" id="mTaskDuration" placeholder="15" min="5" step="5">
+      </div>
+      <div class="fg" style="max-width:130px">
+        <label class="fl">Default time <span style="opacity:.5">(optional)</span></label>
+        <input type="time" class="fi" id="mTaskDefaultTime">
+      </div>
+    </div>
     <div class="fg">
       <label class="fl">Assign to (empty = everyone)</label>
       <div class="assign-chips" id="mTaskAssign"></div>
@@ -3568,6 +3660,26 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
   </div>
 </div></div>
 
+
+<!-- Task-as-Bonus Modal -->
+<div class="overlay" id="taskAsBonusModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">⭐ Log as Bonus</div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:14px" id="tabmTaskName"></div>
+    <div class="fg">
+      <label class="fl">Who gets credit?</label>
+      <select class="fi" id="tabmPerson"></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Date</label>
+      <input class="fi" type="date" id="tabmDate">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('taskAsBonusModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="logTaskAsBonus()">Log Bonus</button>
+    </div>
+  </div>
+</div>
 
 <!-- Person Modal -->
 <div class="overlay" id="personModal">
@@ -4033,7 +4145,7 @@ function loadSetting(key) { try { const v=localStorage.getItem('hb_'+key); retur
 let DB;
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('HomeBaseDB', 13);
+    const r = indexedDB.open('HomeBaseDB', 14);
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('chores'))
@@ -4100,6 +4212,13 @@ function openDB() {
         const s = d.createObjectStore('groceryLibrary', { keyPath: 'id', autoIncrement: false });
         s.createIndex('nameKey', 'nameKey');
         s.createIndex('categoryId', 'categoryId');
+      }
+      // v14: Task schedule overrides
+      if (!d.objectStoreNames.contains('taskSchedule')) {
+        const s = d.createObjectStore('taskSchedule', { keyPath: 'id', autoIncrement: false });
+        s.createIndex('date', 'date');
+        s.createIndex('choreId', 'choreId');
+        s.createIndex('personId', 'personId');
       }
       // v12: Migrate existing integer IDs to UUIDs for all stores
       // New records will get UUIDs via the put() helper going forward.
@@ -4305,6 +4424,7 @@ async function migrateToUUIDs() {
     taskSkips:         { choreId: 'chores' },
     recipeIngredients: { recipeId: 'recipes', libraryId: 'groceryLibrary' },
     mealPlan:          { recipeId: 'recipes' },
+    taskSchedule:      { choreId: 'chores', personId: 'people' },
     groceryLibrary:    { categoryId: 'groceryCategories' },
     groceryItems:      { categoryId: 'groceryCategories' },
   };
@@ -4314,7 +4434,7 @@ async function migrateToUUIDs() {
     'rewards','earnedRewards','pins','pauses','expenseCategories',
     'expenses','expenseTemplates','taskSkips','recipes',
     'recipeIngredients','mealPlan','groceryItems',
-    'groceryCategories','groceryLibrary'
+    'groceryCategories','groceryLibrary','taskSchedule'
   ];
 
   // Step 1: Build id maps for every store (old int id -> new UUID)
@@ -4831,6 +4951,9 @@ function streakEmoji(n, unit='days') {
 async function renderDash() {
   const todayStr = today();
   const dow = new Date().getDay();
+
+  // Apply saved dashboard layout (order + hidden cards)
+  applyDashLayout();
 
   // 5. Greeting
   const greetEl = g('dashGreeting');
@@ -5562,8 +5685,9 @@ async function renderWeek() {
             const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
             return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${p.name}${comp?' ✓':''}"></div>`;
           }).join('')}</div>`:(done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}${cnt>1?`<span class="comp-count-badge">×${cnt}</span>`:''}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
-          item.onclick=(e)=>{ animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
+          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}${cnt>1?`<span class="comp-count-badge">×${cnt}</span>`:''}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><button class="w-task-bonus-btn" title="Log as bonus for someone else" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 3px;color:var(--text-3);flex-shrink:0">⭐</button><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          item.querySelector('.w-task-bonus-btn').onclick=(e)=>{e.stopPropagation();openTaskAsBonusModal(c.id,ds);};
+          item.onclick=(e)=>{ if(e.target.classList.contains('w-task-bonus-btn')) return; animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
           detail.appendChild(item);
           // Show completion notes
           const taskComps = allComps.filter(cp=>cp.choreId===c.id&&cp.date===ds&&cp.note);
@@ -5589,7 +5713,8 @@ async function renderWeek() {
         const person=bc.personId?people.find(p=>p.id===bc.personId):null;
         const chip=document.createElement('div'); chip.className='w-bonus';
         if(cat) chip.style.borderLeftColor=cat.color;
-        chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
+        chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" title="Remove">✕</button>`;
+        chip.querySelector('.w-bonus-remove').onclick=(e)=>{e.stopPropagation();removeBonusComp(bc.id);};
         detail.appendChild(chip);
       });
 
@@ -5690,7 +5815,8 @@ async function renderWeek() {
         const person=bc.personId?people.find(p=>p.id===bc.personId):null;
         const chip=document.createElement('div'); chip.className='w-bonus';
         if(cat) chip.style.borderLeftColor=cat.color;
-        chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" onclick="event.stopPropagation();removeBonusComp(${bc.id})" title="Remove">✕</button>`;
+        chip.innerHTML=`<span class="w-bonus-icon">✨</span><span class="w-bonus-name">${task.name}</span>${person?`<span style="font-size:10px;font-weight:600;color:${person.color};flex-shrink:0">${person.name}</span>`:''}<button class="w-bonus-remove" title="Remove">✕</button>`;
+        chip.querySelector('.w-bonus-remove').onclick=(e)=>{e.stopPropagation();removeBonusComp(bc.id);};
         body.appendChild(chip);
       });
       const bonusBtn=document.createElement('button'); bonusBtn.className='wday-bonus-btn';
@@ -6171,6 +6297,39 @@ async function toggleRewardDropdown(category, personId, weekStartStr, btn) {
     const closeHandler = e=>{ if(!drop.contains(e.target)&&e.target!==btn){ drop.style.display='none'; document.removeEventListener('click',closeHandler); } };
     document.addEventListener('click', closeHandler);
   }, 0);
+}
+
+// ── Task as Bonus ────────────────────────────────────────────────────
+let _tabmChoreId = null;
+async function openTaskAsBonusModal(choreId, date) {
+  _tabmChoreId = choreId;
+  const [chore, people] = await Promise.all([get('chores', choreId), all('people')]);
+  g('tabmTaskName').textContent = `"${chore?.name||'Task'}" will be logged as a bonus completion`;
+  g('tabmDate').value = date || today();
+  const sel = g('tabmPerson');
+  sel.innerHTML = '<option value="">— Select person —</option>';
+  // Pre-select current viewed person, or first person
+  const defaultPid = S.person !== 'all' ? S.person : (people[0]?.id || '');
+  people.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.name;
+    if (p.id === defaultPid) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  _openModal('taskAsBonusModal');
+}
+
+async function logTaskAsBonus() {
+  const personId = g('tabmPerson').value;
+  const date = g('tabmDate').value || today();
+  if (!personId) { showToast('Select a person first', 'var(--terra)'); return; }
+  if (!_tabmChoreId) return;
+  const chore = await get('chores', _tabmChoreId);
+  await put('completions', { choreId: _tabmChoreId, date, personId, points: chore?.points||0, isBonus: true });
+  playSound('complete');
+  closeModal('taskAsBonusModal');
+  showToast(`⭐ Bonus logged for ${g('tabmPerson').options[g('tabmPerson').selectedIndex]?.text}`, 'var(--sage)');
+  await render(S.view);
 }
 
 async function removeBonusComp(compId) {
@@ -8077,6 +8236,8 @@ async function openTaskModal(taskId=null, presetDate=null) {
   g('mTaskName').value=task?.name||'';
   g('mTaskPoints').value=task?.points||'';
   g('mTaskDesc').value=task?.description||'';
+  g('mTaskDuration').value=task?.duration||'';
+  g('mTaskDefaultTime').value=task?.defaultTime||'';
   // Pre-fill date for quick-add from week view (one-time task)
   if(presetDate&&!task){
     g('mTaskDate').value=presetDate;
@@ -8199,6 +8360,8 @@ async function saveTask() {
   const isRecurring=isBonus?false:(g('mTaskRecurring').dataset.checked==='true');
   const c={
     name,points,description:g('mTaskDesc').value.trim()||null,
+    duration:parseInt(g('mTaskDuration').value)||null,
+    defaultTime:g('mTaskDefaultTime').value||null,
     categoryId:S.taskCategoryId,isRecurring,assignedTo:S.taskAssign,isBonus,
     days:      (!isBonus&&isRecurring)?S.taskDays:[],
     startDate: (!isBonus&&isRecurring)?(g('mTaskStartDate').value||null):null,
@@ -9197,16 +9360,50 @@ async function openRecipeView(recipeId){
       ${r.cookMin?`<span>🔥 ${r.cookMin} min cook</span>`:''}
       ${totalTime?`<span>⏱ ${totalTime} min total</span>`:''}
     </div>
-    ${ings.length?`<div class="rec-view-section-title">Ingredients</div>
-      <ul class="rec-view-ings">${ings.map(i=>{
-        if(i.sectionName!=null) return `</ul><div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${i.sectionName}</div><ul class="rec-view-ings">`;
-        return `<li><span class="q">${[i.qty,i.unit].filter(Boolean).join(' ')||'—'}</span><div style="flex:1"><span>${i.name}</span>${i.note?`<span style="display:block;font-size:11.5px;color:var(--text-3);font-style:italic">${i.note}</span>`:''}</div></li>`;
-      }).join('')}</ul>`:''}
+    ${ings.length?`<div class="rec-view-section-title">Ingredients</div><div id="recViewIngsList"></div>`:''}
     ${(r.steps||[]).length?`<div class="rec-view-section-title">Steps</div>
       <ol class="rec-view-steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`:''}
     ${r.notes?`<div class="rec-view-section-title">Notes</div><p style="font-size:13px;color:var(--text-2);line-height:1.6">${r.notes}</p>`:''}
     ${r.source?`<div style="margin-top:14px"><a href="${r.source}" target="_blank" rel="noopener" style="color:var(--gold);font-size:13px">🔗 Original recipe ↗</a></div>`:''}
   `;
+  // Build ingredient list via DOM (not innerHTML) so mobile parses sections correctly
+  const ingsList = g('recViewIngsList');
+  if (ingsList && ings.length) {
+    let currentUl = document.createElement('ul');
+    currentUl.className = 'rec-view-ings';
+    ingsList.appendChild(currentUl);
+    ings.forEach(i => {
+      if (i.sectionName != null) {
+        // Section header — close current list, add header, open new list
+        const hdr = document.createElement('div');
+        hdr.style.cssText = 'font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)';
+        hdr.textContent = i.sectionName;
+        ingsList.appendChild(hdr);
+        currentUl = document.createElement('ul');
+        currentUl.className = 'rec-view-ings';
+        ingsList.appendChild(currentUl);
+      } else {
+        const li = document.createElement('li');
+        const qty = document.createElement('span');
+        qty.className = 'q';
+        qty.textContent = [i.qty, i.unit].filter(Boolean).join(' ') || '—';
+        const nameWrap = document.createElement('div');
+        nameWrap.style.flex = '1';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = i.name;
+        nameWrap.appendChild(nameSpan);
+        if (i.note) {
+          const noteSpan = document.createElement('span');
+          noteSpan.style.cssText = 'display:block;font-size:11.5px;color:var(--text-3);font-style:italic';
+          noteSpan.textContent = i.note;
+          nameWrap.appendChild(noteSpan);
+        }
+        li.appendChild(qty);
+        li.appendChild(nameWrap);
+        currentUl.appendChild(li);
+      }
+    });
+  }
   _openModal('recipeViewModal');
   const favBtn=g('recViewFavBtn');
   if(favBtn) favBtn.onclick=()=>toggleRecipeFavorite(recipeId);
@@ -10447,7 +10644,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.12.1', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.16.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10707,7 +10904,9 @@ function wire() {
   g('dashBonusBtn').onclick=()=>openBonusModal(today());
   g('dashMealBtn').onclick=()=>{ S.recTab='plan'; nav('recipes'); };
   g('dashGroceryBtn').onclick=()=>{ S.recTab='grocery'; nav('recipes'); };
+  g('dashCustomizeBtn').onclick=()=>{ if(_dashCustomizing) exitDashCustomizeMode(); else enterDashCustomizeMode(); };
   g('wkBonusBtn').onclick=()=>openBonusModal(today());
+  g('wkScheduleToggle').onclick=()=>toggleScheduleView();
   g('bonusCancelBtn').onclick=()=>closeModal('bonusModal');
   g('bonusLogBtn').onclick=logBonusTask;
   g('bonusQtyMinus').onclick=()=>{
@@ -11050,6 +11249,13 @@ window.toggleMoodPicker=toggleMoodPicker;
 window.removeDiaryPhoto=removeDiaryPhoto;
 window.toggleRewardDropdown=toggleRewardDropdown;
 window.removeBonusComp=removeBonusComp;
+window.openTaskAsBonusModal=openTaskAsBonusModal;
+window.openResetModal=openResetModal;
+window.toggleDashCard=toggleDashCard;
+window.openScheduleBlockModal=openScheduleBlockModal;
+window.saveScheduleBlock=saveScheduleBlock;
+window.deleteScheduleBlock=deleteScheduleBlock;
+window.logTaskAsBonus=logTaskAsBonus;
 window.claimMegaReward=claimMegaReward;
 window.claimReward=claimReward;
 window.toggleEarnedUsed=toggleEarnedUsed;
@@ -12136,6 +12342,189 @@ function showToast(msg, color='var(--sage)') {
 
 
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// POINTS & REWARDS RESET
+// ═══════════════════════════════════════════
+async function openResetModal(period) {
+  const labels = { week: 'last 7 days', month: 'last 30 days', all: 'all time' };
+  const label = labels[period];
+  askConfirm(
+    `Reset all completions and earned rewards for ${label}? This affects the whole household and cannot be undone.`,
+    async () => {
+      await doResetPeriod(period);
+      showToast(`✓ Reset complete for ${label}`, 'var(--sage)');
+      await render(S.view);
+    },
+    `Reset ${label}`
+  );
+}
+
+async function doResetPeriod(period) {
+  const now = new Date();
+  let cutoff = null;
+  if (period === 'week') {
+    cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 7);
+  } else if (period === 'month') {
+    cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30);
+  }
+  // else 'all' — cutoff stays null, delete everything
+
+  const cutoffStr = cutoff ? cutoff.toISOString().slice(0, 10) : null;
+
+  // Delete completions in range
+  const allComps = await new Promise((res, rej) => {
+    const q = tx('completions').objectStore('completions').getAll();
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+  for (const c of allComps) {
+    if (!cutoffStr || c.date >= cutoffStr) {
+      await del('completions', c.id);
+    }
+  }
+
+  // Delete earnedRewards in range
+  const allEarned = await new Promise((res, rej) => {
+    const q = tx('earnedRewards').objectStore('earnedRewards').getAll();
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+  for (const r of allEarned) {
+    const dateStr = r.claimedDate || r.weekStart?.slice(0, 10) || '';
+    if (!cutoffStr || dateStr >= cutoffStr) {
+      await del('earnedRewards', r.id);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD CUSTOMIZATION
+// ═══════════════════════════════════════════
+const DASH_CARD_LABELS = {
+  tasks:"Today's Tasks", week:'This Week', events:'Upcoming Events',
+  meals:"Today's Meals", grocery:'Grocery List', streaks:'Streaks',
+  summary:'Weekly Summary', pins:'Pinboard', diary:'Journal', expenses:'Expenses'
+};
+const DASH_DEFAULT_ORDER = ['tasks','week','events','meals','grocery','streaks','summary','pins','diary','expenses'];
+
+function getDashLayout() {
+  try {
+    const saved = localStorage.getItem('den_dash_layout');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return { order: [...DASH_DEFAULT_ORDER], hidden: [] };
+}
+
+function saveDashLayout(layout) {
+  try { localStorage.setItem('den_dash_layout', JSON.stringify(layout)); } catch {}
+}
+
+function applyDashLayout() {
+  const layout = getDashLayout();
+  const grid = g('dashGrid');
+  if (!grid) return;
+  // Reorder cards
+  layout.order.forEach(cardId => {
+    const wrap = grid.querySelector(`[data-card="${cardId}"]`);
+    if (wrap) grid.appendChild(wrap); // move to end in order
+  });
+  // Show/hide
+  grid.querySelectorAll('.dash-card-wrap').forEach(wrap => {
+    const id = wrap.dataset.card;
+    const hidden = layout.hidden.includes(id);
+    wrap.style.display = hidden ? 'none' : '';
+  });
+}
+
+let _dashCustomizing = false;
+let _dashDragEl = null;
+
+function enterDashCustomizeMode() {
+  _dashCustomizing = true;
+  const grid = g('dashGrid');
+  const btn = g('dashCustomizeBtn');
+  if (btn) { btn.textContent = '✓ Done'; btn.style.background = 'var(--gold)'; btn.style.color = 'var(--bg)'; }
+  grid.classList.add('dash-customize-mode');
+
+  const layout = getDashLayout();
+
+  // Add control bars to each card
+  grid.querySelectorAll('.dash-card-wrap').forEach(wrap => {
+    const id = wrap.dataset.card;
+    if (!id) return;
+    const hidden = layout.hidden.includes(id);
+    if (hidden) wrap.classList.add('hidden-card');
+
+    // Add control bar
+    const bar = document.createElement('div');
+    bar.className = 'dash-card-customize-bar';
+    bar.innerHTML = `
+      <span class="dash-card-drag-handle" title="Drag to reorder">⠿</span>
+      <button class="dash-card-eye" title="${hidden?'Show':'Hide'} this card" data-eye="${id}">${hidden?'👁 Show':'🚫 Hide'}</button>`;
+    bar.querySelector('[data-eye]').onclick = () => toggleDashCard(id);
+    wrap.appendChild(bar);
+
+    // Wire drag
+    wrap.setAttribute('draggable', 'true');
+    wrap.addEventListener('dragstart', e => {
+      _dashDragEl = wrap;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => wrap.style.opacity = '0.4', 0);
+    });
+    wrap.addEventListener('dragend', () => {
+      wrap.style.opacity = '';
+      grid.querySelectorAll('.dash-card-wrap').forEach(w => w.classList.remove('drag-over'));
+      saveDashCurrentOrder();
+      _dashDragEl = null;
+    });
+    wrap.addEventListener('dragover', e => { e.preventDefault(); if (_dashDragEl && _dashDragEl !== wrap) wrap.classList.add('drag-over'); });
+    wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+    wrap.addEventListener('drop', e => {
+      e.preventDefault(); wrap.classList.remove('drag-over');
+      if (_dashDragEl && _dashDragEl !== wrap) {
+        const all = [...grid.querySelectorAll('.dash-card-wrap')];
+        if (all.indexOf(_dashDragEl) < all.indexOf(wrap)) wrap.after(_dashDragEl);
+        else wrap.before(_dashDragEl);
+      }
+    });
+  });
+}
+
+function exitDashCustomizeMode() {
+  _dashCustomizing = false;
+  const grid = g('dashGrid');
+  const btn = g('dashCustomizeBtn');
+  if (btn) { btn.textContent = '✏️ Customize'; btn.style.background = ''; btn.style.color = ''; }
+  grid.classList.remove('dash-customize-mode');
+  // Remove control bars and drag listeners by re-rendering
+  grid.querySelectorAll('.dash-card-customize-bar').forEach(b => b.remove());
+  grid.querySelectorAll('.dash-card-wrap').forEach(w => { w.removeAttribute('draggable'); w.classList.remove('hidden-card'); });
+  saveDashCurrentOrder();
+  applyDashLayout();
+}
+
+function toggleDashCard(id) {
+  const layout = getDashLayout();
+  const idx = layout.hidden.indexOf(id);
+  if (idx > -1) layout.hidden.splice(idx, 1);
+  else layout.hidden.push(id);
+  saveDashLayout(layout);
+  // Update the button and card appearance live
+  const grid = g('dashGrid');
+  const wrap = grid?.querySelector(`[data-card="${id}"]`);
+  const eyeBtn = grid?.querySelector(`[data-eye="${id}"]`);
+  if (wrap) wrap.classList.toggle('hidden-card', layout.hidden.includes(id));
+  if (eyeBtn) { const hidden = layout.hidden.includes(id); eyeBtn.textContent = hidden ? '👁 Show' : '🚫 Hide'; }
+}
+
+function saveDashCurrentOrder() {
+  const grid = g('dashGrid');
+  if (!grid) return;
+  const layout = getDashLayout();
+  const newOrder = [...grid.querySelectorAll('.dash-card-wrap[data-card]')].map(w => w.dataset.card);
+  layout.order = newOrder;
+  saveDashLayout(layout);
+}
+
+// ═══════════════════════════════════════════
 function renderSettings() {
   // Theme swatches
   renderThemeSwatches();
@@ -12841,6 +13230,270 @@ async function gistPull() {
   }
 }
 
+// ═══════════════════════════════════════════
+// SCHEDULE VIEW
+// ═══════════════════════════════════════════
+// taskSchedule IndexedDB store: { id, choreId, date, personId, startTime, duration }
+// startTime: "HH:MM" 24h string. duration: minutes.
+// If no taskSchedule row exists for a task+date, uses task.defaultTime + task.duration as defaults.
+
+let _scheduleVisible = false;
+
+function toggleScheduleView() {
+  _scheduleVisible = !_scheduleVisible;
+  const schedEl = g('scheduleView');
+  const weekGrid = g('weekGrid');
+  const btn = g('wkScheduleToggle');
+  if (_scheduleVisible) {
+    schedEl.style.display = '';
+    weekGrid.style.display = 'none';
+    btn.style.background = 'var(--gold)';
+    btn.style.color = 'var(--bg)';
+    initScheduleView();
+  } else {
+    schedEl.style.display = 'none';
+    weekGrid.style.display = '';
+    btn.style.background = '';
+    btn.style.color = '';
+  }
+}
+
+async function initScheduleView() {
+  const people = await all('people');
+  // Populate person selector
+  const sel = g('schedulePerson');
+  sel.innerHTML = '';
+  const defaultPid = S.person !== 'all' ? S.person : (people[0]?.id || '');
+  people.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.name;
+    if (p.id === defaultPid) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Set date to today
+  g('scheduleDate').value = today();
+  // Wire controls
+  if (!g('scheduleDate').dataset.wired) {
+    g('scheduleDate').dataset.wired = '1';
+    g('scheduleDate').onchange = renderSchedule;
+    g('schedulePerson').onchange = renderSchedule;
+    g('scheduleAddBlock').onclick = openScheduleBlockModal;
+  }
+  await renderSchedule();
+}
+
+async function renderSchedule() {
+  const date = g('scheduleDate')?.value || today();
+  const personId = g('schedulePerson')?.value;
+  if (!personId) return;
+
+  const [chores, schedBlocks, allComps, people] = await Promise.all([
+    all('chores'), all('taskSchedule').catch(()=>[]), all('completions'), all('people')
+  ]);
+  const person = people.find(p => p.id === personId);
+
+  // Tasks active for this person on this date
+  const activeTasks = chores.filter(c =>
+    !c.isBonus &&
+    isTaskActiveFor(c, date, personId) &&
+    (c.assignedTo?.length === 0 || c.assignedTo?.includes(personId))
+  );
+
+  // Build schedule entries: scheduled + unscheduled
+  const scheduled = [];
+  const unscheduled = [];
+
+  activeTasks.forEach(task => {
+    // Look for an explicit schedule override for this date
+    const override = schedBlocks.find(b => b.choreId === task.id && b.date === date && b.personId === personId);
+    const startTime = override?.startTime || task.defaultTime || null;
+    const duration = override?.duration || task.duration || 30;
+    if (startTime) {
+      scheduled.push({ task, startTime, duration, overrideId: override?.id || null, done: allComps.some(c=>c.choreId===task.id&&c.date===date&&c.personId===personId) });
+    } else {
+      unscheduled.push({ task, duration, done: allComps.some(c=>c.choreId===task.id&&c.date===date&&c.personId===personId) });
+    }
+  });
+
+  // Sort scheduled by start time
+  scheduled.sort((a,b) => a.startTime.localeCompare(b.startTime));
+
+  const timeline = g('scheduleTimeline');
+  timeline.innerHTML = '';
+
+  // Unscheduled pool at top
+  if (unscheduled.length) {
+    const pool = document.createElement('div'); pool.className = 'sched-unscheduled';
+    const title = document.createElement('div'); title.className = 'sched-unscheduled-title';
+    title.textContent = 'Unscheduled tasks';
+    pool.appendChild(title);
+    const chips = document.createElement('div');
+    unscheduled.forEach(entry => {
+      const chip = document.createElement('div'); chip.className = 'sched-chip' + (entry.done ? '' : '');
+      chip.style.opacity = entry.done ? '0.5' : '1';
+      chip.innerHTML = `<span>${entry.task.name}</span><span style="font-size:10px;color:var(--text-3)">${entry.duration}min</span>`;
+      chip.onclick = () => openScheduleBlockModal(entry.task.id, date, personId, null, entry.duration);
+      chips.appendChild(chip);
+    });
+    pool.appendChild(chips);
+    timeline.appendChild(pool);
+  }
+
+  // Build hour grid: 5am to 11pm (hours 5–23)
+  const HOUR_START = 5, HOUR_END = 23;
+  const PX_PER_MIN = 1.6; // pixels per minute
+  const HOUR_HEIGHT = PX_PER_MIN * 60;
+  const totalHeight = (HOUR_END - HOUR_START) * HOUR_HEIGHT;
+
+  const gridWrap = document.createElement('div');
+  gridWrap.style.cssText = `position:relative;height:${totalHeight}px`;
+
+  // Hour rows
+  for (let h = HOUR_START; h <= HOUR_END; h++) {
+    const row = document.createElement('div'); row.className = 'sched-hour-row';
+    row.style.cssText = `position:absolute;top:${(h-HOUR_START)*HOUR_HEIGHT}px;left:0;right:0;height:${HOUR_HEIGHT}px`;
+    const label = document.createElement('div'); label.className = 'sched-hour-label';
+    label.textContent = h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h-12}pm`;
+    row.appendChild(label);
+    gridWrap.appendChild(row);
+  }
+
+  // Now-line
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const startMins = HOUR_START * 60;
+  if (date === today() && nowMins >= startMins && nowMins <= HOUR_END * 60) {
+    const nowLine = document.createElement('div'); nowLine.className = 'sched-now-line';
+    nowLine.style.top = `${(nowMins - startMins) * PX_PER_MIN}px`;
+    gridWrap.appendChild(nowLine);
+  }
+
+  // Place scheduled task blocks — detect overlaps for side-by-side rendering
+  // Convert all to {top, height, task, ...} then compute columns
+  const blockData = scheduled.map(entry => {
+    const [hh, mm] = entry.startTime.split(':').map(Number);
+    const startMin = hh * 60 + mm;
+    const endMin = startMin + entry.duration;
+    return { ...entry, startMin, endMin, col: 0, totalCols: 1 };
+  });
+
+  // Compute overlap columns (simple greedy)
+  for (let i = 0; i < blockData.length; i++) {
+    const cols = [false]; // col 0 is available
+    for (let j = 0; j < i; j++) {
+      if (blockData[j].endMin > blockData[i].startMin && blockData[j].startMin < blockData[i].endMin) {
+        // Overlapping — block j's col is taken
+        while (cols.length <= blockData[j].col) cols.push(false);
+        cols[blockData[j].col] = true;
+      }
+    }
+    blockData[i].col = cols.indexOf(false) === -1 ? cols.length : cols.indexOf(false);
+  }
+  // Compute totalCols for each overlapping group
+  for (let i = 0; i < blockData.length; i++) {
+    let maxCol = blockData[i].col;
+    for (let j = 0; j < blockData.length; j++) {
+      if (i !== j && blockData[j].endMin > blockData[i].startMin && blockData[j].startMin < blockData[i].endMin) {
+        maxCol = Math.max(maxCol, blockData[j].col);
+      }
+    }
+    blockData[i].totalCols = maxCol + 1;
+  }
+
+  blockData.forEach(entry => {
+    const topPx = (entry.startMin - startMins) * PX_PER_MIN;
+    const heightPx = Math.max(entry.duration * PX_PER_MIN, 28);
+    const laneWidth = 100 / entry.totalCols;
+    const leftPct = 44 + (laneWidth * entry.col); // 44px for hour labels
+    const widthCalc = `calc(${laneWidth}% - 8px)`;
+
+    const block = document.createElement('div'); block.className = 'sched-block';
+    const color = person?.color || 'var(--gold)';
+    const colLeftPct  = laneWidth * entry.col;
+    const colWidthPct = laneWidth;
+    block.style.cssText = `
+      top:${topPx}px; height:${heightPx}px;
+      left:calc(44px + ${colLeftPct}% - ${colLeftPct * 0.44}px);
+      width:calc(${colWidthPct}% - 12px);
+      background:${color}${entry.done ? '55' : 'cc'};
+      color:${entry.done ? 'var(--text-3)' : '#fff'};
+      position:absolute;
+      text-decoration:${entry.done?'line-through':''};
+      opacity:${entry.totalCols > 1 ? '0.88' : '1'}`;
+    block.innerHTML = `<div class="sched-block-name">${entry.task.name}</div>
+      <div class="sched-block-time">${entry.startTime} · ${entry.duration}min</div>`;
+    block.onclick = () => openScheduleBlockModal(entry.task.id, date, personId, entry.startTime, entry.duration, entry.overrideId);
+    gridWrap.appendChild(block);
+  });
+
+  timeline.appendChild(gridWrap);
+}
+
+// Schedule block modal — set/edit a task's time slot for a specific day
+let _schedModalData = {};
+async function openScheduleBlockModal(choreId=null, date=null, personId=null, startTime=null, duration=null, overrideId=null) {
+  const chores = await all('chores');
+  const people = await all('people');
+  _schedModalData = { choreId, date: date||g('scheduleDate')?.value||today(), personId: personId||g('schedulePerson')?.value, startTime, duration, overrideId };
+
+  // Remove existing panel
+  g('schedBlockPanel')?.remove();
+  const panel = document.createElement('div');
+  panel.id = 'schedBlockPanel';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+
+  const activeTasks = chores.filter(c => !c.isBonus);
+
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;box-shadow:0 -8px 32px rgba(0,0,0,0.4)">
+      <div style="display:flex;align-items:center;margin-bottom:14px">
+        <div style="font-weight:700;font-size:15px;flex:1">📅 Schedule Block</div>
+        <button onclick="document.getElementById('schedBlockPanel').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      <label class="fl">Task</label>
+      <select class="fi" id="schedBlockTask" style="margin-bottom:10px">
+        ${activeTasks.map(c=>`<option value="${c.id}" ${c.id===choreId?'selected':''}>${c.name}</option>`).join('')}
+      </select>
+      <label class="fl">Person</label>
+      <select class="fi" id="schedBlockPerson" style="margin-bottom:10px">
+        ${people.map(p=>`<option value="${p.id}" ${p.id===_schedModalData.personId?'selected':''}>${p.name}</option>`).join('')}
+      </select>
+      <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div style="flex:1"><label class="fl">Start time</label><input type="time" class="fi" id="schedBlockStart" value="${startTime||''}"></div>
+        <div style="flex:1"><label class="fl">Duration (min)</label><input type="number" class="fi" id="schedBlockDur" value="${duration||30}" min="5" step="5"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        ${overrideId ? `<button class="btn btn-ghost del" style="color:var(--terra)" onclick="deleteScheduleBlock('${overrideId}')">Remove override</button>` : ''}
+        <button class="btn btn-primary" style="flex:1" onclick="saveScheduleBlock()">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(panel);
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+}
+
+async function saveScheduleBlock() {
+  const choreId = g('schedBlockTask')?.value;
+  const personId = g('schedBlockPerson')?.value;
+  const startTime = g('schedBlockStart')?.value;
+  const duration = parseInt(g('schedBlockDur')?.value) || 30;
+  const date = _schedModalData.date;
+  if (!choreId || !startTime) { showToast('Pick a task and start time', 'var(--terra)'); return; }
+
+  const obj = { choreId, personId, date, startTime, duration };
+  if (_schedModalData.overrideId) obj.id = _schedModalData.overrideId;
+  await put('taskSchedule', obj);
+  g('schedBlockPanel')?.remove();
+  await renderSchedule();
+}
+
+async function deleteScheduleBlock(id) {
+  await del('taskSchedule', id);
+  g('schedBlockPanel')?.remove();
+  await renderSchedule();
+}
+
+// ═══════════════════════════════════════════
+
 function wireGistSync() {
   const tokenInput = g('gistTokenInput');
   const saveBtn = g('gistSaveTokenBtn');
@@ -12902,6 +13555,8 @@ const SYNC_STORES = {
   recipes:           { table: 'recipes',             fields: { prepMin:'prep_min', cookMin:'cook_min', favorite:null } },
   recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order', libraryId:'library_id', sectionName:'section_name' } },
   mealPlan:          { table: 'meal_plan',           fields: { recipeId:'recipe_id' } },
+  // Task schedule overrides
+  taskSchedule:      { table: 'task_schedule',       fields: { choreId:'chore_id', personId:'person_id', startTime:'start_time' } },
 };
 
 // camelCase→snake_case using the field map for a given store.
@@ -13144,6 +13799,7 @@ const STORE_VIEW_MAP = {
   recipes:           ['recipes'],
   recipeIngredients: ['recipes'],
   mealPlan:          ['recipes', 'dashboard'],
+  taskSchedule:      ['week'],
 };
 
 async function handleRealtimeEvent(store, payload) {
@@ -13241,6 +13897,8 @@ async function cloudPushAll() {
     'recipes',
     // Depend on recipes
     'recipeIngredients', 'mealPlan',
+    // Depend on chores + people
+    'taskSchedule',
   ];
   let pushed = 0, errors = 0;
   for (const store of stores) {
