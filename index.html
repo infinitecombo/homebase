@@ -2058,7 +2058,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.20.0</p>
+      <p class="sidebar-version">v7.21.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2920,7 +2920,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.20.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.21.0</span>
         </div>
       </div>
     </div>
@@ -10689,7 +10689,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.20.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.21.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -10950,7 +10950,7 @@ function wire() {
   g('dashMealBtn').onclick=()=>{ S.recTab='plan'; nav('recipes'); };
   g('dashGroceryBtn').onclick=()=>{ S.recTab='grocery'; nav('recipes'); };
   if(g('dashSchedulePerson')) g('dashSchedulePerson').onchange=()=>renderDashSchedule();
-  g('dashCustomizeBtn').onclick=()=>{ if(_dashCustomizing) exitDashCustomizeMode(); else enterDashCustomizeMode(); };
+  g('dashCustomizeBtn').onclick=()=>openDashCustomizeModal();
   g('wkBonusBtn').onclick=()=>openBonusModal(today());
   g('wkScheduleToggle').onclick=()=>toggleScheduleView();
   g('bonusCancelBtn').onclick=()=>closeModal('bonusModal');
@@ -11298,7 +11298,6 @@ window.toggleRewardDropdown=toggleRewardDropdown;
 window.removeBonusComp=removeBonusComp;
 window.openTaskAsBonusModal=openTaskAsBonusModal;
 window.openResetModal=openResetModal;
-window.toggleDashCard=toggleDashCard;
 window.openScheduleBlockModal=openScheduleBlockModal;
 window.openScheduleGroupModal=openScheduleGroupModal;
 window.saveScheduleBlock=saveScheduleBlock;
@@ -12456,7 +12455,14 @@ const DASH_DEFAULT_ORDER = ['tasks','week','events','meals','grocery','streaks',
 function getDashLayout() {
   try {
     const saved = localStorage.getItem('den_dash_layout');
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Ensure all known cards are present in order (add new ones at end)
+      DASH_DEFAULT_ORDER.forEach(id => {
+        if (!parsed.order.includes(id)) parsed.order.push(id);
+      });
+      return parsed;
+    }
   } catch {}
   return { order: [...DASH_DEFAULT_ORDER], hidden: [] };
 }
@@ -12469,107 +12475,98 @@ function applyDashLayout() {
   const layout = getDashLayout();
   const grid = g('dashGrid');
   if (!grid) return;
-  // Reorder cards
+  // Reorder: append cards in saved order (appendChild moves existing nodes)
   layout.order.forEach(cardId => {
-    const wrap = grid.querySelector(`[data-card="${cardId}"]`);
-    if (wrap) grid.appendChild(wrap); // move to end in order
+    const wrap = grid.querySelector(`.dash-card-wrap[data-card="${cardId}"]`);
+    if (wrap) grid.appendChild(wrap);
   });
-  // Show/hide
-  grid.querySelectorAll('.dash-card-wrap').forEach(wrap => {
-    const id = wrap.dataset.card;
-    const hidden = layout.hidden.includes(id);
+  // Show/hide based on hidden list
+  grid.querySelectorAll('.dash-card-wrap[data-card]').forEach(wrap => {
+    const hidden = layout.hidden.includes(wrap.dataset.card);
     wrap.style.display = hidden ? 'none' : '';
   });
 }
 
-let _dashCustomizing = false;
-let _dashDragEl = null;
-
-function enterDashCustomizeMode() {
-  _dashCustomizing = true;
-  const grid = g('dashGrid');
-  const btn = g('dashCustomizeBtn');
-  if (btn) { btn.textContent = '✓ Done'; btn.style.background = 'var(--gold)'; btn.style.color = 'var(--bg)'; }
-  grid.classList.add('dash-customize-mode');
+// ── Dashboard customize modal (mobile-friendly, no HTML5 drag) ──
+function openDashCustomizeModal() {
+  g('dashCustomModal')?.remove();
 
   const layout = getDashLayout();
+  // Work on a mutable copy so cancel discards changes
+  let workOrder  = [...layout.order];
+  let workHidden = [...layout.hidden];
 
-  // Add control bars to each card
-  grid.querySelectorAll('.dash-card-wrap').forEach(wrap => {
-    const id = wrap.dataset.card;
-    if (!id) return;
-    const hidden = layout.hidden.includes(id);
-    if (hidden) wrap.classList.add('hidden-card');
+  const panel = document.createElement('div');
+  panel.id = 'dashCustomModal';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
 
-    // Add control bar
-    const bar = document.createElement('div');
-    bar.className = 'dash-card-customize-bar';
-    bar.innerHTML = `
-      <span class="dash-card-drag-handle" title="Drag to reorder">⠿</span>
-      <button class="dash-card-eye" title="${hidden?'Show':'Hide'} this card" data-eye="${id}">${hidden?'👁 Show':'🚫 Hide'}</button>`;
-    bar.querySelector('[data-eye]').onclick = () => toggleDashCard(id);
-    wrap.appendChild(bar);
+  function buildRows() {
+    return workOrder.map((id, idx) => {
+      const label   = DASH_CARD_LABELS[id] || id;
+      const hidden  = workHidden.includes(id);
+      const isFirst = idx === 0;
+      const isLast  = idx === workOrder.length - 1;
+      return `<div class="dcm-row" data-id="${id}" style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-soft);background:var(--surface);${hidden?'opacity:0.45':''}">
+        <div style="flex:1;font-size:13.5px;font-weight:${hidden?'400':'500'};color:var(--text);text-decoration:${hidden?'line-through':''}">${label}</div>
+        <button data-move="up" data-idx="${idx}" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text-2);font-size:14px;${isFirst?'opacity:0.25;pointer-events:none':''}">↑</button>
+        <button data-move="down" data-idx="${idx}" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text-2);font-size:14px;${isLast?'opacity:0.25;pointer-events:none':''}">↓</button>
+        <button data-toggle="${id}" style="background:none;border:1px solid var(--border);border-radius:6px;padding:0 8px;height:28px;cursor:pointer;font-size:12px;color:${hidden?'var(--sage)':'var(--terra)'};white-space:nowrap">${hidden?'Show':'Hide'}</button>
+      </div>`;
+    }).join('');
+  }
 
-    // Wire drag
-    wrap.setAttribute('draggable', 'true');
-    wrap.addEventListener('dragstart', e => {
-      _dashDragEl = wrap;
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(() => wrap.style.opacity = '0.4', 0);
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 -8px 32px rgba(0,0,0,0.4);overflow:hidden">
+      <div style="display:flex;align-items:center;padding:16px;border-bottom:1px solid var(--border-soft);flex-shrink:0">
+        <div style="font-weight:700;font-size:15px;flex:1">✏️ Customize Dashboard</div>
+        <button id="dcmCancel" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      <div id="dcmRows" style="overflow-y:auto;flex:1">${buildRows()}</div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border-soft);display:flex;gap:8px;flex-shrink:0">
+        <button id="dcmReset" class="btn btn-ghost" style="font-size:13px">Reset</button>
+        <button id="dcmSave"  class="btn btn-primary" style="flex:1;font-size:13px">Save</button>
+      </div>
+    </div>`;
+
+  function refresh() {
+    g('dcmRows').innerHTML = buildRows();
+    wireRows();
+  }
+
+  function wireRows() {
+    g('dcmRows').querySelectorAll('[data-move]').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx);
+        const dir = btn.dataset.move;
+        const swap = dir === 'up' ? idx - 1 : idx + 1;
+        if (swap < 0 || swap >= workOrder.length) return;
+        [workOrder[idx], workOrder[swap]] = [workOrder[swap], workOrder[idx]];
+        refresh();
+      };
     });
-    wrap.addEventListener('dragend', () => {
-      wrap.style.opacity = '';
-      grid.querySelectorAll('.dash-card-wrap').forEach(w => w.classList.remove('drag-over'));
-      saveDashCurrentOrder();
-      _dashDragEl = null;
+    g('dcmRows').querySelectorAll('[data-toggle]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.toggle;
+        const hi = workHidden.indexOf(id);
+        if (hi > -1) workHidden.splice(hi, 1);
+        else workHidden.push(id);
+        refresh();
+      };
     });
-    wrap.addEventListener('dragover', e => { e.preventDefault(); if (_dashDragEl && _dashDragEl !== wrap) wrap.classList.add('drag-over'); });
-    wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
-    wrap.addEventListener('drop', e => {
-      e.preventDefault(); wrap.classList.remove('drag-over');
-      if (_dashDragEl && _dashDragEl !== wrap) {
-        const all = [...grid.querySelectorAll('.dash-card-wrap')];
-        if (all.indexOf(_dashDragEl) < all.indexOf(wrap)) wrap.after(_dashDragEl);
-        else wrap.before(_dashDragEl);
-      }
-    });
-  });
-}
+  }
 
-function exitDashCustomizeMode() {
-  _dashCustomizing = false;
-  const grid = g('dashGrid');
-  const btn = g('dashCustomizeBtn');
-  if (btn) { btn.textContent = '✏️ Customize'; btn.style.background = ''; btn.style.color = ''; }
-  grid.classList.remove('dash-customize-mode');
-  // Remove control bars and drag listeners by re-rendering
-  grid.querySelectorAll('.dash-card-customize-bar').forEach(b => b.remove());
-  grid.querySelectorAll('.dash-card-wrap').forEach(w => { w.removeAttribute('draggable'); w.classList.remove('hidden-card'); });
-  saveDashCurrentOrder();
-  applyDashLayout();
-}
+  wireRows();
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+  g('dcmCancel').onclick = () => panel.remove();
+  g('dcmReset').onclick  = () => { workOrder = [...DASH_DEFAULT_ORDER]; workHidden = []; refresh(); };
+  g('dcmSave').onclick   = () => {
+    saveDashLayout({ order: workOrder, hidden: workHidden });
+    panel.remove();
+    applyDashLayout();
+  };
 
-function toggleDashCard(id) {
-  const layout = getDashLayout();
-  const idx = layout.hidden.indexOf(id);
-  if (idx > -1) layout.hidden.splice(idx, 1);
-  else layout.hidden.push(id);
-  saveDashLayout(layout);
-  // Update the button and card appearance live
-  const grid = g('dashGrid');
-  const wrap = grid?.querySelector(`[data-card="${id}"]`);
-  const eyeBtn = grid?.querySelector(`[data-eye="${id}"]`);
-  if (wrap) wrap.classList.toggle('hidden-card', layout.hidden.includes(id));
-  if (eyeBtn) { const hidden = layout.hidden.includes(id); eyeBtn.textContent = hidden ? '👁 Show' : '🚫 Hide'; }
-}
-
-function saveDashCurrentOrder() {
-  const grid = g('dashGrid');
-  if (!grid) return;
-  const layout = getDashLayout();
-  const newOrder = [...grid.querySelectorAll('.dash-card-wrap[data-card]')].map(w => w.dataset.card);
-  layout.order = newOrder;
-  saveDashLayout(layout);
+  document.body.appendChild(panel);
+  history.pushState({ modal: 'dashCustomModal' }, '');
 }
 
 // ═══════════════════════════════════════════
@@ -12882,7 +12879,7 @@ function wirePopstate() {
     }
 
     // 2. If there's an inline panel (fixed overlay not using .overlay class)
-    const inlinePanels = ['schedBlockPanel','schedGroupPanel','glibItemPanel','glibCatsPanel','taskAsBonusModal'];
+    const inlinePanels = ['schedBlockPanel','schedGroupPanel','glibItemPanel','glibCatsPanel','taskAsBonusModal','dashCustomModal'];
     for (const pid of inlinePanels) {
       const el = document.getElementById(pid);
       if (el) { el.remove(); history.pushState({ view: S.view }, ''); return; }
