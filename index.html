@@ -2058,7 +2058,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.19.0</p>
+      <p class="sidebar-version">v7.20.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2920,7 +2920,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.19.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.20.0</span>
         </div>
       </div>
     </div>
@@ -4594,6 +4594,11 @@ const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', h
 async function nav(view) {
   S.view = view;
   clearDirtyFlag(view);  // clear sync dirty flag — render() below will fetch fresh data
+  // Push a history entry for this view so the back button works
+  // Don't push a duplicate if we're already on this view
+  if(history.state?.view !== view) {
+    history.pushState({ view }, '');
+  }
   // Close more sheet on any navigation
   if(typeof closeMobileMore === 'function') closeMobileMore();
   // Close desktop sidebar backdrop if open
@@ -10635,11 +10640,16 @@ async function savePerson() {
   if(S.view==='person-detail'&&S.detailPersonId===p.id) await renderPersonDetail();
 }
 
-function closeModal(id){
+function closeModal(id, fromPopstate=false){
   g(id).classList.remove('open');
   // Show FAB again if no other modals are open
   if(!document.querySelector('.overlay.open')) {
     const fab=g('fab'); if(fab) fab.style.display='';
+  }
+  // If this close wasn't triggered by popstate, pop the history entry we pushed
+  if(!fromPopstate) {
+    // Only go back if the current state is for this modal
+    if(history.state?.modal === id) history.back();
   }
 }
 function _openModal(id){
@@ -10649,6 +10659,8 @@ function _openModal(id){
   if(modal) animPop(modal);
   // Hide FAB while modal is open
   const fab=g('fab'); if(fab) fab.style.display='none';
+  // Push a history entry so the back button closes this modal
+  history.pushState({ modal: id }, '');
 }
 
 // ═══════════════════════════════════════════
@@ -10677,7 +10689,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.19.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.20.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11029,6 +11041,7 @@ function wire() {
 
   // Keyboard shortcuts
   wireKeyboardShortcuts();
+  wirePopstate();
   // Mobile hamburger
   g('hamburgerBtn').onclick = toggleSidebar;
   g('sidebarBackdrop').onclick = closeSidebar;
@@ -12851,6 +12864,38 @@ async function unskipTaskOccurrence(choreId, dateStr) {
 
 function isTaskSkipped(choreId, dateStr) {
   return S.taskSkips.some(s=>s.choreId===choreId&&s.date===dateStr);
+}
+
+function wirePopstate() {
+  // Intercepts the browser/phone back button so it closes modals or
+  // navigates within the app instead of exiting it.
+  window.addEventListener('popstate', e => {
+    const state = e.state;
+
+    // 1. If there's an open overlay modal, close the topmost one
+    const openModals = [...document.querySelectorAll('.overlay.open')];
+    if (openModals.length) {
+      const top = openModals[openModals.length - 1];
+      closeModal(top.id, true); // true = called from popstate, don't call history.back()
+      history.pushState({ view: S.view }, '');
+      return;
+    }
+
+    // 2. If there's an inline panel (fixed overlay not using .overlay class)
+    const inlinePanels = ['schedBlockPanel','schedGroupPanel','glibItemPanel','glibCatsPanel','taskAsBonusModal'];
+    for (const pid of inlinePanels) {
+      const el = document.getElementById(pid);
+      if (el) { el.remove(); history.pushState({ view: S.view }, ''); return; }
+    }
+
+    // 3. Navigate to the view in the state, or default to dashboard
+    if (state?.view && state.view !== S.view) {
+      nav(state.view);
+    } else if (!state) {
+      // Fell off the bottom of history — re-seed and stay on dashboard
+      nav('dashboard');
+    }
+  });
 }
 
 function wireKeyboardShortcuts() {
@@ -15045,6 +15090,8 @@ const CONFETTI_ANIM_DATA = {"v":"5.7.12","fr":30,"ip":0,"op":60,"w":512,"h":512,
   wirePullToRefresh();
   await renderSidebarPeople();
   await nav('dashboard');
+  // Seed the history stack so back button stays in-app
+  history.replaceState({ view: 'dashboard' }, '');
   g('diaryDate').value=today();
   // Show onboarding for first-time users, otherwise check daily reminder
   await maybeShowOnboarding();
