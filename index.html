@@ -2058,7 +2058,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.21.0</p>
+      <p class="sidebar-version">v7.21.1</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2920,7 +2920,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.21.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.21.1</span>
         </div>
       </div>
     </div>
@@ -12555,6 +12555,9 @@ function openDashCustomizeModal() {
     });
   }
 
+  // Append first so g() can find the elements by ID
+  document.body.appendChild(panel);
+
   wireRows();
   panel.onclick = e => { if (e.target === panel) panel.remove(); };
   g('dcmCancel').onclick = () => panel.remove();
@@ -12565,7 +12568,6 @@ function openDashCustomizeModal() {
     applyDashLayout();
   };
 
-  document.body.appendChild(panel);
   history.pushState({ modal: 'dashCustomModal' }, '');
 }
 
