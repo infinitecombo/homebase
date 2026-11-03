@@ -301,6 +301,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .task-item{display:flex;align-items:center;gap:12px;padding:13px 16px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);margin-bottom:7px;transition:all var(--t)}
 .task-item:hover{background:var(--surface-2)}
 .task-item-color{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+.task-item-color.has-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1}
 .task-item-body{flex:1;min-width:0}
 .task-item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .task-item-name{font-size:14.5px}
@@ -328,6 +329,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .cat-card{display:flex;align-items:center;gap:13px;padding:14px 16px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);margin-bottom:7px;transition:all var(--t)}
 .cat-card:hover{background:var(--surface-2)}
 .cat-swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0}
+.cat-swatch.has-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1}
+.cdot.has-icon,.mini-dot.has-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;line-height:1;margin-right:0}
 .cat-name{flex:1;font-size:14px;font-weight:500}
 .cat-count{font-size:11.5px;color:var(--text-3);margin-right:8px}
 
@@ -1054,6 +1057,19 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .rec-ing-note::placeholder{color:var(--text-3);opacity:0.6}
 .rec-ing-wrap{display:flex;flex-direction:column;margin-bottom:6px}
 /* Drag reorder for category manager */
+.inv-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);margin-bottom:5px}
+.inv-row.out{opacity:0.55}
+.inv-main{flex:1;min-width:0}
+.inv-name{font-size:13.5px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inv-sub{font-size:11.5px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inv-stepper{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.inv-step-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;font-size:15px;line-height:1;padding:0}
+.inv-step-btn:hover{border-color:var(--gold);color:var(--gold)}
+.inv-qty{min-width:44px;text-align:center;font-size:13px;font-weight:600;color:var(--gold);line-height:1.15}
+.inv-qty small{display:block;font-size:10px;font-weight:400;color:var(--text-3)}
+.inv-icon-btn{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:4px 5px;border-radius:5px;flex-shrink:0}
+.inv-icon-btn:hover{color:var(--gold);background:var(--surface-2)}
+.inv-icon-btn.del:hover{color:var(--terra)}
 .glib-item[draggable]{cursor:grab}
 .glib-item[draggable]:active{cursor:grabbing}
 .glib-item.drag-over{border-color:var(--gold);background:var(--gold-glow)}
@@ -1582,7 +1598,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     padding: 14px 16px 80px;
     min-height: 0;
   }
-  #subview-recAll, #subview-recPlan, #subview-recGrocery, #subview-recGLib {
+  #subview-recAll, #subview-recPlan, #subview-recGrocery, #subview-recGLib, #subview-recInv {
     flex: 1;
     overflow-y: auto;
     padding: 12px 16px 80px;
@@ -1786,6 +1802,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
 .cat-group-hdr{display:flex;align-items:center;gap:7px;padding:5px 0 6px;cursor:pointer;user-select:none}
 .cat-group-hdr:hover .cat-group-name{color:var(--text)}
 .cat-group-swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-group-swatch.has-icon{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1}
 .cat-group-name{font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);font-weight:600;flex:1}
 .cat-group-prog{font-size:10.5px;color:var(--text-3)}
 .cat-group-chevron{font-size:9px;color:var(--text-3);transition:transform var(--t);margin-left:2px}
@@ -2058,7 +2075,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.21.1</p>
+      <p class="sidebar-version">v7.23.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2073,7 +2090,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="nav-item" data-view="expenses"><span class="nav-icon">💰</span><span class="nav-label-text">Expenses</span></div>
     <div class="nav-item" data-view="diary"><span class="nav-icon">📖</span><span class="nav-label-text">Diary</span></div>
     <div class="nav-item" data-view="pinboard"><span class="nav-icon">📌</span><span class="nav-label-text">Pinboard</span></div>
-    <div class="nav-item" data-view="recipes"><span class="nav-icon">🍳</span><span class="nav-label-text">Recipes</span></div>
+    <div class="nav-item" data-view="recipes"><span class="nav-icon">🍳</span><span class="nav-label-text">Kitchen</span></div>
 
     <div class="nav-group-label">Review</div>
     <div class="nav-item" data-view="history"><span class="nav-icon">📈</span><span class="nav-label-text">History</span></div>
@@ -2509,6 +2526,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <input type="date" class="fi" id="diaryDate" style="width:150px">
         <select class="fi" id="diaryPerson" style="flex:1;min-width:100px"></select>
         <label class="photo-btn" title="Attach a photo">📷<input type="file" id="diaryPhotoInput" accept="image/*" style="display:none"></label>
+        <button class="btn btn-ghost" id="deleteDiaryBtn" onclick="deleteDiaryEntry()" style="display:none;color:var(--terra)" title="Delete this entry">🗑 Delete</button>
         <button class="btn btn-primary" id="saveDiaryBtn">Save</button>
       </div>
       <!-- Mood picker row (compact button) -->
@@ -2623,6 +2641,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="vtab" id="recTabPlan">🗓 Meal Plan</div>
       <div class="vtab" id="recTabGrocery">🛒 Grocery</div>
       <div class="vtab" id="recTabGLib">🏪 Groceries</div>
+      <div class="vtab" id="recTabInv">📦 Inventory</div>
     </div>
 
     <!-- Recipes tab -->
@@ -2673,6 +2692,20 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <button class="btn btn-ghost" id="groceryClearChecked" style="font-size:12px">Clear checked</button>
         <button class="btn btn-ghost del" id="groceryClearAll" style="font-size:12px;color:var(--terra)">Clear all</button>
       </div>
+    </div>
+
+    <!-- Inventory tab -->
+    <div id="subview-recInv" style="display:none">
+      <div class="rec-toolbar">
+        <input class="fi" type="text" id="invSearch" placeholder="Search inventory…" style="flex:1;min-width:140px">
+        <button class="btn btn-ghost" id="invLocBtn" style="flex-shrink:0;font-size:12px">📍 Locations</button>
+        <button class="btn btn-primary" id="invAddBtn" style="flex-shrink:0">+ Item</button>
+      </div>
+      <div style="display:flex;gap:6px;margin:8px 0 12px">
+        <button class="sort-btn active" id="invGroupLoc">By location</button>
+        <button class="sort-btn" id="invGroupCat">By category</button>
+      </div>
+      <div id="invList"></div>
     </div>
 
     <!-- Groceries Library tab -->
@@ -2823,6 +2856,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
               <div id="cloudJoinMsg" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
             </div>
           </div>
+          <div id="cloudSyncIssues" style="display:none;margin-top:12px;background:var(--surface-2);border:1px solid var(--gold-dim);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;line-height:1.5"></div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft)">
             <button class="btn btn-ghost" onclick="cloudSignOut()" style="width:100%;font-size:13px;color:var(--terra)">Sign Out</button>
           </div>
@@ -2888,6 +2922,19 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">🧹 Clear Tasks &amp; Categories</div>
+      <div class="card">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Start fresh with your task list</div>
+            <div class="setting-sub">Clear all tasks, all categories, or both for the whole household. Completion history and points are kept — use the reset above to clear those.</div>
+          </div>
+          <button class="btn btn-ghost" style="color:var(--terra);flex-shrink:0" onclick="openClearTasksPanel()">Clear…</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">💾 Data</div>
       <div class="card">
         <div class="setting-row">
@@ -2920,7 +2967,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.21.1</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.23.0</span>
         </div>
       </div>
     </div>
@@ -3219,11 +3266,16 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
         <!-- Recipes -->
 
         <div class="help-section" id="help-recipes">
-          <div class="help-section-title"><span class="ico">🍳</span>Recipes &amp; Meals</div>
+          <div class="help-section-title"><span class="ico">🍳</span>Kitchen</div>
           <div class="help-card">
             <h3>Building your recipe library</h3>
             <p>Tap <strong>+ Recipe</strong> to add a recipe with a name, servings, prep/cook time, ingredients, and steps. Add as many <strong>tags</strong> as you like (e.g. Dinner, Vegetarian, Quick) — a recipe can have several, and they power the tag filter at the top of the list.</p>
             <p style="margin-top:8px">Each ingredient has its own quantity, unit, and name. Enter steps one per line — they're shown as a numbered list when you open the recipe.</p>
+          </div>
+          <div class="help-card">
+            <h3>Inventory</h3>
+            <p>The <strong>📦 Inventory</strong> tab tracks what you have on hand and where it's stored. Tap <strong>📍 Locations</strong> to set up places like your fridge, freezer, or garage freezer, then <strong>+ Item</strong> to record something — pick it from your Groceries list (or type a new one and it's added there for you), then enter a quantity, unit, and location.</p>
+            <p style="margin-top:8px">Use the <strong>− / +</strong> buttons to adjust amounts as you use things up. View it <strong>By location</strong> or <strong>By category</strong>.</p>
           </div>
           <div class="help-card">
             <h3>Finding recipes</h3>
@@ -3630,6 +3682,14 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="fg">
       <label class="fl">Color</label>
       <div class="color-row" id="mCatColors"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Icon <span style="opacity:.5">(optional)</span></label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="icon-preview" id="catIconPreview" style="cursor:pointer" title="Click to choose an icon">＋</div>
+        <button type="button" class="btn btn-ghost" id="catIconClear" style="font-size:12px;display:none">Remove icon</button>
+      </div>
+      <div id="catIconPicker" style="display:none;margin-top:8px"><div class="icon-picker" id="catIconGrid"></div></div>
     </div>
     <div class="tog-row">
       <div>
@@ -4166,7 +4226,7 @@ function loadSetting(key) { try { const v=localStorage.getItem('hb_'+key); retur
 let DB;
 function openDB() {
   return new Promise((res, rej) => {
-    const r = indexedDB.open('HomeBaseDB', 14);
+    const r = indexedDB.open('HomeBaseDB', 15);
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('chores'))
@@ -4233,6 +4293,14 @@ function openDB() {
         const s = d.createObjectStore('groceryLibrary', { keyPath: 'id', autoIncrement: false });
         s.createIndex('nameKey', 'nameKey');
         s.createIndex('categoryId', 'categoryId');
+      }
+      // v15: Household inventory (locations + stock on hand)
+      if (!d.objectStoreNames.contains('inventoryLocations'))
+        d.createObjectStore('inventoryLocations', { keyPath: 'id', autoIncrement: false });
+      if (!d.objectStoreNames.contains('inventory')) {
+        const s = d.createObjectStore('inventory', { keyPath: 'id', autoIncrement: false });
+        s.createIndex('libraryId', 'libraryId');
+        s.createIndex('locationId', 'locationId');
       }
       // v14: Task schedule overrides
       if (!d.objectStoreNames.contains('taskSchedule')) {
@@ -4590,7 +4658,7 @@ function parseLocal(s) { const [y,m,d]=s.split('-').map(Number); return new Date
 // Navigation
 // ═══════════════════════════════════════════
 const VIEW_ICONS = {dashboard:'🏠',week:'📋',calendar:'🗓',history:'📈',stats:'🌟',tasks:'✅',events:'📅',rewards:'🏆',people:'👥','person-detail':'👤',diary:'📖',pinboard:'📌',expenses:'💰',recipes:'🍳',settings:'⚙️',help:'❓'};
-const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', recipes:'Recipes & Meals', settings:'Settings', help:'Help & Guide' };
+const TITLES = { dashboard:'Dashboard', week:'Week View', calendar:'Calendar', history:'History', stats:'Lifetime Stats', tasks:'Tasks', events:'Events & Appointments', rewards:'Rewards', people:'People', 'person-detail':'', diary:'Diary', pinboard:'Pinboard', expenses:'Expenses', recipes:'Kitchen', settings:'Settings', help:'Help & Guide' };
 async function nav(view) {
   S.view = view;
   clearDirtyFlag(view);  // clear sync dirty flag — render() below will fetch fresh data
@@ -4817,6 +4885,16 @@ async function renderSidebarPeople() {
 // ═══════════════════════════════════════════
 // Helpers
 // ═══════════════════════════════════════════
+// Category icon helpers — the icon sits inside the colored badge so color is never lost
+function taskIconOf(task, categories) {
+  if (!task || !task.categoryId) return '';
+  return categories.find(c => c.id === task.categoryId)?.icon || '';
+}
+function dotHtml(cls, color, icon, extraStyle='') {
+  return icon
+    ? `<div class="${cls} has-icon" style="background:${color};${extraStyle}">${icon}</div>`
+    : `<div class="${cls}" style="background:${color};${extraStyle}"></div>`;
+}
 function taskColor(task, categories) {
   if (!task.categoryId) return '#5e5878';
   return categories.find(c=>c.id===task.categoryId)?.color || '#5e5878';
@@ -5056,7 +5134,7 @@ async function renderDash() {
 
       const group=document.createElement('div'); group.className='cat-group'; group.style.setProperty('--cat-color',color);
       const hdr=document.createElement('div'); hdr.className='cat-group-hdr';
-      hdr.innerHTML=`<div class="cat-group-swatch" style="background:${color}"></div><span class="cat-group-name">${label}</span><span class="cat-group-prog">${doneInGroup}/${activeInGroup}</span><span class="cat-group-chevron">▾</span>`;
+      hdr.innerHTML=`${dotHtml('cat-group-swatch',color,cat?.icon||'')}<span class="cat-group-name">${label}</span><span class="cat-group-prog">${doneInGroup}/${activeInGroup}</span><span class="cat-group-chevron">▾</span>`;
       hdr.onclick=()=>group.classList.toggle('collapsed');
       group.appendChild(hdr);
 
@@ -5071,12 +5149,12 @@ async function renderDash() {
         const nameHtml = `<span class="chore-name" style="flex:1">${c.name}${count>1?`<span class="comp-count-badge">×${count}</span>`:''}${c.description?` <span style="font-size:10.5px;color:var(--text-3)">— ${c.description}</span>`:''}</span><span class="pts-badge">${pts(c.points)}</span>${skipped?'<span class="skip-ico" title="Skipped">⊘</span>':''}`;
         if(S.person!=='all' && !skipped) {
           // Single-person view: +/- stepper
-          row.innerHTML=`<div class="cdot" style="background:${color}"></div>${nameHtml}<div class="comp-stepper" data-chore="${c.id}"><button class="comp-minus" ${count===0?'disabled':''}>−</button><span class="comp-count ${count===0?'zero':''}">${count}</span><button class="comp-plus">+</button></div>`;
+          row.innerHTML=`${dotHtml('cdot',color,taskIconOf(c,categories))}${nameHtml}<div class="comp-stepper" data-chore="${c.id}"><button class="comp-minus" ${count===0?'disabled':''}>−</button><span class="comp-count ${count===0?'zero':''}">${count}</span><button class="comp-plus">+</button></div>`;
           row.querySelector('.comp-plus').onclick=(e)=>{ e.stopPropagation(); stepCompletion(c.id,todayStr,+1); };
           row.querySelector('.comp-minus').onclick=(e)=>{ e.stopPropagation(); stepCompletion(c.id,todayStr,-1); };
         } else {
           // Everyone view: tap opens modal (count badge shown inline)
-          row.innerHTML=`<div class="cdot" style="background:${color}"></div>${nameHtml}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          row.innerHTML=`${dotHtml('cdot',color,taskIconOf(c,categories))}${nameHtml}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
           row.querySelector('.check-btn').onclick=(e)=>{ e.stopPropagation(); animCheckBurst(e.currentTarget); openCompleteModal(c.id,todayStr); };
           row.onclick=()=>openCompleteModal(c.id,todayStr);
         }
@@ -5105,7 +5183,7 @@ async function renderDash() {
       const person=c.personId?people.find(p=>p.id===c.personId):null;
       const row=document.createElement('div'); row.className='chore-row done';
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-sm)';
-      row.innerHTML=`<div class="cdot" style="background:${cat?.color||'var(--gold-dim)'}"></div><span class="chore-name" style="flex:1">${task.name}</span>${person?`<span style="font-size:11px;font-weight:500;color:${person.color}">${person.name}</span>`:''}<span class="pts-badge">${pts(task.points)}</span><span class="bonus-badge">bonus</span>`;
+      row.innerHTML=`${dotHtml('cdot',cat?.color||'var(--gold-dim)',cat?.icon||'')}<span class="chore-name" style="flex:1">${task.name}</span>${person?`<span style="font-size:11px;font-weight:500;color:${person.color}">${person.name}</span>`:''}<span class="pts-badge">${pts(task.points)}</span><span class="bonus-badge">bonus</span>`;
       const rmBtn=document.createElement('button');
       rmBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--text-3);font-size:13px;padding:0 3px;line-height:1;opacity:0;transition:opacity 0.15s;flex-shrink:0';
       rmBtn.title='Remove this bonus task log';
@@ -5385,7 +5463,7 @@ async function renderDash() {
         const state=chipState(r), claimed=state==='claimed', locked=state==='locked';
         const label=claimed?`${r.icon||'🏆'} ${r.name} ✓`:locked?`🔒 ${r.name}`:`${r.icon||'🏆'} ${r.name}`;
         const tooltip=claimed?'Already claimed':locked?lockReason(r):r.type==='credit'?'Earn a 💰 credit toward mega rewards':r.type==='point'?`Claim — costs ${r.pointsRequired||0} pts (${remainingPts} remaining)`:'Claim this reward';
-        return `<div class="reward-claim-chip${claimed?' claimed':locked?' locked':''}" style="border-color:${r.color};color:${r.color};background:${claimed?r.color+'22':'transparent'}" ${state==='claimable'?`onclick="claimReward(${r.id},${p.id},'${weekStartStr}')"`:''}title="${tooltip}">${label}</div>`;
+        return `<div class="reward-claim-chip${claimed?' claimed':locked?' locked':''}" style="border-color:${r.color};color:${r.color};background:${claimed?r.color+'22':'transparent'}" ${state==='claimable'?`onclick="claimReward('${r.id}','${p.id}','${weekStartStr}')"`:''}title="${tooltip}">${label}</div>`;
       };
 
       // Build dropdown data — we no longer inline all chips, just render buttons
@@ -5406,8 +5484,8 @@ async function renderDash() {
         const ptsBtnLabel  = anyPointRewardClaimed ? `⭐ Pts (${remainingPts} left)` : visiblePointRewards.length ? `⭐ Point Reward${visiblePointRewards.length>1?' ('+visiblePointRewards.length+')':''}` : null;
         const goalLocked = goalRewardClaimed || anyPointRewardClaimed;
         const pButtons = [
-          goalBtnLabel ? `<button class="btn-select-reward${goalLocked?' locked':''}" onclick="toggleRewardDropdown('goal',${p.id},'${weekStartStr}',this)">${goalBtnLabel}</button>` : '',
-          ptsBtnLabel  ? `<button class="btn-select-reward" onclick="toggleRewardDropdown('point',${p.id},'${weekStartStr}',this)">${ptsBtnLabel}</button>` : ''
+          goalBtnLabel ? `<button class="btn-select-reward${goalLocked?' locked':''}" onclick="toggleRewardDropdown('goal','${p.id}','${weekStartStr}',this)">${goalBtnLabel}</button>` : '',
+          ptsBtnLabel  ? `<button class="btn-select-reward" onclick="toggleRewardDropdown('point','${p.id}','${weekStartStr}',this)">${ptsBtnLabel}</button>` : ''
         ].filter(Boolean).join('');
         rewardStatus = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${pButtons}<div class="rwd-dropdown" id="rwd-drop-${p.id}" style="display:none"></div></div>`;
       }
@@ -5466,7 +5544,7 @@ async function renderDash() {
     const slotLabel={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner'};
     const sorted=todayMeals.slice().sort((a,b)=>(slotOrder[a.slot]??9)-(slotOrder[b.slot]??9));
     if(!sorted.length){
-      dm.innerHTML='<div class="empty"><div class="ico">🍳</div><p>No meals planned for today.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Plan meals in <strong>🍳 Recipes → Meal Plan</strong>.</p></div>';
+      dm.innerHTML='<div class="empty"><div class="ico">🍳</div><p>No meals planned for today.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Plan meals in <strong>🍳 Kitchen → Meal Plan</strong>.</p></div>';
     } else {
       dm.innerHTML = sorted.map(m=>{
         const recipe = m.recipeId!=null ? mrById[m.recipeId] : null;
@@ -5485,7 +5563,7 @@ async function renderDash() {
   if(dg){
     const gItems=(await all('groceryItems')).sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
     if(!gItems.length){
-      dg.innerHTML='<div class="empty"><div class="ico">🛒</div><p>No grocery list yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Generate one in <strong>🍳 Recipes → Grocery</strong>.</p></div>';
+      dg.innerHTML='<div class="empty"><div class="ico">🛒</div><p>No grocery list yet.</p><p style="font-size:12px;color:var(--text-3);margin-top:6px">Generate one in <strong>🍳 Kitchen → Grocery</strong>.</p></div>';
     } else {
       const checked=gItems.filter(i=>i.checked).length;
       const pct=Math.round(checked/gItems.length*100);
@@ -5723,7 +5801,7 @@ async function renderWeek() {
             const comp=allComps.find(cp=>cp.choreId===c.id&&cp.date===ds&&cp.personId===p.id);
             return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${p.name}${comp?' ✓':''}"></div>`;
           }).join('')}</div>`:(done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-          item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name" style="flex:1">${c.name}${cnt>1?`<span class="comp-count-badge">×${cnt}</span>`:''}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><button class="w-task-bonus-btn" title="Log as bonus for someone else" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 3px;color:var(--text-3);flex-shrink:0">⭐</button><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+          item.innerHTML=`${dotHtml('mini-dot',color,taskIconOf(c,categories))}<span class="w-chore-name" style="flex:1">${c.name}${cnt>1?`<span class="comp-count-badge">×${cnt}</span>`:''}</span>${dotsHtml}${skpd?'<span class="skip-ico">⊘</span>':''}<span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span><button class="w-task-bonus-btn" title="Log as bonus for someone else" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0 3px;color:var(--text-3);flex-shrink:0">⭐</button><div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
           item.querySelector('.w-task-bonus-btn').onclick=(e)=>{e.stopPropagation();openTaskAsBonusModal(c.id,ds);};
           item.onclick=(e)=>{ if(e.target.classList.contains('w-task-bonus-btn')) return; animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
           detail.appendChild(item);
@@ -5837,7 +5915,7 @@ async function renderWeek() {
           const tooltip=comp?.note?`${p.name}: ${comp.note}`:p.name+(comp?' ✓':'');
           return `<div class="comp-dot" style="background:${comp?p.color:p.color+'33'}" title="${tooltip}"></div>`;
         }).join('')}</div>` : (done?'<span style="color:var(--sage);font-size:10px">✓</span>':'');
-        item.innerHTML=`<div class="mini-dot" style="background:${color}"></div><span class="w-chore-name">${c.name}</span>${dotsHtml}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
+        item.innerHTML=`${dotHtml('mini-dot',color,taskIconOf(c,categories))}<span class="w-chore-name">${c.name}</span>${dotsHtml}<div class="check-btn${done?' checked':''}">${done?'✓':''}</div>`;
         // Quick-complete: single click toggles when viewing as specific person
         if(S.person !== 'all') {
           item.onclick=(e)=>{ animCheckBurst(item.querySelector('.check-btn')); openCompleteModal(c.id,ds); };
@@ -5935,7 +6013,7 @@ async function renderCalDetail(ds) {
       row.style.cssText=`background:${e.color}12;border-left-color:${e.color}`;
       const isRecurring = e.recurrence && e.recurrence!=='none';
       const isSkipped = (e.exceptions||[]).some(ex=>ex.date===ds&&!ex.movedTo);
-      row.innerHTML=`<span style="font-size:18px">${e.icon||'📅'}</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:${e.color}">${e.title}${isSkipped?' <span style="color:var(--text-3);font-size:11px">(skipped)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${e.type}${e.time?' · '+fmtTime(e.time):''}${e.endTime?' – '+fmtTime(e.endTime):''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${e.notes}</div>`:''}</div><div style="display:flex;gap:4px;flex-shrink:0">${isRecurring&&!isSkipped?`<button class="evt-skip-btn" onclick="openSkipModal(${e.id},'${ds}')">Skip/Move</button>`:''}${isSkipped?`<button class="evt-skip-btn" style="border-color:var(--sage);color:var(--sage)" onclick="unskipOccurrence(${e.id},'${ds}')">Restore</button>`:''}<button class="act-btn" onclick="openEventModal('${e.id}')" style="font-size:11px;padding:3px 8px">Edit</button></div>`;
+      row.innerHTML=`<span style="font-size:18px">${e.icon||'📅'}</span><div style="flex:1"><div style="font-size:13px;font-weight:500;color:${e.color}">${e.title}${isSkipped?' <span style="color:var(--text-3);font-size:11px">(skipped)</span>':''}</div><div style="font-size:11px;color:var(--text-3)">${e.type}${e.time?' · '+fmtTime(e.time):''}${e.endTime?' – '+fmtTime(e.endTime):''}${person?` · <span style="color:${person.color}">${person.name}</span>`:''}</div>${e.notes?`<div style="font-size:11px;color:var(--text-3);margin-top:2px">${e.notes}</div>`:''}</div><div style="display:flex;gap:4px;flex-shrink:0">${isRecurring&&!isSkipped?`<button class="evt-skip-btn" onclick="openSkipModal('${e.id}','${ds}')">Skip/Move</button>`:''}${isSkipped?`<button class="evt-skip-btn" style="border-color:var(--sage);color:var(--sage)" onclick="unskipOccurrence('${e.id}','${ds}')">Restore</button>`:''}<button class="act-btn" onclick="openEventModal('${e.id}')" style="font-size:11px;padding:3px 8px">Edit</button></div>`;
       sec.appendChild(row);
     });
     wrap.appendChild(sec);
@@ -5958,7 +6036,7 @@ async function renderCalDetail(ds) {
       const taskComps=comps.filter(cp=>cp.choreId===c.id);
       const notes=taskComps.filter(cp=>cp.note).map(cp=>{ const p=people.find(pp=>pp.id===cp.personId); return `${p?p.name+': ':''}${cp.note}`; });
       const dotsHtml=assignees.length?`<div class="cal-task-who">${assignees.map(p=>{const d=comps.some(cp=>cp.choreId===c.id&&cp.personId===p.id); return `<div class="comp-dot" style="background:${d?p.color:p.color+'33'}" title="${p.name}"></div>`;}).join('')}</div>`:'';
-      row.innerHTML=`<div class="cdot" style="background:${color}"></div><span class="cal-task-name">${c.name}</span><span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span>${dotsHtml}<div class="check-btn${done?' checked':''}" onclick="openCompleteModal(${c.id},'${ds}')">${done?'✓':''}</div>`;
+      row.innerHTML=`${dotHtml('cdot',color,taskIconOf(c,categories))}<span class="cal-task-name">${c.name}</span><span class="pts-badge" style="margin-right:4px">${pts(c.points)}</span>${dotsHtml}<div class="check-btn${done?' checked':''}" onclick="openCompleteModal('${c.id}','${ds}')">${done?'✓':''}</div>`;
       if(notes.length) {
         const noteEl=document.createElement('div');
         noteEl.style.cssText='font-size:11px;color:var(--text-3);font-style:italic;padding:3px 10px 5px 22px;line-height:1.4';
@@ -5981,7 +6059,7 @@ async function renderCalDetail(ds) {
       const person=bc.personId?people.find(p=>p.id===bc.personId):null;
       const row=document.createElement('div'); row.className='cal-task-row done';
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);background:var(--surface-2);margin-bottom:4px';
-      row.innerHTML=`<div class="cdot" style="background:${cat?.color||'var(--gold-dim)'}"></div><span class="cal-task-name" style="flex:1">${task.name}</span><span class="pts-badge">${pts(task.points)}</span><span class="bonus-badge">bonus</span>${person?`<span style="font-size:11px;color:${person.color}">${person.name}</span>`:''}`;
+      row.innerHTML=`${dotHtml('cdot',cat?.color||'var(--gold-dim)',cat?.icon||'')}<span class="cal-task-name" style="flex:1">${task.name}</span><span class="pts-badge">${pts(task.points)}</span><span class="bonus-badge">bonus</span>${person?`<span style="font-size:11px;color:${person.color}">${person.name}</span>`:''}`;
       const rmBtn=document.createElement('button');
       rmBtn.style.cssText='background:none;border:none;cursor:pointer;color:var(--text-3);font-size:13px;padding:0 3px;opacity:0;transition:opacity 0.15s';
       rmBtn.title='Remove'; rmBtn.textContent='✕';
@@ -6131,7 +6209,7 @@ async function renderCreditsView() {
         ${megaRewards.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;max-width:200px">${megaRewards.map(r=>{
           const cost=r.creditCost||1, canClaim=balance>=cost;
           return `<div class="reward-claim-chip${canClaim?'':' locked'}" style="border-color:${r.color};color:${r.color};background:${canClaim?r.color+'15':'transparent'};font-size:11px"
-            ${canClaim?`onclick="claimMegaReward(${r.id},${p.id})" title="Claim — costs ${cost} credit${cost!==1?'s':''}"`:`title="Need ${cost} credits, have ${balance}"`}>
+            ${canClaim?`onclick="claimMegaReward('${r.id}','${p.id}')" title="Claim — costs ${cost} credit${cost!==1?'s':''}"`:`title="Need ${cost} credits, have ${balance}"`}>
             ${r.icon||'🌟'} ${r.name} <span style="opacity:0.7">(${cost}💰)</span>
           </div>`;
         }).join('')}</div>`:''}`; 
@@ -7361,11 +7439,11 @@ async function renderTasks() {
     }
   });
 
-  const renderGroup = (label, color, tasks, isBonus=false) => {
+  const renderGroup = (label, color, tasks, isBonus=false, icon='') => {
     if (!tasks.length) return;
     const hdr = document.createElement('div');
     hdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin:16px 0 8px';
-    hdr.innerHTML = `${color?`<div style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0"></div>`:'<div style="width:10px;height:10px;border-radius:3px;background:var(--surface-3);flex-shrink:0"></div>'}<span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);font-weight:600">${label}</span>${isBonus?'<span class="bonus-badge">bonus</span>':''}<span style="font-size:11px;color:var(--text-3)">(${tasks.length})</span>`;
+    hdr.innerHTML = `${color?(icon?`<div class="cat-swatch has-icon" style="background:${color}">${icon}</div>`:`<div style="width:10px;height:10px;border-radius:3px;background:${color};flex-shrink:0"></div>`):'<div style="width:10px;height:10px;border-radius:3px;background:var(--surface-3);flex-shrink:0"></div>'}<span style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);font-weight:600">${label}</span>${isBonus?'<span class="bonus-badge">bonus</span>':''}<span style="font-size:11px;color:var(--text-3)">(${tasks.length})</span>`;
     cont.appendChild(hdr);
 
     // Only show drag/reorder controls when no sort is active (manual order)
@@ -7381,11 +7459,11 @@ async function renderTasks() {
 
       const dragHandle=manualOrder?`<div class="task-drag-handle" title="Drag to reorder">⠿</div>`:'';
       const reorderBtns=manualOrder?`<div class="task-reorder-btns">
-        <button class="task-reorder-btn" onclick="moveTaskOrder(${c.id},-1,${c.categoryId||'null'})" ${idx===0?'disabled':''} title="Move up">▲</button>
-        <button class="task-reorder-btn" onclick="moveTaskOrder(${c.id},1,${c.categoryId||'null'})" ${idx===tasks.length-1?'disabled':''} title="Move down">▼</button>
+        <button class="task-reorder-btn" onclick="moveTaskOrder('${c.id}',-1,${c.categoryId?`'${c.categoryId}'`:'null'})" ${idx===0?'disabled':''} title="Move up">▲</button>
+        <button class="task-reorder-btn" onclick="moveTaskOrder('${c.id}',1,${c.categoryId?`'${c.categoryId}'`:'null'})" ${idx===tasks.length-1?'disabled':''} title="Move down">▼</button>
       </div>`:'';
 
-      item.innerHTML=`${dragHandle}<div class="task-item-color" style="background:${color2}"></div><div class="task-item-body"><div class="task-item-top"><span class="task-item-name">${c.name}</span><span class="pts-badge">${pts(c.points)}</span>${c.isRecurring?'<span class="tag rec">↻ Recurring</span>':'<span class="tag" style="background:rgba(90,142,212,0.12);color:#5a8ed4">📅 One-time</span>'}</div>${c.description?`<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">${c.description}</div>`:''}<div class="task-item-meta">${c.isRecurring?`<div class="day-tags">${DAYS.map((d,i)=>`<span class="day-tag${c.days&&c.days.includes(i)?' on':''}">${d[0]}</span>`).join('')}</div>${c.startDate||c.endDate?`<span style="font-size:11px;color:var(--text-3)">${c.startDate||''}${c.startDate&&c.endDate?' – ':''}${c.endDate||''}</span>`:''}${c.recurEnd?`<span style="font-size:11px;color:var(--terra)">ends ${c.recurEnd}</span>`:''}`:c.date?`<span style="font-size:11px;color:var(--text-3)">${c.date}</span>`:''}${assigned.length?`<span style="font-size:11px;color:var(--text-3)">→ ${assigned.join(', ')}</span>`:''}</div></div><div class="item-actions">${reorderBtns}<button class="act-btn" onclick="openTaskModal('${c.id}')">Edit</button><button class="act-btn" onclick="duplicateTask('${c.id}')" title="Duplicate task">Copy</button><button class="act-btn del" onclick="deleteTask('${c.id}')">Delete</button></div>`;
+      item.innerHTML=`${dragHandle}${dotHtml('task-item-color',color2,icon)}<div class="task-item-body"><div class="task-item-top"><span class="task-item-name">${c.name}</span><span class="pts-badge">${pts(c.points)}</span>${c.isRecurring?'<span class="tag rec">↻ Recurring</span>':'<span class="tag" style="background:rgba(90,142,212,0.12);color:#5a8ed4">📅 One-time</span>'}</div>${c.description?`<div style="font-size:11.5px;color:var(--text-3);margin-top:3px">${c.description}</div>`:''}<div class="task-item-meta">${c.isRecurring?`<div class="day-tags">${DAYS.map((d,i)=>`<span class="day-tag${c.days&&c.days.includes(i)?' on':''}">${d[0]}</span>`).join('')}</div>${c.startDate||c.endDate?`<span style="font-size:11px;color:var(--text-3)">${c.startDate||''}${c.startDate&&c.endDate?' – ':''}${c.endDate||''}</span>`:''}${c.recurEnd?`<span style="font-size:11px;color:var(--terra)">ends ${c.recurEnd}</span>`:''}`:c.date?`<span style="font-size:11px;color:var(--text-3)">${c.date}</span>`:''}${assigned.length?`<span style="font-size:11px;color:var(--text-3)">→ ${assigned.join(', ')}</span>`:''}</div></div><div class="item-actions">${reorderBtns}<button class="act-btn" onclick="openTaskModal('${c.id}')">Edit</button><button class="act-btn" onclick="duplicateTask('${c.id}')" title="Duplicate task">Copy</button><button class="act-btn del" onclick="deleteTask('${c.id}')">Delete</button></div>`;
 
       if(manualOrder){
         item.addEventListener('dragstart',e=>{ dragSrc=item; item.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
@@ -7409,7 +7487,7 @@ async function renderTasks() {
 
   // Render categorized first
   sortedCats.forEach(cat => {
-    if (grouped[cat.id]) renderGroup(cat.name, cat.color, grouped[cat.id], cat.isBonus||false);
+    if (grouped[cat.id]) renderGroup(cat.name, cat.color, grouped[cat.id], cat.isBonus||false, cat.icon||'');
   });
   if (grouped[UNCAT]) renderGroup('Uncategorized', null, grouped[UNCAT], false);
 }
@@ -7444,10 +7522,10 @@ async function renderCategories() {
     card.innerHTML=`
       <div class="cat-drag-handle" title="Drag to reorder">⠿</div>
       <div class="cat-order-btns">
-        <button class="cat-order-btn" onclick="moveCatOrder(${cat.id},-1)" ${idx===0?'disabled':''} title="Move up">▲</button>
-        <button class="cat-order-btn" onclick="moveCatOrder(${cat.id},1)" ${idx===sorted.length-1?'disabled':''} title="Move down">▼</button>
+        <button class="cat-order-btn" onclick="moveCatOrder('${cat.id}',-1)" ${idx===0?'disabled':''} title="Move up">▲</button>
+        <button class="cat-order-btn" onclick="moveCatOrder('${cat.id}',1)" ${idx===sorted.length-1?'disabled':''} title="Move down">▼</button>
       </div>
-      <div class="cat-swatch" style="background:${cat.color}"></div>
+      <div class="cat-swatch${cat.icon?' has-icon':''}" style="background:${cat.color}">${cat.icon||''}</div>
       <span class="cat-name" style="flex:1">${cat.name}</span>
       ${cat.isBonus?'<span class="bonus-cat-chip">bonus</span>':''}
       <span class="cat-count">${taskCount} task${taskCount!==1?'s':''}</span>
@@ -7870,7 +7948,9 @@ async function renderDiary() {
           <div class="diary-item-preview">${(e.content||'').trim().slice(0,90)||'(no content)'}</div>
           ${tagsHtml}
         </div>
-        ${e.photo?'<span style="font-size:16px;align-self:center;flex-shrink:0">📷</span>':''}`;
+        ${e.photo?'<span style="font-size:16px;align-self:center;flex-shrink:0">📷</span>':''}
+        <button class="diary-item-del" title="Delete entry" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:4px 6px;align-self:center;flex-shrink:0;border-radius:6px">🗑</button>`;
+      item.querySelector('.diary-item-del').onclick=(ev)=>{ ev.stopPropagation(); deleteDiaryEntry(e.id); };
       item.onclick=()=>loadEntry(e);
       list.appendChild(item);
     });
@@ -7878,6 +7958,10 @@ async function renderDiary() {
 
   // Sync mood picker button label
   syncMoodPickerBtn();
+}
+
+function syncDiaryDeleteBtn() {
+  const b = g('deleteDiaryBtn'); if (b) b.style.display = S.diaryEntryId ? '' : 'none';
 }
 
 function diaryShowEditor(isNew=false) {
@@ -7893,6 +7977,7 @@ function diaryShowEditor(isNew=false) {
   g('diaryLanding').style.display='none';
   const editor=g('diaryEditor');
   editor.style.display='flex'; editor.style.flexDirection='column'; editor.style.gap='12px'; editor.style.flex='1';
+  syncDiaryDeleteBtn();
 }
 
 function diaryShowLanding() {
@@ -7900,6 +7985,7 @@ function diaryShowLanding() {
   S.diaryEntryId = null;
   g('diaryEditor').style.display='none';
   g('diaryLanding').style.display='';
+  syncDiaryDeleteBtn();
   renderDiary();
 }
 
@@ -7918,6 +8004,7 @@ function loadEntry(e) {
   g('diaryLanding').style.display='none';
   const editor=g('diaryEditor');
   editor.style.display='flex'; editor.style.flexDirection='column'; editor.style.gap='12px'; editor.style.flex='1';
+  syncDiaryDeleteBtn();
 }
 
 function syncMoodBtns() {
@@ -7975,6 +8062,19 @@ function removeDiaryTag(tag) {
 function removeDiaryPhoto() {
   S.diaryPhoto=null;
   syncPhotoPreview();
+}
+
+async function deleteDiaryEntry(id) {
+  id = id || S.diaryEntryId;
+  if (!id) return;
+  const entry = await get('diary', id);
+  if (!entry) return;
+  askConfirm(`Delete the diary entry from ${relDate(entry.date)}? This can't be undone.`, async () => {
+    await del('diary', id);   // soft-delete — syncs to your other devices
+    if (entry.photo && _cloudUser) { try { await deletePhoto(`diary-${id}.jpg`); } catch(e) { /* photo cleanup is best-effort */ } }
+    showToast('Diary entry deleted', 'var(--text-3)');
+    if (S.diaryEntryId === id || S._diaryEditorOpen) diaryShowLanding(); else await renderDiary();
+  }, 'Delete diary entry');
 }
 
 async function saveDiaryEntry() {
@@ -8356,7 +8456,7 @@ async function openTaskModal(taskId=null, presetDate=null) {
       const chip = document.createElement('div');
       chip.className = 'assign-chip cat-pick-chip';
       chip.dataset.cid = cat.id;
-      chip.innerHTML = `<div class="pdot" style="background:${cat.color}"></div>${cat.name}${cat.isBonus?` <span class="bonus-badge">bonus</span>`:''}`;
+      chip.innerHTML = `${cat.icon?`<span style="font-size:13px;line-height:1">${cat.icon}</span>`:`<div class="pdot" style="background:${cat.color}"></div>`}${cat.name}${cat.isBonus?` <span class="bonus-badge">bonus</span>`:''}`;
       chip.onclick = () => { S.taskCategoryId = cat.id; refreshPicker(); };
       picker.appendChild(chip);
     });
@@ -8469,14 +8569,14 @@ async function renderPinboard() {
       const progressHtml=items.length>0?`<div class="pin-list-progress"><div class="pin-list-progress-fill" style="width:${Math.round(doneItems.length/items.length*100)}%"></div></div>`:'';
 
       bodyHtml=progressHtml+items.map(item=>`<div class="pin-list-item">
-        <div class="pin-check${item.done?' checked':''}" onclick="togglePinItem(${pin.id},'${item.id}')">${item.done?'✓':''}</div>
+        <div class="pin-check${item.done?' checked':''}" onclick="togglePinItem('${pin.id}','${item.id}')">${item.done?'✓':''}</div>
         <span class="pin-item-text${item.done?' done':''}">${item.text}</span>
-        <span class="pin-item-delete" onclick="deletePinItem(${pin.id},'${item.id}')" style="font-size:10px;color:var(--text-3);cursor:pointer;padding:0 4px;opacity:0">✕</span>
+        <span class="pin-item-delete" onclick="deletePinItem('${pin.id}','${item.id}')" style="font-size:10px;color:var(--text-3);cursor:pointer;padding:0 4px;opacity:0">✕</span>
       </div>`).join('');
 
       // Quick-add row
       bodyHtml+=`<div class="pin-add-item">
-        <input class="pin-add-input" id="pai_${pin.id}" placeholder="Add item…" onkeydown="if(event.key==='Enter'){addPinItem(${pin.id},this.value);this.value=''}">
+        <input class="pin-add-input" id="pai_${pin.id}" placeholder="Add item…" onkeydown="if(event.key==='Enter'){addPinItem('${pin.id}',this.value);this.value=''}">
       </div>`;
 
       // Bottom action bar (only show if there are items)
@@ -8657,14 +8757,14 @@ function removeFromBlacklist(key){
 
 function switchRecipeTab(tab){
   S.recTab = tab;
-  const map = {all:'recAll', plan:'recPlan', grocery:'recGrocery', glib:'recGLib'};
+  const map = {all:'recAll', plan:'recPlan', grocery:'recGrocery', glib:'recGLib', inv:'recInv'};
   Object.entries(map).forEach(([t,sv])=>{
     const el=g('subview-'+sv); if(el) el.style.display = (t===tab)?'':'none';
   });
-  ['recTabAll','recTabPlan','recTabGrocery','recTabGLib'].forEach(id=>{
+  ['recTabAll','recTabPlan','recTabGrocery','recTabGLib','recTabInv'].forEach(id=>{
     const el=g(id); if(el) el.classList.remove('active');
   });
-  const active={all:'recTabAll',plan:'recTabPlan',grocery:'recTabGrocery',glib:'recTabGLib'}[tab];
+  const active={all:'recTabAll',plan:'recTabPlan',grocery:'recTabGrocery',glib:'recTabGLib',inv:'recTabInv'}[tab];
   if(g(active)) g(active).classList.add('active');
 }
 
@@ -8677,6 +8777,7 @@ async function renderRecipes(){
   g('recTabPlan').onclick=()=>{ switchRecipeTab('plan'); renderMealPlan(); };
   g('recTabGrocery').onclick=()=>{ switchRecipeTab('grocery'); renderGrocery(); };
   g('recTabGLib').onclick=()=>{ switchRecipeTab('glib'); renderGroceryLib(); };
+  g('recTabInv').onclick=()=>{ switchRecipeTab('inv'); renderInventory(); };
 
   // Wire toolbar
   const searchEl=g('recSearch'), ingEl=g('recIngSearch');
@@ -8688,6 +8789,7 @@ async function renderRecipes(){
   if(S.recTab==='plan') await renderMealPlan();
   if(S.recTab==='grocery') await renderGrocery();
   if(S.recTab==='glib') await renderGroceryLib();
+  if(S.recTab==='inv') await renderInventory();
 }
 
 async function renderRecipeGrid(){
@@ -8909,6 +9011,7 @@ function handleRecipePhotoSelect(input) {
   const file = input.files?.[0];
   if (!file) return;
   input.value = '';
+  resetCropMode(); // make sure no stale avatar/diary crop callback is still armed
   // Load into crop modal instead of showing directly
   const reader = new FileReader();
   reader.onload = e => openPhotoCrop(e.target.result, file);
@@ -8984,7 +9087,13 @@ function applyCropTransform() {
   img.style.height = _crop.imgH + 'px';
 }
 
+function resetCropMode() {
+  _cropCustomCallback = null;
+  const frame = g('cropFrame');
+  if (frame) frame.style.aspectRatio = '4/3';
+}
 function cancelPhotoCrop() {
+  resetCropMode();
   closeModal('photoCropModal');
 }
 
@@ -10316,7 +10425,7 @@ async function runSearch(query) {
   // Diary entries
   diaryEntries.filter(e=>(e.content||'').toLowerCase().includes(q)||(e.date||'').includes(q)||(e.tags||[]).some(t=>t.toLowerCase().includes(q)))
     .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8)
-    .forEach(e=>results.push({type:'diary',ico:'📖',title:e.date+(e.mood?' '+e.mood:''),meta:(e.content||'').slice(0,50)+'…',action:()=>{ closeSearch(); nav('diary'); setTimeout(()=>openDiaryEntry(e),80); },raw:e}));
+    .forEach(e=>results.push({type:'diary',ico:'📖',title:e.date+(e.mood?' '+e.mood:''),meta:(e.content||'').slice(0,50)+'…',action:()=>{ closeSearch(); nav('diary'); setTimeout(()=>loadEntry(e),80); },raw:e}));
 
   // Events
   events.filter(e=>e.title?.toLowerCase().includes(q)||(e.notes||'').toLowerCase().includes(q))
@@ -10420,7 +10529,7 @@ async function renderBonusCats() {
     if(!taskCount) return;
     const opt=document.createElement('div'); opt.className='bonus-cat-opt';
     opt.style.borderLeftColor=cat.color;
-    opt.innerHTML=`<div style="width:12px;height:12px;border-radius:3px;background:${cat.color};flex-shrink:0"></div><div style="flex:1"><div style="font-size:13.5px;font-weight:500">${cat.name}</div><div style="font-size:11.5px;color:var(--text-3)">${taskCount} bonus task${taskCount!==1?'s':''}</div></div><span style="font-size:13px;color:var(--text-3)">→</span>`;
+    opt.innerHTML=`${cat.icon?`<div class="cat-swatch has-icon" style="background:${cat.color}">${cat.icon}</div>`:`<div style="width:12px;height:12px;border-radius:3px;background:${cat.color};flex-shrink:0"></div>`}<div style="flex:1"><div style="font-size:13.5px;font-weight:500">${cat.name}</div><div style="font-size:11.5px;color:var(--text-3)">${taskCount} bonus task${taskCount!==1?'s':''}</div></div><span style="font-size:13px;color:var(--text-3)">→</span>`;
     opt.onclick=()=>selectBonusCat(cat);
     cont.appendChild(opt);
   });
@@ -10530,7 +10639,17 @@ async function openCatModal(catId=null) {
   g('catModalTitle').textContent=catId?'Edit Category':'Add Category';
   g('mCatName').value=cat?.name||'';
   S.catColor=cat?.color||PALETTE[0];
+  S.catIcon=cat?.icon||null;
   S.catBonus=cat?.isBonus||false;
+  const refreshCatIcon=()=>{ g('catIconPreview').textContent=S.catIcon||'＋'; g('catIconClear').style.display=S.catIcon?'':'none'; };
+  refreshCatIcon();
+  g('catIconPicker').style.display='none';
+  g('catIconPreview').onclick=()=>{
+    const shown=g('catIconPicker').style.display!=='none';
+    g('catIconPicker').style.display=shown?'none':'';
+    if(!shown) buildIconPicker(g('catIconGrid'),S.catIcon,ico=>{ S.catIcon=ico; refreshCatIcon(); });
+  };
+  g('catIconClear').onclick=()=>{ S.catIcon=null; refreshCatIcon(); g('catIconGrid').querySelectorAll('.icon-opt').forEach(b=>b.classList.remove('sel')); };
   renderColors('mCatColors',S.catColor,c=>{S.catColor=c;});
   const tog=g('mCatBonus');
   tog.dataset.checked=S.catBonus?'true':'false';
@@ -10542,7 +10661,7 @@ async function openCatModal(catId=null) {
 async function saveCategory() {
   const name=g('mCatName').value.trim();
   if(!name){ g('mCatName').focus(); return; }
-  const c={name,color:S.catColor,isBonus:g('mCatBonus').dataset.checked==='true'};
+  const c={name,color:S.catColor,icon:S.catIcon||null,isBonus:g('mCatBonus').dataset.checked==='true'};
   if(S.editCategoryId) c.id=S.editCategoryId;
   await put('categories',c); closeModal('catModal'); await renderTasksView();
 }
@@ -10641,26 +10760,30 @@ async function savePerson() {
 }
 
 function closeModal(id, fromPopstate=false){
+  const wasOpen = g(id).classList.contains('open');
   g(id).classList.remove('open');
   // Show FAB again if no other modals are open
   if(!document.querySelector('.overlay.open')) {
     const fab=g('fab'); if(fab) fab.style.display='';
   }
   // If this close wasn't triggered by popstate, pop the history entry we pushed
-  if(!fromPopstate) {
-    // Only go back if the current state is for this modal
-    if(history.state?.modal === id) history.back();
+  if(!fromPopstate && wasOpen) {
+    // Only go back if the current state is for this modal. Mark the resulting
+    // popstate as self-inflicted so it doesn't also close the modal underneath.
+    if(history.state?.modal === id) { _ignorePop++; history.back(); }
   }
 }
+let _ignorePop = 0; // counts popstate events we triggered ourselves via history.back()
 function _openModal(id){
+  const wasOpen = g(id).classList.contains('open');
   g(id).classList.add('open');
   // Animate the modal card
   const modal = g(id).querySelector('.modal');
   if(modal) animPop(modal);
   // Hide FAB while modal is open
   const fab=g('fab'); if(fab) fab.style.display='none';
-  // Push a history entry so the back button closes this modal
-  history.pushState({ modal: id }, '');
+  // Push a history entry so the back button closes this modal (once per open)
+  if(!wasOpen) history.pushState({ modal: id }, '');
 }
 
 // ═══════════════════════════════════════════
@@ -10689,7 +10812,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.21.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.23.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -11088,7 +11211,7 @@ function wire() {
   };
 
   // Rewards history tab
-  g('rwdTabHistory').onclick=()=>{ S.rwdTab='history'; renderRewards(); };
+  g('rwdTabHistory').onclick=()=>{ S.rwdTab='history'; renderRewardsView(); };
 
   // Gist sync
   wireGistSync();
@@ -11298,6 +11421,7 @@ window.toggleRewardDropdown=toggleRewardDropdown;
 window.removeBonusComp=removeBonusComp;
 window.openTaskAsBonusModal=openTaskAsBonusModal;
 window.openResetModal=openResetModal;
+window.openClearTasksPanel=openClearTasksPanel;
 window.openScheduleBlockModal=openScheduleBlockModal;
 window.openScheduleGroupModal=openScheduleGroupModal;
 window.saveScheduleBlock=saveScheduleBlock;
@@ -11631,7 +11755,7 @@ async function renderExpOverview(monthExp, cats, people, totalExpense, totalInco
     const ds=expMonthDates(ym);
     const inc=allExp.filter(e=>e.isIncome&&e.date>=ds[0]&&e.date<=ds[ds.length-1]).reduce((s,e)=>s+e.amount,0);
     const exp=allExp.filter(e=>!e.isIncome&&e.date>=ds[0]&&e.date<=ds[ds.length-1]).reduce((s,e)=>s+e.amount,0);
-    return {ym, inc, exp, label:monthNames[parseInt(ym.split('-')[1])-1].slice(0,3)};
+    return {ym, inc, exp, label:MONTHS[parseInt(ym.split('-')[1])-1].slice(0,3)};
   });
   const maxV=Math.max(...trendData.flatMap(d=>[d.inc,d.exp]),1);
   const W=500,H=120; const svg=makeSVG(W,H); svg.style.cssText='width:100%;height:auto';
@@ -11665,7 +11789,7 @@ async function renderExpOverview(monthExp, cats, people, totalExpense, totalInco
 
   // ── Running balance: cumulative day-by-day ──────────────────
   const runWrap=document.createElement('div'); runWrap.className='exp-chart-wrap';
-  runWrap.innerHTML='<div class="exp-chart-title">Daily Running Balance — '+label(S.expMonth)+'</div>';
+  runWrap.innerHTML='<div class="exp-chart-title">Daily Running Balance — '+(()=>{ const [yy,mm]=S.expMonth.split('-').map(Number); return MONTHS[mm-1]+' '+yy; })()+'</div>';
   const days=expMonthDates(S.expMonth);
   let running=0;
   const runPts=days.map(d=>{
@@ -12392,6 +12516,424 @@ function showToast(msg, color='var(--sage)') {
 // ═══════════════════════════════════════════
 // POINTS & REWARDS RESET
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// HOUSEHOLD INVENTORY
+// ═══════════════════════════════════════════
+// Stock on hand: one `inventory` row per (grocery item, location, unit) with a quantity.
+// Items come from the same `groceryLibrary` as the grocery list; `inventoryLocations`
+// are the places things are stored (fridge, garage freezer, pantry…).
+const INV_UNITS = ['count','lb','oz','box','bag','can','jar','bottle','pack','carton','dozen','gal','L'];
+const invFmtQty = n => { n = Number(n) || 0; return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100); };
+const invSortedLocs = locs => [...locs].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || (a.name || '').localeCompare(b.name || ''));
+
+async function seedInvLocations() {
+  const existing = (await all('inventoryLocations')).map(l => recKey(l.name));
+  let order = (await all('inventoryLocations')).length;
+  for (const name of ['Fridge', 'Freezer', 'Pantry']) {
+    if (!existing.includes(recKey(name))) await put('inventoryLocations', { name, sortOrder: order++ });
+  }
+}
+
+function wireInventoryToolbar() {
+  const s = g('invSearch');
+  if (!s || s.dataset.wired) return;
+  s.dataset.wired = '1';
+  s.oninput = () => renderInventory();
+  g('invAddBtn').onclick = () => openInvItemPanel(null);
+  g('invLocBtn').onclick = () => openInvLocationsPanel();
+  g('invGroupLoc').onclick = () => { S.invGroup = 'location'; renderInventory(); };
+  g('invGroupCat').onclick = () => { S.invGroup = 'category'; renderInventory(); };
+}
+
+async function renderInventory() {
+  if (!S.invGroup) S.invGroup = 'location';
+  if (!S.invCollapsed) S.invCollapsed = new Set();
+  wireInventoryToolbar();
+  g('invGroupLoc').classList.toggle('active', S.invGroup === 'location');
+  g('invGroupCat').classList.toggle('active', S.invGroup === 'category');
+
+  const [locs, inv, lib, cats] = await Promise.all([all('inventoryLocations'), all('inventory'), all('groceryLibrary'), getGlibCats()]);
+  const list = g('invList'); list.innerHTML = '';
+
+  if (!locs.length) {
+    list.innerHTML = `<div class="empty"><div class="ico">📦</div><p>Where do you keep things?</p>
+      <p style="font-size:12px;color:var(--text-3);margin-top:6px">Add storage locations like your fridge, freezer, or garage freezer, then track what's in each one.</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="invSeedBtn">Add Fridge, Freezer &amp; Pantry</button>
+        <button class="btn btn-ghost" id="invCustomLocBtn">Add my own…</button></div></div>`;
+    g('invSeedBtn').onclick = async () => { await seedInvLocations(); renderInventory(); };
+    g('invCustomLocBtn').onclick = () => openInvLocationsPanel(true);
+    return;
+  }
+  if (!inv.length) {
+    list.innerHTML = `<div class="empty"><div class="ico">📦</div><p>Nothing tracked yet</p>
+      <p style="font-size:12px;color:var(--text-3);margin-top:6px">Tap <strong>+ Item</strong> to record what you have and where it is.</p></div>`;
+    return;
+  }
+
+  const libById = Object.fromEntries(lib.map(i => [i.id, i]));
+  const catById = Object.fromEntries(cats.map(c => [c.id, c]));
+  const locById = Object.fromEntries(locs.map(l => [l.id, l]));
+  const q = (g('invSearch').value || '').trim().toLowerCase();
+  const rows = inv.map(r => {
+    const li = libById[r.libraryId];
+    return { r, name: li?.name || r.name || 'Item', cat: catById[li?.categoryId] || null, loc: locById[r.locationId] || null };
+  }).filter(x => !q || x.name.toLowerCase().includes(q) || (x.loc?.name || '').toLowerCase().includes(q) || (x.cat?.name || '').toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!rows.length) { list.innerHTML = `<div class="empty"><div class="ico">🔍</div><p>No inventory matches "${q.replace(/[<>&"]/g, '')}"</p></div>`; return; }
+
+  let groups;
+  if (S.invGroup === 'location') {
+    groups = invSortedLocs(locs).map(l => ({ key: l.id, label: l.name, color: 'var(--gold)', icon: '📍', rows: rows.filter(x => x.r.locationId === l.id) }));
+    groups.push({ key: '__none__', label: 'No location', color: '#999', icon: '', rows: rows.filter(x => !x.loc) });
+  } else {
+    groups = cats.map(c => ({ key: c.id, label: c.name, color: c.color, icon: c.icon || '', rows: rows.filter(x => x.cat?.id === c.id) }));
+    groups.push({ key: '__none__', label: 'Other', color: '#999', icon: '📦', rows: rows.filter(x => !x.cat) });
+  }
+
+  groups.filter(gr => gr.rows.length).forEach(gr => {
+    const ck = S.invGroup + ':' + gr.key;
+    const collapsed = S.invCollapsed.has(ck);
+    const hdr = document.createElement('div');
+    hdr.className = 'grocery-cat-hdr-colored';
+    hdr.style.cssText = `border-color:${gr.color};cursor:pointer;user-select:none`;
+    hdr.innerHTML = `<span class="grocery-cat-dot" style="background:${gr.color}"></span><span class="inv-hdr-label" style="color:${gr.color};font-weight:700"></span><span style="margin-left:auto;font-size:10px;color:var(--text-3);margin-right:6px">${gr.rows.length}</span><span class="inv-chev" style="font-size:11px;color:${gr.color};opacity:.7;display:inline-block;transition:transform .2s;transform:rotate(${collapsed ? -90 : 0}deg)">▾</span>`;
+    hdr.querySelector('.inv-hdr-label').textContent = `${gr.icon ? gr.icon + ' ' : ''}${gr.label}`;
+    const body = document.createElement('div');
+    body.style.display = collapsed ? 'none' : '';
+    gr.rows.forEach(x => body.appendChild(buildInvRow(x)));
+    hdr.onclick = () => {
+      const now = !S.invCollapsed.has(ck);
+      if (now) S.invCollapsed.add(ck); else S.invCollapsed.delete(ck);
+      body.style.display = now ? 'none' : '';
+      hdr.querySelector('.inv-chev').style.transform = `rotate(${now ? -90 : 0}deg)`;
+    };
+    list.appendChild(hdr);
+    list.appendChild(body);
+  });
+}
+
+function buildInvRow(x) {
+  const { r, name, cat, loc } = x;
+  const row = document.createElement('div');
+  row.className = 'inv-row' + (Number(r.qty) <= 0 ? ' out' : '');
+  row.innerHTML = `<div class="inv-main"><div class="inv-name"></div><div class="inv-sub"></div></div>
+    <div class="inv-stepper"><button class="inv-step-btn" data-d="-1" title="One less">−</button><div class="inv-qty"></div><button class="inv-step-btn" data-d="1" title="One more">+</button></div>
+    <button class="inv-icon-btn" data-act="edit" title="Edit">✏️</button><button class="inv-icon-btn del" data-act="del" title="Remove">×</button>`;
+  row.querySelector('.inv-name').textContent = name;
+  const sub = [];
+  if (S.invGroup === 'location') { if (cat) sub.push(`${cat.icon ? cat.icon + ' ' : ''}${cat.name}`); }
+  else sub.push(`📍 ${loc?.name || 'No location'}`);
+  if (r.note) sub.push(r.note);
+  const subEl = row.querySelector('.inv-sub');
+  subEl.textContent = sub.join(' · ');
+  if (!sub.length) subEl.style.display = 'none';
+  const qtyEl = row.querySelector('.inv-qty');
+  const paintQty = () => {
+    qtyEl.textContent = invFmtQty(r.qty);
+    if (r.unit) { const u = document.createElement('small'); u.textContent = r.unit; qtyEl.appendChild(u); }
+    row.classList.toggle('out', Number(r.qty) <= 0);
+  };
+  paintQty();
+  // Taps update the on-screen number immediately (from the live value, so rapid taps all
+  // count) and saves are queued so they land in order.
+  let saveChain = Promise.resolve();
+  row.querySelectorAll('.inv-step-btn').forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    r.qty = Math.max(0, Math.round((Number(r.qty || 0) + Number(b.dataset.d)) * 100) / 100);
+    paintQty();
+    saveChain = saveChain.then(async () => {
+      const cur = await get('inventory', r.id); if (!cur) return;
+      await put('inventory', { ...cur, qty: r.qty });
+    }).catch(err => console.warn('Den: inventory save failed', err));
+  });
+  row.querySelector('[data-act="edit"]').onclick = () => openInvItemPanel(r);
+  row.querySelector('[data-act="del"]').onclick = () => {
+    askConfirm(`Remove ${name}${loc ? ' from ' + loc.name : ''} from your inventory?`, async () => {
+      await del('inventory', r.id);
+      showToast(`Removed ${name}`, 'var(--text-3)');
+      await renderInventory();
+    }, 'Remove item');
+  };
+  return row;
+}
+
+// ── Add / edit an inventory item ────────────
+async function openInvItemPanel(row = null) {
+  const [locs, lib, cats] = await Promise.all([all('inventoryLocations'), all('groceryLibrary'), getGlibCats()]);
+  if (!locs.length) { showToast('Add a storage location first', 'var(--gold)'); openInvLocationsPanel(true); return; }
+  g('invItemPanel')?.remove();
+  const libById = Object.fromEntries(lib.map(i => [i.id, i]));
+  let chosenLibId = row?.libraryId && libById[row.libraryId] ? row.libraryId : null;
+
+  const panel = document.createElement('div');
+  panel.id = 'invItemPanel';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:20px 16px 28px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,0.4)">
+      <div style="display:flex;align-items:center;margin-bottom:14px">
+        <div style="font-weight:700;font-size:15px;flex:1">${row ? 'Edit Item' : 'Add to Inventory'}</div>
+        <button id="invItemClose" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      <label class="fl">Item</label>
+      <div style="position:relative;margin-bottom:6px">
+        <input class="fi" id="invItemName" placeholder="Search your groceries…" autocomplete="off" style="width:100%">
+        <div id="invItemDrop" class="ing-search-dropdown" style="display:none"></div>
+      </div>
+      <div id="invNewItemRow" style="display:none;margin-bottom:10px;padding:8px 10px;background:var(--surface-2);border-radius:var(--radius-sm);font-size:12px;color:var(--text-2)">
+        <div style="margin-bottom:6px">✨ New item — it'll be added to your Groceries list.</div>
+        <select class="fi" id="invNewItemCat" style="width:100%"><option value="">Category (optional)</option>${cats.map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('')}</select>
+      </div>
+      <div style="display:flex;gap:10px;margin:10px 0">
+        <div style="flex:1"><label class="fl">Quantity</label><input class="fi" id="invQty" type="number" step="any" min="0" inputmode="decimal" value="1"></div>
+        <div style="flex:1"><label class="fl">Unit <span style="opacity:.5">(optional)</span></label><input class="fi" id="invUnit" list="invUnitList" placeholder="lb, box, count…"><datalist id="invUnitList">${INV_UNITS.map(u => `<option value="${u}">`).join('')}</datalist></div>
+      </div>
+      <label class="fl">Location</label>
+      <select class="fi" id="invLoc" style="margin-bottom:10px">${invSortedLocs(locs).map(l => `<option value="${l.id}">${l.name}</option>`).join('')}</select>
+      <label class="fl">Note <span style="opacity:.5">(optional)</span></label>
+      <input class="fi" id="invNote" placeholder="e.g. expires Dec 12, bottom shelf" style="margin-bottom:16px">
+      <div style="display:flex;gap:8px">
+        ${row ? '<button class="btn btn-ghost" id="invItemDelete" style="color:var(--terra)">Delete</button>' : ''}
+        <button class="btn btn-primary" id="invItemSave" style="flex:1">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(panel);
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+  g('invItemClose').onclick = () => panel.remove();
+
+  const nameEl = g('invItemName'), drop = g('invItemDrop');
+  if (row) {
+    nameEl.value = libById[row.libraryId]?.name || row.name || '';
+    g('invQty').value = row.qty ?? 1; g('invUnit').value = row.unit || ''; g('invNote').value = row.note || '';
+    if (locs.some(l => l.id === row.locationId)) g('invLoc').value = row.locationId;
+  } else if (S.invLastLoc && locs.some(l => l.id === S.invLastLoc)) g('invLoc').value = S.invLastLoc;
+
+  const exactMatch = () => lib.find(i => recKey(i.name) === recKey(nameEl.value));
+  const refreshNewHint = () => {
+    const t = nameEl.value.trim();
+    g('invNewItemRow').style.display = (t && !chosenLibId && !exactMatch()) ? '' : 'none';
+  };
+  nameEl.oninput = () => {
+    const t = nameEl.value.trim().toLowerCase();
+    if (chosenLibId && libById[chosenLibId]?.name.toLowerCase() !== t) chosenLibId = null;
+    drop.innerHTML = '';
+    if (t) {
+      const catMap = Object.fromEntries(cats.map(c => [c.id, c]));
+      lib.filter(i => i.name.toLowerCase().includes(t)).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 8).forEach(item => {
+        const cat = catMap[item.categoryId];
+        const opt = document.createElement('div'); opt.className = 'ing-search-opt';
+        const nm = document.createElement('span'); nm.textContent = item.name; opt.appendChild(nm);
+        if (cat) { const cs = document.createElement('span'); cs.className = 'ing-search-opt-cat'; cs.style.color = cat.color; cs.textContent = `${cat.icon || ''} ${cat.name}`.trim(); opt.appendChild(cs); }
+        opt.onmousedown = e => { e.preventDefault(); nameEl.value = item.name; chosenLibId = item.id; drop.style.display = 'none'; refreshNewHint(); };
+        drop.appendChild(opt);
+      });
+    }
+    drop.style.display = drop.children.length ? '' : 'none';
+    refreshNewHint();
+  };
+  nameEl.onblur = () => setTimeout(() => { drop.style.display = 'none'; }, 150);
+  refreshNewHint();
+
+  g('invItemSave').onclick = async () => {
+    const typed = nameEl.value.trim();
+    if (!typed) { nameEl.focus(); return; }
+    const qty = parseFloat(g('invQty').value);
+    if (isNaN(qty) || qty < 0) { showToast('Enter a quantity (0 or more)', 'var(--terra)'); return; }
+    const unit = g('invUnit').value.trim();
+    const locationId = g('invLoc').value;
+    const note = g('invNote').value.trim() || null;
+    let libId = chosenLibId, name = typed;
+    if (!libId) {
+      const hit = exactMatch();
+      if (hit) { libId = hit.id; name = hit.name; }
+      else { libId = await put('groceryLibrary', { name: typed, nameKey: recKey(typed), categoryId: g('invNewItemCat').value || null }); }
+    } else name = libById[libId].name;
+    S.invLastLoc = locationId;
+
+    if (row) {
+      await put('inventory', { ...row, libraryId: libId, name, locationId, qty, unit, note });
+    } else {
+      // Same item, same place, same unit already tracked? Add to it instead of duplicating.
+      const dup = (await all('inventory')).find(r => r.libraryId === libId && r.locationId === locationId && recKey(r.unit) === recKey(unit));
+      if (dup) {
+        await put('inventory', { ...dup, qty: Math.round((Number(dup.qty || 0) + qty) * 100) / 100, note: note || dup.note || null });
+        showToast(`Updated ${name} — added to what you already had`, 'var(--sage)');
+      } else {
+        await put('inventory', { libraryId: libId, name, locationId, qty, unit, note });
+      }
+    }
+    panel.remove();
+    await renderInventory();
+  };
+  if (row) g('invItemDelete').onclick = () => {
+    panel.remove();
+    askConfirm(`Remove ${nameEl.value} from your inventory?`, async () => { await del('inventory', row.id); await renderInventory(); }, 'Remove item');
+  };
+  setTimeout(() => nameEl.focus(), 60);
+}
+
+// ── Manage storage locations ────────────────
+async function openInvLocationsPanel(focusAdd = false) {
+  const [locs, inv] = await Promise.all([all('inventoryLocations'), all('inventory')]);
+  g('invLocPanel')?.remove();
+  const sorted = invSortedLocs(locs);
+  const panel = document.createElement('div');
+  panel.id = 'invLocPanel';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;padding:20px 16px 28px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 -8px 32px rgba(0,0,0,0.4)">
+      <div style="display:flex;align-items:center;margin-bottom:6px">
+        <div style="font-weight:700;font-size:15px;flex:1">📍 Storage Locations</div>
+        <button id="invLocClose" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Places you keep things — rename, reorder, or remove them.</div>
+      <div id="invLocRows"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="fi" id="invLocNew" placeholder="New location (e.g. Garage Freezer)" style="flex:1">
+        <button class="btn btn-primary" id="invLocAdd" style="flex-shrink:0">Add</button>
+      </div>
+      ${locs.length ? '' : '<button class="btn btn-ghost" id="invLocSeed" style="width:100%;margin-top:10px;font-size:13px">Add Fridge, Freezer &amp; Pantry</button>'}
+    </div>`;
+  document.body.appendChild(panel);
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+  g('invLocClose').onclick = () => panel.remove();
+  const reopen = (focus = false) => { renderInventory(); openInvLocationsPanel(focus); };
+
+  const rowsEl = g('invLocRows');
+  sorted.forEach((loc, idx) => {
+    const count = inv.filter(r => r.locationId === loc.id).length;
+    const row = document.createElement('div');
+    row.className = 'glib-item';
+    const paint = () => {
+      row.innerHTML = `<input class="fi" style="flex:1;min-width:0" maxlength="40">
+        <span style="font-size:11px;color:var(--text-3);flex-shrink:0">${count} item${count !== 1 ? 's' : ''}</span>
+        <button class="inv-icon-btn" data-m="up" ${idx === 0 ? 'disabled style="opacity:.25"' : ''} title="Move up">▲</button>
+        <button class="inv-icon-btn" data-m="down" ${idx === sorted.length - 1 ? 'disabled style="opacity:.25"' : ''} title="Move down">▼</button>
+        <button class="inv-icon-btn del" data-m="del" title="Delete">×</button>`;
+      const input = row.querySelector('input'); input.value = loc.name;
+      input.onchange = async () => {
+        const nm = input.value.trim();
+        if (!nm) { input.value = loc.name; return; }
+        await put('inventoryLocations', { ...(await get('inventoryLocations', loc.id)), name: nm });
+        loc.name = nm; renderInventory();
+      };
+      const swap = async dir => {
+        const other = sorted[idx + dir]; if (!other) return;
+        const a = await get('inventoryLocations', loc.id), b = await get('inventoryLocations', other.id);
+        // normalise to distinct positions first so equal sortOrders can't block a swap
+        const order = sorted.map(l => l.id); [order[idx], order[idx + dir]] = [order[idx + dir], order[idx]];
+        for (let i = 0; i < order.length; i++) { const rec = await get('inventoryLocations', order[i]); if (rec && rec.sortOrder !== i) await put('inventoryLocations', { ...rec, sortOrder: i }); }
+        reopen();
+      };
+      row.querySelector('[data-m="up"]').onclick = () => swap(-1);
+      row.querySelector('[data-m="down"]').onclick = () => swap(1);
+      row.querySelector('[data-m="del"]').onclick = () => {
+        // inline confirmation — the app's confirm dialog would sit underneath this panel
+        row.innerHTML = `<div style="flex:1;font-size:12.5px;color:var(--text)">Delete “<strong></strong>”?${count ? ` The ${count} item${count !== 1 ? 's' : ''} stored here will be removed too.` : ''}</div>
+          <button class="btn btn-ghost" data-c="no" style="font-size:12px">Cancel</button>
+          <button class="btn btn-ghost" data-c="yes" style="font-size:12px;color:var(--terra)">Delete</button>`;
+        row.querySelector('strong').textContent = loc.name;
+        row.querySelector('[data-c="no"]').onclick = paint;
+        row.querySelector('[data-c="yes"]').onclick = async () => {
+          for (const r of inv.filter(r => r.locationId === loc.id)) await del('inventory', r.id);
+          await del('inventoryLocations', loc.id);
+          showToast(`Deleted ${loc.name}`, 'var(--text-3)');
+          reopen();
+        };
+      };
+    };
+    paint();
+    rowsEl.appendChild(row);
+  });
+
+  const addInput = g('invLocNew');
+  const addLoc = async () => {
+    const nm = addInput.value.trim(); if (!nm) { addInput.focus(); return; }
+    if (locs.some(l => recKey(l.name) === recKey(nm))) { showToast(`You already have “${nm}”`, 'var(--gold)'); return; }
+    await put('inventoryLocations', { name: nm, sortOrder: locs.length });
+    reopen(true);
+  };
+  g('invLocAdd').onclick = addLoc;
+  addInput.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); addLoc(); } };
+  if (g('invLocSeed')) g('invLocSeed').onclick = async () => { await seedInvLocations(); reopen(); };
+  if (focusAdd) setTimeout(() => addInput.focus(), 60);
+}
+
+// ═══════════════════════════════════════════
+// CLEAR TASKS & CATEGORIES
+// ═══════════════════════════════════════════
+// Works out exactly what each option would delete so the confirmation can be specific.
+// "Orphaned" = a task whose category no longer exists, or that belongs to a category
+// being cleared. Those are always removed together with their categories.
+async function planClear(mode) {
+  const [chores, categories] = await Promise.all([all('chores'), all('categories')]);
+  const catIds = new Set(categories.map(c => c.id));
+  const orphans = chores.filter(t => t.categoryId && !catIds.has(t.categoryId));
+  let tasks = [], cats = [];
+  if (mode === 'tasks')      { tasks = chores; }
+  if (mode === 'categories') { tasks = chores.filter(t => t.categoryId); cats = categories; }
+  if (mode === 'both')       { tasks = chores; cats = categories; }
+  return { tasks, cats, orphans, totalTasks: chores.length, totalCats: categories.length };
+}
+
+async function openClearTasksPanel() {
+  g('clearTasksPanel')?.remove();
+  const [pt, pc, pb] = await Promise.all([planClear('tasks'), planClear('categories'), planClear('both')]);
+  const orphanNote = pb.orphans.length
+    ? `<div style="font-size:12px;color:var(--gold);margin:0 16px 10px">⚠ ${pb.orphans.length} orphaned task${pb.orphans.length!==1?'s':''} (their category no longer exists) will be removed with any option below.</div>`
+    : '';
+  const opt = (mode, title, desc) => `
+    <button data-clear="${mode}" style="display:block;width:calc(100% - 32px);margin:0 16px 8px;text-align:left;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;color:var(--text)">
+      <div style="font-size:14px;font-weight:600;color:var(--terra)">${title}</div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:3px">${desc}</div>
+    </button>`;
+  const panel = document.createElement('div');
+  panel.id = 'clearTasksPanel';
+  panel.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:flex;align-items:flex-end;justify-content:center';
+  panel.innerHTML = `
+    <div style="background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding-bottom:20px;box-shadow:0 -8px 32px rgba(0,0,0,0.4)">
+      <div style="display:flex;align-items:center;padding:16px;border-bottom:1px solid var(--border-soft);margin-bottom:12px">
+        <div style="font-weight:700;font-size:15px;flex:1">🧹 Clear Tasks &amp; Categories</div>
+        <button id="clearTasksClose" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+      </div>
+      ${orphanNote}
+      ${opt('tasks', `Clear all tasks (${pt.tasks.length})`, 'Deletes every task. Categories stay.')}
+      ${opt('categories', `Clear all categories (${pc.cats.length})`, `Deletes every category and the ${pc.tasks.length} task${pc.tasks.length!==1?'s':''} filed under them. Uncategorized tasks stay.`)}
+      ${opt('both', 'Clear both', `Deletes all ${pb.tasks.length} task${pb.tasks.length!==1?'s':''} and all ${pb.cats.length} categor${pb.cats.length!==1?'ies':'y'}.`)}
+    </div>`;
+  document.body.appendChild(panel);
+  panel.onclick = e => { if (e.target === panel) panel.remove(); };
+  g('clearTasksClose').onclick = () => panel.remove();
+  panel.querySelectorAll('[data-clear]').forEach(btn => {
+    btn.onclick = async () => {
+      const mode = btn.dataset.clear;
+      panel.remove();   // close first: the confirm dialog sits beneath inline panels
+      const plan = await planClear(mode);
+      if (!plan.tasks.length && !plan.cats.length) { showToast('Nothing to clear', 'var(--text-3)'); return; }
+      const parts = [];
+      if (plan.tasks.length) parts.push(`${plan.tasks.length} task${plan.tasks.length!==1?'s':''}`);
+      if (plan.cats.length)  parts.push(`${plan.cats.length} categor${plan.cats.length!==1?'ies':'y'}`);
+      askConfirm(`This will delete ${parts.join(' and ')} for everyone in your household. Completion history and points are kept. This can't be undone.`,
+        () => doClearTasks(mode), 'Clear tasks & categories');
+    };
+  });
+}
+
+async function doClearTasks(mode) {
+  const plan = await planClear(mode);
+  showToast('Clearing…', 'var(--text-3)');
+  const taskIds = new Set(plan.tasks.map(t => t.id));
+  for (const t of plan.tasks) await del('chores', t.id);
+  for (const cat of plan.cats) await del('categories', cat.id);
+  // Remove records that only make sense alongside the deleted tasks
+  const [skips, sched] = await Promise.all([all('taskSkips'), all('taskSchedule').catch(() => [])]);
+  for (const s of skips) if (taskIds.has(s.choreId)) await del('taskSkips', s.id);
+  for (const s of sched) if (taskIds.has(s.choreId)) await del('taskSchedule', s.id);
+  showToast(`✓ Cleared ${plan.tasks.length} task${plan.tasks.length!==1?'s':''}${plan.cats.length?` and ${plan.cats.length} categor${plan.cats.length!==1?'ies':'y'}`:''}`, 'var(--sage)');
+  await render(S.view);
+}
+
 async function openResetModal(period) {
   const labels = { week: 'last 7 days', month: 'last 30 days', all: 'all time' };
   const label = labels[period];
@@ -12568,7 +13110,6 @@ function openDashCustomizeModal() {
     applyDashLayout();
   };
 
-  history.pushState({ modal: 'dashCustomModal' }, '');
 }
 
 // ═══════════════════════════════════════════
@@ -12869,19 +13410,21 @@ function wirePopstate() {
   // Intercepts the browser/phone back button so it closes modals or
   // navigates within the app instead of exiting it.
   window.addEventListener('popstate', e => {
+    // A pop we caused ourselves (closeModal -> history.back()) — nothing more to do
+    if (_ignorePop > 0) { _ignorePop--; return; }
     const state = e.state;
 
-    // 1. If there's an open overlay modal, close the topmost one
+    // 1. If there's an open overlay modal, close the topmost one.
+    //    The browser already popped that modal's history entry, so no re-push needed.
     const openModals = [...document.querySelectorAll('.overlay.open')];
     if (openModals.length) {
       const top = openModals[openModals.length - 1];
       closeModal(top.id, true); // true = called from popstate, don't call history.back()
-      history.pushState({ view: S.view }, '');
       return;
     }
 
     // 2. If there's an inline panel (fixed overlay not using .overlay class)
-    const inlinePanels = ['schedBlockPanel','schedGroupPanel','glibItemPanel','glibCatsPanel','taskAsBonusModal','dashCustomModal'];
+    const inlinePanels = ['invItemPanel','invLocPanel','clearTasksPanel','schedBlockPanel','schedGroupPanel','glibItemPanel','glibCatsPanel','taskAsBonusModal','dashCustomModal'];
     for (const pid of inlinePanels) {
       const el = document.getElementById(pid);
       if (el) { el.remove(); history.pushState({ view: S.view }, ''); return; }
@@ -13392,7 +13935,7 @@ async function renderDashSchedule() {
       </div>
       <div style="width:3px;height:36px;border-radius:2px;flex-shrink:0;background:${color};opacity:${entry.done?'0.4':'1'}"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:500;${entry.done?'text-decoration:line-through;color:var(--text-3)':'color:var(--text)'}">${entry.task.name}</div>
+        <div style="font-size:13px;font-weight:500;${entry.done?'text-decoration:line-through;color:var(--text-3)':'color:var(--text)'}">${cat?.icon?cat.icon+' ':''}${entry.task.name}</div>
         <div style="font-size:11px;color:var(--text-3)">${entry.duration}min${isNow?' · <span style="color:var(--sage);font-weight:600">In progress</span>':''}</div>
       </div>
       ${entry.done ? '<span style="color:var(--sage);font-size:14px">✓</span>' : (isNow ? '<span style="color:var(--sage);font-size:11px;font-weight:600">▶</span>' : '')}`;
@@ -13567,7 +14110,7 @@ async function renderSchedule() {
     const endMin   = startMin + entry.duration;
     const cat   = categories.find(c => c.id === entry.task.categoryId);
     const color = cat?.color || person?.color || '#5a8ed4';
-    return { ...entry, startMin, endMin, color };
+    return { ...entry, startMin, endMin, color, icon: cat?.icon || '' };
   }).sort((a, b) => a.startMin - b.startMin);
 
   // Group overlapping entries
@@ -13635,7 +14178,7 @@ async function renderSchedule() {
 
       const name = document.createElement('div');
       name.className = 'sched-block-name';
-      name.textContent = e.task.name;
+      name.textContent = (e.icon ? e.icon + ' ' : '') + e.task.name;
 
       const time = document.createElement('div');
       time.className = 'sched-block-time';
@@ -13683,7 +14226,7 @@ function openScheduleGroupModal(entries, date, personId) {
       onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''">
       <div style="width:10px;height:10px;border-radius:50%;background:${e.color};flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13.5px;font-weight:600;color:var(--text)">${e.task.name}</div>
+        <div style="font-size:13.5px;font-weight:600;color:var(--text)">${e.icon?e.icon+' ':''}${e.task.name}</div>
         <div style="font-size:11.5px;color:var(--text-3)">${e.startTime}–${endStr} · ${e.duration}min</div>
       </div>
       <span style="color:var(--text-3);font-size:12px">Edit ›</span>
@@ -13808,7 +14351,7 @@ const SYNC_STORES = {
   // Core — people, tasks, categories
   people:            { table: 'people',             fields: { weekGoal:'week_goal', dayGoal:'day_goal', avatarEmoji:'avatar_emoji', sortOrder:'sort_order' } },
   categories:        { table: 'categories',          fields: { isBonus:'is_bonus', bonusPoints:'bonus_points', sortOrder:'sort_order' } },
-  chores:            { table: 'chores',              fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', recurEnd:null } },
+  chores:            { table: 'chores',              fields: { isRecurring:'is_recurring', isBonus:'is_bonus', startDate:'start_date', endDate:'end_date', assignedTo:'assigned_to', taskSortOrder:'task_sort_order', categoryId:'category_id', defaultTime:'default_time', recurEnd:null } },
   completions:       { table: 'completions',         fields: { choreId:'chore_id', personId:'person_id', isBonus:'is_bonus' } },
   taskSkips:         { table: 'task_skips',          fields: { choreId:'chore_id' } },
   pauses:            { table: 'pauses',              fields: { choreId:'chore_id', startDate:'start_date', endDate:'end_date' } },
@@ -13831,6 +14374,9 @@ const SYNC_STORES = {
   recipes:           { table: 'recipes',             fields: { prepMin:'prep_min', cookMin:'cook_min', favorite:null } },
   recipeIngredients: { table: 'recipe_ingredients',  fields: { recipeId:'recipe_id', nameKey:'name_key', sortOrder:'sort_order', libraryId:'library_id', sectionName:'section_name' } },
   mealPlan:          { table: 'meal_plan',           fields: { recipeId:'recipe_id' } },
+  // Household inventory
+  inventoryLocations:{ table: 'inventory_locations', fields: { sortOrder:'sort_order' } },
+  inventory:         { table: 'inventory',           fields: { libraryId:'library_id', locationId:'location_id' } },
   // Task schedule overrides
   taskSchedule:      { table: 'task_schedule',       fields: { choreId:'chore_id', personId:'person_id', startTime:'start_time' } },
 };
@@ -13861,6 +14407,52 @@ function toSupabaseRow(store, obj) {
   return row;
 }
 
+// ── Resilient upsert ────────────────────────
+// If Supabase rejects a payload because a column doesn't exist yet (PGRST204,
+// "Could not find the 'x' column of 'table'"), drop that column and retry so the
+// rest of the record still syncs — and surface the problem instead of hiding it
+// in the console. Columns are remembered per table for the session.
+const _missingCols = {};   // table -> Set(column names the server doesn't have)
+const _syncIssues  = {};   // "table.column" -> human-readable message
+function recordSyncIssue(table, col) {
+  const key = table + '.' + col;
+  if (_syncIssues[key]) return;
+  _syncIssues[key] = `"${col}" column missing on ${table} — that field isn't syncing`;
+  console.warn('Den: sync issue —', _syncIssues[key]);
+  showToast(`⚠ Cloud is missing "${col}" on ${table} — see Settings → Cloud Account`, 'var(--gold)');
+  if (typeof cloudUpdateSyncIssuesUI === 'function') cloudUpdateSyncIssuesUI();
+}
+function recordTableIssue(table) {
+  const key = table + '.*';
+  if (_syncIssues[key]) return;
+  _syncIssues[key] = `the "${table}" table doesn't exist in Supabase yet — run the setup SQL to sync it`;
+  console.warn('Den: sync issue —', _syncIssues[key]);
+  showToast(`⚠ Supabase is missing the "${table}" table — see Settings → Cloud Account`, 'var(--gold)');
+  if (typeof cloudUpdateSyncIssuesUI === 'function') cloudUpdateSyncIssuesUI();
+}
+const isMissingTableMsg = msg => /Could not find the table|relation .* does not exist/i.test(msg || '');
+async function upsertResilient(table, payload) {
+  const isArr = Array.isArray(payload);
+  let rows = isArr ? payload : [payload];
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const missing = _missingCols[table];
+    if (missing && missing.size) {
+      rows = rows.map(r => { const cp = { ...r }; missing.forEach(k => delete cp[k]); return cp; });
+    }
+    const { error } = await getSupa().from(table).upsert(isArr ? rows : rows[0], { onConflict: 'id' });
+    if (!error) return;
+    const m = /Could not find the '([^']+)' column of '([^']+)'/.exec(error.message || '');
+    if (m && m[2] === table && !(_missingCols[table] && _missingCols[table].has(m[1]))) {
+      (_missingCols[table] ||= new Set()).add(m[1]);
+      recordSyncIssue(table, m[1]);
+      continue; // retry without that column
+    }
+    if (isMissingTableMsg(error.message)) recordTableIssue(table);
+    throw new Error(error.message);
+  }
+  throw new Error('Too many missing columns on ' + table);
+}
+
 // Push a single record to Supabase (upsert by id).
 // No-op if not signed in, no household, or store not in Tier 1.
 async function cloudPush(store, obj) {
@@ -13868,12 +14460,11 @@ async function cloudPush(store, obj) {
   if (!SYNC_STORES[store]) return;
   const row = toSupabaseRow(store, obj);
   if (!row) return;
-  const { error } = await getSupa()
-    .from(SYNC_STORES[store].table)
-    .upsert(row, { onConflict: 'id' });
-  if (error) {
-    console.error(`Den: push failed [${store}]`, error.message, row);
-    throw new Error(error.message);
+  try {
+    await upsertResilient(SYNC_STORES[store].table, row);
+  } catch (e) {
+    console.error(`Den: push failed [${store}]`, e.message, row);
+    throw e;
   }
   console.log(`Den: pushed [${store}] id=${obj.id}`);
 }
@@ -14006,6 +14597,7 @@ async function cloudPullAll(force = false) {
 
       const { data, error } = await query;
       if (error) {
+        if (isMissingTableMsg(error.message)) recordTableIssue(cfg.table);
         console.warn(`Den: pull failed [${store}]:`, error.message);
         continue; // skip this store, don't block others
       }
@@ -14076,6 +14668,8 @@ const STORE_VIEW_MAP = {
   recipeIngredients: ['recipes'],
   mealPlan:          ['recipes', 'dashboard'],
   taskSchedule:      ['week'],
+  inventoryLocations:['recipes'],
+  inventory:         ['recipes'],
 };
 
 async function handleRealtimeEvent(store, payload) {
@@ -14169,6 +14763,8 @@ async function cloudPushAll() {
     'diary', 'events', 'pins',
     // Grocery (depends on groceryCategories + groceryLibrary)
     'groceryItems',
+    // Inventory (locations first, then stock rows that reference them + the grocery library)
+    'inventoryLocations', 'inventory',
     // Recipes (no FKs except household)
     'recipes',
     // Depend on recipes
@@ -14185,10 +14781,7 @@ async function cloudPushAll() {
       // Batch upsert in chunks of 200 to avoid payload limits
       for (let i = 0; i < rows.length; i += 200) {
         const chunk = rows.slice(i, i + 200);
-        const { error } = await getSupa()
-          .from(SYNC_STORES[store].table)
-          .upsert(chunk, { onConflict: 'id' });
-        if (error) throw new Error(error.message);
+        await upsertResilient(SYNC_STORES[store].table, chunk);
         pushed += chunk.length;
       }
     } catch(e) {
@@ -14286,7 +14879,18 @@ function cloudToggleEye(inputId, btn) {
   btn.style.color = show ? 'var(--gold)' : 'var(--text-3)';
 }
 
+function cloudUpdateSyncIssuesUI() {
+  const el = g('cloudSyncIssues'); if (!el) return;
+  const msgs = Object.values(_syncIssues);
+  if (!msgs.length) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<div style="font-weight:600;color:var(--gold);margin-bottom:4px">⚠ Sync needs attention</div>' +
+    msgs.map(m => `<div style="color:var(--text-2)">• ${m}</div>`).join('') +
+    '<div style="color:var(--text-3);margin-top:4px">Everything else is syncing normally. Add the missing column(s) in Supabase to sync these fields.</div>';
+}
+
 function cloudUpdateUI() {
+  cloudUpdateSyncIssuesUI();
   const out  = g('cloudSignedOut');
   const ins  = g('cloudSignedIn');
   if (!out || !ins) return;
