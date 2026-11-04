@@ -2075,7 +2075,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
     <div class="logo">
       <h1>Den</h1>
       <p style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap;overflow:hidden;letter-spacing:0.01em">Your household, in sync</p>
-      <p class="sidebar-version">v7.23.0</p>
+      <p class="sidebar-version">v7.24.0</p>
     </div>
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar">‹</button>
   </div>
@@ -2856,6 +2856,17 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
               <div id="cloudJoinMsg" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
             </div>
           </div>
+          <details id="cloudToolsWrap" style="margin-top:12px">
+            <summary style="font-size:13px;color:var(--text-2);cursor:pointer;user-select:none">🔧 Sync tools &amp; details</summary>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-ghost" onclick="cloudCheckCounts()" style="font-size:12.5px;text-align:left">📊 Compare this device with the cloud</button>
+              <button class="btn btn-ghost" onclick="cloudPushNow()" style="font-size:12.5px;text-align:left">⬆ Push everything on this device to the cloud</button>
+              <button class="btn btn-ghost" onclick="cloudRedownload()" style="font-size:12.5px;text-align:left">⬇ Re-download everything from the cloud</button>
+              <div style="font-size:11.5px;color:var(--text-3);line-height:1.5">Neither one wipes your device: push only adds or updates cloud records, and re-download only adds or updates records here (plus deletions you made on your other devices).</div>
+            </div>
+            <div id="cloudToolsResult" style="margin-top:10px;font-size:12px;line-height:1.6"></div>
+            <div id="cloudSyncLogBox" style="margin-top:10px"></div>
+          </details>
           <div id="cloudSyncIssues" style="display:none;margin-top:12px;background:var(--surface-2);border:1px solid var(--gold-dim);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;line-height:1.5"></div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft)">
             <button class="btn btn-ghost" onclick="cloudSignOut()" style="width:100%;font-size:13px;color:var(--terra)">Sign Out</button>
@@ -2967,7 +2978,7 @@ body.theme-sunset .card     { border-color: rgba(224,112,154,0.12); }
       <div class="card">
         <div class="setting-row">
           <div><div class="setting-label">Den</div><div class="setting-sub">Household task tracker, expense logger &amp; journal</div></div>
-          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.23.0</span>
+          <span style="font-size:13px;color:var(--text-3);font-weight:600">v7.24.0</span>
         </div>
       </div>
     </div>
@@ -10812,7 +10823,7 @@ async function exportData() {
       all('chores'), all('people'), all('completions'), all('diary'), all('categories'), all('events'), all('rewards'), all('earnedRewards'), all('pins'), all('pauses').catch(()=>[])
     ]);
     const payload = {
-      _meta: { app: 'HomeBase', version: '7.23.0', exportedAt: new Date().toISOString(),
+      _meta: { app: 'HomeBase', version: '7.24.0', exportedAt: new Date().toISOString(),
         counts: { chores:chores.length, people:people.length, completions:completions.length, diary:diary.length, categories:categories.length, events:events.length, rewards:rewards.length, earnedRewards:earnedRewards.length, pins:pins.length, pauses:(pauses||[]).length }
       },
       chores, people, completions, diary, categories, events, rewards, earnedRewards, pins, pauses
@@ -12504,11 +12515,15 @@ function playSound(name) { try { SOUNDS[name]?.(); } catch(e){} }
 
 function showToast(msg, color='var(--sage)') {
   const t=document.createElement('div');
-  t.style.cssText=`position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid ${color};border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;font-weight:600;color:${color};z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3);pointer-events:none;white-space:nowrap`;
+  // Wraps instead of running off-screen; stays long enough to read; tap to dismiss.
+  t.style.cssText=`position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(92vw,460px);background:var(--surface);border:1px solid ${color};border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;font-weight:600;line-height:1.4;color:${color};z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.3);white-space:normal;overflow-wrap:anywhere;text-align:center;cursor:pointer`;
   t.textContent=msg;
   document.body.appendChild(t);
   t.animate([{opacity:0,transform:'translateX(-50%) translateY(8px)'},{opacity:1,transform:'translateX(-50%) translateY(0)'}],{duration:220,fill:'both'});
-  setTimeout(()=>{ t.animate([{opacity:1},{opacity:0}],{duration:300,fill:'both'}).onfinish=()=>t.remove(); },2200);
+  let gone=false;
+  const dismiss=()=>{ if(gone) return; gone=true; t.animate([{opacity:1},{opacity:0}],{duration:300,fill:'both'}).onfinish=()=>t.remove(); };
+  t.onclick=dismiss;
+  setTimeout(dismiss, Math.min(9000, Math.max(2200, 1400 + String(msg).length*55)));
 }
 
 
@@ -14414,6 +14429,17 @@ function toSupabaseRow(store, obj) {
 // in the console. Columns are remembered per table for the session.
 const _missingCols = {};   // table -> Set(column names the server doesn't have)
 const _syncIssues  = {};   // "table.column" -> human-readable message
+// Persistent log of full sync error text (survives reloads) — shown in Settings → Cloud Account
+const SYNC_LOG_KEY = 'den_sync_log';
+let _syncLog = (() => { try { return JSON.parse(localStorage.getItem(SYNC_LOG_KEY) || '[]'); } catch { return []; } })();
+function logSyncError(store, message, rec) {
+  const label = rec ? (rec.title || rec.name || rec.id || '') : '';
+  _syncLog.push({ t: new Date().toISOString(), store, label: String(label).slice(0, 60), message: String(message || '') });
+  if (_syncLog.length > 30) _syncLog = _syncLog.slice(-30);
+  try { localStorage.setItem(SYNC_LOG_KEY, JSON.stringify(_syncLog)); } catch {}
+  if (typeof renderSyncLog === 'function') renderSyncLog();
+}
+let _pullStats = {};   // store -> records written locally by the latest pull
 function recordSyncIssue(table, col) {
   const key = table + '.' + col;
   if (_syncIssues[key]) return;
@@ -14464,6 +14490,7 @@ async function cloudPush(store, obj) {
     await upsertResilient(SYNC_STORES[store].table, row);
   } catch (e) {
     console.error(`Den: push failed [${store}]`, e.message, row);
+    logSyncError(store, e.message, obj);
     throw e;
   }
   console.log(`Den: pushed [${store}] id=${obj.id}`);
@@ -14582,6 +14609,7 @@ async function cloudPullAll(force = false) {
   const supa = getSupa();
   if (!supa || !_cloudHH) return;
   let changed = false;
+  _pullStats = {};
   const hwm = getSyncHWM();
   const pullStart = new Date().toISOString();
 
@@ -14593,17 +14621,20 @@ async function cloudPullAll(force = false) {
         .from(cfg.table)
         .select('*')
         .eq('household_id', _cloudHH.id);
-      if (since) query = query.gt('updated_at', since);
+      // 10-minute overlap so a device with a slightly slow clock can't hide rows from us
+      // (re-merging a record we already have is a harmless no-op)
+      if (since) query = query.gt('updated_at', new Date(new Date(since).getTime() - 10 * 60 * 1000).toISOString());
 
       const { data, error } = await query;
       if (error) {
         if (isMissingTableMsg(error.message)) recordTableIssue(cfg.table);
         console.warn(`Den: pull failed [${store}]:`, error.message);
+        logSyncError(store, 'pull: ' + error.message);
         continue; // skip this store, don't block others
       }
       for (const row of (data || [])) {
         const didChange = await mergeRecord(store, row);
-        if (didChange) changed = true;
+        if (didChange) { changed = true; _pullStats[store] = (_pullStats[store] || 0) + 1; }
       }
       // Sweep leftover integer-ID records (pre-migration duplicates)
       const allLocal = await new Promise((res, rej) => {
@@ -14772,7 +14803,7 @@ async function cloudPushAll() {
     // Depend on chores + people
     'taskSchedule',
   ];
-  let pushed = 0, errors = 0;
+  let pushed = 0, errors = 0, failed = 0;
   for (const store of stores) {
     try {
       const records = await all(store);
@@ -14781,16 +14812,25 @@ async function cloudPushAll() {
       // Batch upsert in chunks of 200 to avoid payload limits
       for (let i = 0; i < rows.length; i += 200) {
         const chunk = rows.slice(i, i + 200);
-        await upsertResilient(SYNC_STORES[store].table, chunk);
-        pushed += chunk.length;
+        try {
+          await upsertResilient(SYNC_STORES[store].table, chunk);
+          pushed += chunk.length;
+        } catch (chunkErr) {
+          // One bad record must not block the rest of the batch — retry them one at a time
+          for (const row of chunk) {
+            try { await upsertResilient(SYNC_STORES[store].table, row); pushed++; }
+            catch (rowErr) { failed++; logSyncError(store, rowErr.message, row); }
+          }
+        }
       }
     } catch(e) {
       console.warn(`Den: bulk push failed for ${store}:`, e.message);
+      logSyncError(store, e.message);
       errors++;
     }
   }
-  console.log(`Den: bulk push complete — ${pushed} records, ${errors} store errors`);
-  return { pushed, errors };
+  console.log(`Den: bulk push complete — ${pushed} records, ${failed} records failed, ${errors} store errors`);
+  return { pushed, errors, failed };
 }
 
 // ═══════════════════════════════════════════
@@ -14879,6 +14919,67 @@ function cloudToggleEye(inputId, btn) {
   btn.style.color = show ? 'var(--gold)' : 'var(--text-3)';
 }
 
+function renderSyncLog() {
+  const box = g('cloudSyncLogBox'); if (!box) return;
+  if (!_syncLog.length) { box.innerHTML = '<div style="font-size:12px;color:var(--text-3)">No sync errors recorded.</div>'; return; }
+  box.innerHTML = `<div style="font-weight:600;font-size:12.5px;margin-bottom:4px">Recent sync errors</div>
+    <pre id="cloudSyncLogPre" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;background:var(--surface-3);padding:8px;border-radius:6px;max-height:220px;overflow:auto;margin:0;user-select:text"></pre>
+    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-ghost" style="font-size:12px" onclick="copySyncLog()">Copy</button><button class="btn btn-ghost" style="font-size:12px" onclick="clearSyncLog()">Clear</button></div>`;
+  g('cloudSyncLogPre').textContent = _syncLog.slice().reverse().map(e => `${e.t.slice(11, 19)} [${e.store}] ${e.label ? e.label + ': ' : ''}${e.message}`).join('\n');
+}
+function copySyncLog() {
+  const txt = _syncLog.map(e => `${e.t} [${e.store}] ${e.label ? e.label + ': ' : ''}${e.message}`).join('\n');
+  (navigator.clipboard?.writeText(txt) || Promise.reject()).then(() => showToast('Copied', 'var(--sage)')).catch(() => showToast('Select the text and copy it manually', 'var(--gold)'));
+}
+function clearSyncLog() { _syncLog = []; try { localStorage.removeItem(SYNC_LOG_KEY); } catch {} renderSyncLog(); }
+
+// Compare record counts on this device with the cloud, per store
+async function cloudCheckCounts() {
+  const out = g('cloudToolsResult'); if (!out) return;
+  const supa = getSupa();
+  if (!supa || !_cloudHH) { out.textContent = 'Sign in and join a household first.'; return; }
+  out.textContent = 'Checking…';
+  const rows = [];
+  for (const [store, cfg] of Object.entries(SYNC_STORES)) {
+    const local = (await all(store)).length;
+    const { count, error } = await supa.from(cfg.table).select('id', { count: 'exact', head: true }).eq('household_id', _cloudHH.id).eq('deleted', false);
+    rows.push({ store, local, cloud: error ? null : count, err: error?.message });
+  }
+  out.innerHTML = '';
+  const mism = rows.filter(r => r.err || r.local !== r.cloud);
+  const head = document.createElement('div'); head.style.cssText = 'font-weight:600;margin-bottom:4px';
+  head.textContent = mism.length ? 'Differences found:' : '✓ This device matches the cloud for every store.';
+  out.appendChild(head);
+  mism.sort((a, b) => (b.store === 'events') - (a.store === 'events')).forEach(r => {
+    const d = document.createElement('div');
+    let msg;
+    if (r.err) msg = `${r.store}: couldn't check — ${r.err}`;
+    else if (r.local > r.cloud) msg = `${r.store}: this device ${r.local} · cloud ${r.cloud} → ${r.local - r.cloud} only here (use ⬆ Push)`;
+    else msg = `${r.store}: this device ${r.local} · cloud ${r.cloud} → ${r.cloud - r.local} only in the cloud (use ⬇ Re-download)`;
+    d.textContent = msg; d.style.color = r.store === 'events' ? 'var(--gold)' : 'var(--text-2)';
+    out.appendChild(d);
+  });
+}
+async function cloudPushNow() {
+  const out = g('cloudToolsResult'); if (out) out.textContent = 'Pushing…';
+  if (!_cloudHH) { if (out) out.textContent = 'Sign in and join a household first.'; return; }
+  const r = await cloudPushAll();
+  const msg = `Pushed ${r.pushed} records.` + (r.failed ? ` ${r.failed} couldn't sync — see the error details below.` : ' ✓ Nothing failed.');
+  if (out) out.textContent = msg;
+  showToast(msg, r.failed ? 'var(--gold)' : 'var(--sage)');
+}
+async function cloudRedownload() {
+  const out = g('cloudToolsResult'); if (out) out.textContent = 'Downloading…';
+  if (!_cloudHH) { if (out) out.textContent = 'Sign in and join a household first.'; return; }
+  clearSyncHWM();
+  await cloudPullAll(true);
+  const parts = Object.entries(_pullStats).map(([s, n]) => `${s} ${n}`);
+  const msg = parts.length ? `Added or updated: ${parts.join(', ')}.` : 'Already up to date — nothing new in the cloud.';
+  if (out) out.textContent = msg;
+  showToast(msg, 'var(--sage)');
+  await render(S.view);
+}
+
 function cloudUpdateSyncIssuesUI() {
   const el = g('cloudSyncIssues'); if (!el) return;
   const msgs = Object.values(_syncIssues);
@@ -14891,6 +14992,7 @@ function cloudUpdateSyncIssuesUI() {
 
 function cloudUpdateUI() {
   cloudUpdateSyncIssuesUI();
+  if (typeof renderSyncLog === 'function') renderSyncLog();
   const out  = g('cloudSignedOut');
   const ins  = g('cloudSignedIn');
   if (!out || !ins) return;
